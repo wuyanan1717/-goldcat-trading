@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import { getCheckoutUrl, CREEM_CONFIG } from './creemConfig';
 import {
     TrendingUp, TrendingDown, DollarSign, Package, AlertCircle, BarChart3, Target,
     Award, Plus, X, Crown, Calendar, CreditCard, Wallet, User, LogOut, Trash2,
     Infinity, Activity, Zap, FileText, Brain, Sparkles, CheckCircle2, AlertTriangle,
     Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, Lock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
-    PlusCircle, Check
+    PlusCircle, Check, RotateCcw, Info
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -73,18 +74,13 @@ const TIMEFRAMES = ['1m', '5m', '15m', '1h', '4h', '1d', '1w'];
 const getInitialPatterns = (language) => {
     if (language === 'zh') {
         return [
-            '突破', '回调', '趋势跟随', '反转', '区间震荡',
-            '头肩顶', '头肩底', '双顶', '双底', '上升三角', '下降三角',
-            '对称三角', '旗形', '楔形', '圆弧顶', '圆弧底', '矩形整理',
-            'V型反转', 'W底', 'M顶', '趋势线突破', '回踩确认'
+            '回调', '趋势跟踪', '突破', '反转', '区间震荡',
+            '头肩顶', '双顶', '回踩确认', '趋势线突破', '楔形'
         ];
     } else {
         return [
-            'Breakout', 'Pullback', 'Trend Following', 'Reversal', 'Range Trading',
-            'Head and Shoulders Top', 'Head and Shoulders Bottom', 'Double Top', 'Double Bottom',
-            'Ascending Triangle', 'Descending Triangle', 'Symmetrical Triangle',
-            'Flag', 'Wedge', 'Rounding Top', 'Rounding Bottom', 'Rectangle',
-            'V Reversal', 'W Bottom', 'M Top', 'Trendline Break', 'Pullback Confirmation'
+            'Pullback', 'Trend Following', 'Breakout', 'Reversal', 'Range Trading',
+            'Head and Shoulders Top', 'Double Top', 'Pullback Confirmation', 'Trendline Break', 'Wedge'
         ];
     }
 };
@@ -110,7 +106,8 @@ function GoldCatApp() {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('usdt');
+    const [paymentMethod, setPaymentMethod] = useState(null);
+    const [isUpgrading, setIsUpgrading] = useState(false);
     const [loginForm, setLoginForm] = useState({ email: '', password: '' });
     const [isRegisterMode, setIsRegisterMode] = useState(false);
     const [registerForm, setRegisterForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
@@ -126,6 +123,7 @@ function GoldCatApp() {
         type: 'suggestion',
         content: ''
     });
+    const [isSaving, setIsSaving] = useState(false);
 
     // 多语言支持
     // 多语言支持
@@ -147,7 +145,7 @@ function GoldCatApp() {
     // 监听语言变化并保存
     useEffect(() => {
         localStorage.setItem('goldcat_language', language);
-        setCustomPatterns(getInitialPatterns(language)); // 更新 patterns
+        setPatterns(getInitialPatterns(language)); // 更新 patterns
     }, [language]);
 
     const t = (path, params = {}) => {
@@ -175,10 +173,9 @@ function GoldCatApp() {
 
     // 核心数据：交易记录
     const [trades, setTrades] = useState([]);
-    const [customPatterns, setCustomPatterns] = useState(getInitialPatterns(language));
 
     const [btcMarket, setBtcMarket] = useState({ price: 0, change24h: 0, loading: true });
-    const [totalCapital, setTotalCapital] = useState(10000);
+    const [totalCapital, setTotalCapital] = useState(0);
     const [isEditingCapital, setIsEditingCapital] = useState(false);
 
     // 表单状态
@@ -209,6 +206,8 @@ function GoldCatApp() {
     const [validationErrors, setValidationErrors] = useState({ stopLoss: '', takeProfit: '' });
     const [checklist, setChecklist] = useState({ trend: false, close: false, structure: false });
     const [isShaking, setIsShaking] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submission
+    const [isDataLoaded, setIsDataLoaded] = useState(false); // Prevent overwriting local storage before load
 
     const [showCloseTradeModal, setShowCloseTradeModal] = useState(false);
     const [selectedTradeId, setSelectedTradeId] = useState(null);
@@ -224,64 +223,243 @@ function GoldCatApp() {
     // Pattern Management
     const [patterns, setPatterns] = useState(getInitialPatterns(language));
     const [showPatternModal, setShowPatternModal] = useState(false);
+
     const [newPattern, setNewPattern] = useState('');
 
+    // Risk Warning Modal State
+    const [showRiskWarningModal, setShowRiskWarningModal] = useState(false);
+    const [showSettleModal, setShowSettleModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [tradeToDelete, setTradeToDelete] = useState(null);
+    const [pendingTrade, setPendingTrade] = useState(null);
+
+    // Auto-switch patterns on language change if they match the default of the previous language
+    useEffect(() => {
+        const zhDefaults = getInitialPatterns('zh');
+        const enDefaults = getInitialPatterns('en');
+        const areEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+        if (language === 'en' && areEqual(patterns, zhDefaults)) {
+            setPatterns(enDefaults);
+        } else if (language === 'zh' && areEqual(patterns, enDefaults)) {
+            setPatterns(zhDefaults);
+        }
+    }, [language, patterns]);
+
     // Load User Data Effect
     useEffect(() => {
+        setIsDataLoaded(false); // Reset state on user change
+
         const loadUserData = async () => {
-            if (user && user.email) {
-                const userKey = user.email;
+            if (!user || !user.email) return;
 
-                // 1. Load Local Data (Trades, Patterns, Capital)
-                const savedTrades = JSON.parse(localStorage.getItem(`goldcat_trades_${userKey}`)) || [];
-                // 迁移旧的默认 patterns
-                let savedPatterns = JSON.parse(localStorage.getItem(`goldcat_patterns_${userKey}`));
-                const oldDefault = ['突破 (Breakout)', '回调 (Pullback)', '趋势跟随 (Trend)', '反转 (Reversal)', '区间震荡 (Range)'];
-                // 如果没有保存过，或者保存的是旧的默认值（包含混合语言），则使用新的语言特定列表
-                if (!savedPatterns || (savedPatterns.length === 5 && savedPatterns[0].includes('Breakout'))) {
-                    savedPatterns = getInitialPatterns(language);
-                }
-                const savedCapital = parseFloat(localStorage.getItem(`goldcat_total_capital_${userKey}`)) || 10000;
+            const userKey = user.email;
 
-                setTrades(savedTrades);
-                setPatterns(savedPatterns);
-                setTotalCapital(savedCapital);
+            // 1. Load Capital from Local (Immediate)
+            const savedCapitalStr = localStorage.getItem(`goldcat_total_capital_${userKey}`);
+            const savedCapital = parseFloat(savedCapitalStr) || 0;
+            console.log('[Debug] Loading capital immediately:', { key: `goldcat_total_capital_${userKey}`, val: savedCapitalStr, parsed: savedCapital });
+            setTotalCapital(savedCapital);
 
-                // 2. Load Membership from Supabase DB
-                try {
-                    const { data, error } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', user.id)
-                        .single();
+            // 2. Load Patterns from Database
+            try {
+                const { data: patternsData, error: patternsError } = await supabase
+                    .from('user_patterns')
+                    .select('patterns')
+                    .eq('user_id', user.id)
+                    .single();
 
-                    if (data) {
-                        setMembership({
-                            isPremium: data.is_premium,
-                            expiryDate: data.membership_expiry,
-                            maxTrades: data.max_trades || 20
-                        });
+                if (!patternsError && patternsData && patternsData.patterns) {
+                    setPatterns(patternsData.patterns);
+                } else {
+                    // Fallback to localStorage or default
+                    const localPatterns = JSON.parse(localStorage.getItem(`goldcat_patterns_${userKey}`));
+                    const oldDefault = ['突破 (Breakout)', '回调 (Pullback)', '趋势跟随 (Trend)', '反转 (Reversal)', '区间震荡 (Range)'];
+                    let initialPatterns;
+                    if (!localPatterns || (localPatterns.length === 5 && localPatterns[0].includes('Breakout'))) {
+                        initialPatterns = getInitialPatterns(language);
                     } else {
-                        // Fallback if profile doesn't exist yet (should be created by trigger, but just in case)
-                        setMembership({ isPremium: false, expiryDate: null, maxTrades: 20 });
+                        initialPatterns = localPatterns;
                     }
-                } catch (err) {
-                    console.error('Error loading profile:', err);
-                    // Fallback to local or default
-                    const savedMembership = JSON.parse(localStorage.getItem(`goldcat_membership_${userKey}`)) || { isPremium: false, expiryDate: null, maxTrades: 20 };
-                    setMembership(savedMembership);
+                    setPatterns(initialPatterns);
+                    // Migrate to database
+                    await supabase.from('user_patterns').upsert({
+                        user_id: user.id,
+                        patterns: initialPatterns
+                    });
                 }
+            } catch (err) {
+                console.error('Error loading patterns:', err);
+                const localPatterns = JSON.parse(localStorage.getItem(`goldcat_patterns_${userKey}`)) || getInitialPatterns(language);
+                setPatterns(localPatterns);
             }
-            // Don't clear data when user is null - it might be during initial session check
+
+            // 3. Load Trades from Supabase Database
+            try {
+                const { data: dbTrades, error: tradesError } = await supabase
+                    .from('trades')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('timestamp', { ascending: false });
+
+                if (!tradesError && dbTrades) {
+                    // 转换数据库格式到前端格式
+                    const formattedTrades = dbTrades.map(t => {
+                        const riskData = t.risk_analysis || {};
+                        return {
+                            id: t.id,
+                            date: t.date,
+                            timestamp: t.timestamp,
+                            symbol: t.symbol,
+                            direction: t.direction,
+                            tradeType: t.direction === 'long' ? 'buy' : 'sell', // Fix: Map direction back to tradeType for UI
+                            entryPrice: t.entry_price.toString(),
+                            stopLoss: t.stop_loss?.toString() || '',
+                            takeProfit: t.take_profit?.toString() || '',
+                            margin: t.margin.toString(),
+                            leverage: t.leverage.toString(),
+                            timeframe: t.timeframe,
+                            pattern: t.pattern || '',
+                            status: t.status,
+                            profitLoss: t.profit_loss || 0,
+                            violatedDiscipline: t.violated_discipline || false,
+                            notes: t.notes || '',
+                            review: t.review || '',
+                            rrRatio: riskData.rrRatio,
+                            positionSize: riskData.positionSize,
+                            riskPercent: riskData.riskPercent,
+                            accountRiskPercent: riskData.accountRiskPercent,
+                            riskAmount: riskData.riskAmount,
+                            valid: riskData.valid
+                        };
+                    });
+                    setTrades(formattedTrades);
+
+                    // 数据迁移：如果数据库为空但 localStorage 有数据，迁移过去
+                    if (formattedTrades.length === 0) {
+                        const localTrades = JSON.parse(localStorage.getItem(`goldcat_trades_${userKey}`)) || [];
+                        if (localTrades.length > 0) {
+                            console.log('Migrating', localTrades.length, 'trades from localStorage to database...');
+                            for (const trade of localTrades) {
+                                // Fix: Ensure direction is present (map from tradeType if missing)
+                                const direction = trade.direction || (trade.tradeType === 'buy' ? 'long' : 'short');
+
+                                await supabase.from('trades').insert({
+                                    id: trade.id,
+                                    user_id: user.id,
+                                    date: trade.date,
+                                    timestamp: trade.timestamp,
+                                    symbol: trade.symbol,
+                                    direction: direction,
+                                    entry_price: parseFloat(trade.entryPrice),
+                                    stop_loss: trade.stopLoss ? parseFloat(trade.stopLoss) : null,
+                                    take_profit: trade.takeProfit ? parseFloat(trade.takeProfit) : null,
+                                    margin: parseFloat(trade.margin),
+                                    leverage: parseFloat(trade.leverage),
+                                    timeframe: trade.timeframe,
+                                    pattern: trade.pattern,
+                                    status: trade.status,
+                                    profit_loss: trade.profitLoss || 0,
+                                    violated_discipline: trade.violatedDiscipline,
+                                    notes: trade.notes,
+                                    review: trade.review,
+                                    risk_analysis: {
+                                        rrRatio: trade.rrRatio,
+                                        positionSize: trade.positionSize,
+                                        riskPercent: trade.riskPercent,
+                                        accountRiskPercent: trade.accountRiskPercent,
+                                        riskAmount: trade.riskAmount,
+                                        valid: trade.valid
+                                    }
+                                });
+                            }
+                            // Reload after migration
+                            const { data: reloadedTrades } = await supabase
+                                .from('trades')
+                                .select('*')
+                                .eq('user_id', user.id)
+                                .order('timestamp', { ascending: false });
+
+                            if (reloadedTrades) {
+                                const reloadedFormatted = reloadedTrades.map(t => {
+                                    const riskData = t.risk_analysis || {};
+                                    return {
+                                        id: t.id,
+                                        date: t.date,
+                                        timestamp: t.timestamp,
+                                        symbol: t.symbol,
+                                        direction: t.direction,
+                                        tradeType: t.direction === 'long' ? 'buy' : 'sell',
+                                        entryPrice: t.entry_price.toString(),
+                                        stopLoss: t.stop_loss?.toString() || '',
+                                        takeProfit: t.take_profit?.toString() || '',
+                                        margin: t.margin.toString(),
+                                        leverage: t.leverage.toString(),
+                                        timeframe: t.timeframe,
+                                        pattern: t.pattern || '',
+                                        status: t.status,
+                                        profitLoss: t.profit_loss || 0,
+                                        violatedDiscipline: t.violated_discipline || false,
+                                        notes: t.notes || '',
+                                        review: t.review || '',
+                                        rrRatio: riskData.rrRatio,
+                                        positionSize: riskData.positionSize,
+                                        riskPercent: riskData.riskPercent,
+                                        accountRiskPercent: riskData.accountRiskPercent,
+                                        riskAmount: riskData.riskAmount,
+                                        valid: riskData.valid
+                                    };
+                                });
+                                setTrades(reloadedFormatted);
+                            }
+                            console.log('Migration complete!');
+                        }
+                    }
+                } else {
+                    console.error('Error loading trades:', tradesError);
+                    // Fallback to localStorage
+                    const localTrades = JSON.parse(localStorage.getItem(`goldcat_trades_${userKey}`)) || [];
+                    setTrades(localTrades);
+                }
+            } catch (err) {
+                console.error('Unexpected error loading trades:', err);
+                const localTrades = JSON.parse(localStorage.getItem(`goldcat_trades_${userKey}`)) || [];
+                setTrades(localTrades);
+            }
+
+            // 4. Load Membership from Supabase DB
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (data) {
+                    setMembership({
+                        isPremium: data.is_premium,
+                        expiryDate: data.membership_expiry,
+                        maxTrades: data.max_trades || 20
+                    });
+                } else {
+                    setMembership({ isPremium: false, expiryDate: null, maxTrades: 20 });
+                }
+            } catch (err) {
+                console.error('Error loading profile:', err);
+                const savedMembership = JSON.parse(localStorage.getItem(`goldcat_membership_${userKey}`)) || { isPremium: false, expiryDate: null, maxTrades: 20 };
+                setMembership(savedMembership);
+            }
         };
 
-        loadUserData();
+        if (user && user.email) {
+            loadUserData().then(() => {
+                setIsDataLoaded(true);
+            });
+        }
     }, [user]);
 
-    // 持久化副作用 - User Bound
-    // Load User Data Effect
+    // Check active session
     useEffect(() => {
-        // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null);
         });
@@ -320,16 +498,16 @@ function GoldCatApp() {
     }, [paymentMethod, orderNumber]);
 
     useEffect(() => {
-        if (user && user.email) {
+        if (user && user.email && isDataLoaded) {
             localStorage.setItem(`goldcat_trades_${user.email}`, JSON.stringify(trades));
         }
-    }, [trades, user]);
+    }, [trades, user, isDataLoaded]);
 
     useEffect(() => {
-        if (user && user.email) {
+        if (user && user.email && isDataLoaded) {
             localStorage.setItem(`goldcat_total_capital_${user.email}`, totalCapital);
         }
-    }, [totalCapital, user]);
+    }, [totalCapital, user, isDataLoaded]);
 
     // 获取实时 BTC 行情
     useEffect(() => {
@@ -461,58 +639,163 @@ function GoldCatApp() {
         }
     };
 
-    const handleSubmitTrade = () => {
+    const finalizeTrade = async (trade) => {
+        try {
+            // 获取最新用户信息，确保 ID 匹配
+            const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+
+            if (authError || !currentUser) {
+                console.error('Auth error:', authError);
+                alert('您的登录会话已过期，请重新登录后再试。');
+                return;
+            }
+
+            // Debug logs
+            console.log('Current User ID:', currentUser.id);
+
+            // 1. 存入数据库
+            const { error } = await supabase
+                .from('trades')
+                .insert({
+                    id: trade.id,
+                    user_id: currentUser.id, // 使用最新的 currentUser.id
+                    date: trade.date,
+                    timestamp: trade.timestamp,
+                    symbol: trade.symbol,
+                    direction: trade.direction,
+                    entry_price: parseFloat(trade.entryPrice),
+                    stop_loss: trade.stopLoss ? parseFloat(trade.stopLoss) : null,
+                    take_profit: trade.takeProfit ? parseFloat(trade.takeProfit) : null,
+                    margin: parseFloat(trade.margin),
+                    leverage: parseFloat(trade.leverage),
+                    timeframe: trade.timeframe,
+                    pattern: trade.pattern,
+                    status: trade.status,
+                    notes: trade.notes,
+                    risk_analysis: trade.rrRatio || trade.positionSize ? {
+                        rrRatio: trade.rrRatio,
+                        positionSize: trade.positionSize,
+                        riskPercent: trade.riskPercent,
+                        accountRiskPercent: trade.accountRiskPercent,
+                        riskAmount: trade.riskAmount,
+                        valid: trade.valid
+                    } : null
+                });
+
+            if (error) {
+                console.error('Failed to save trade to database:', error);
+                console.error('Error details:', JSON.stringify(error, null, 2));
+                alert('保存交易记录失败: ' + error.message);
+                return;
+            }
+
+            // 2. 更新本地状态
+            setTrades([trade, ...trades]);
+            setShowSuccessToast(true);
+
+            // 重置表单 but keep some preferences
+            setFormData(prev => ({
+                ...prev,
+                symbol: '', entryPrice: '', stopLoss: '', takeProfit: '', notes: '', margin: ''
+            }));
+            setChecklist({ trend: false, close: false, structure: false });
+        } catch (err) {
+            console.error('Unexpected error saving trade:', err);
+            alert('保存交易记录失败: ' + err.message);
+        }
+    };
+    const handleSubmitTrade = async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+        console.log('handleSubmitTrade called');
+
         // 1. 权限检查
         if (!membership.isPremium && trades.length >= membership.maxTrades) {
-            setPaymentMethod(null);
             setShowPaymentModal(true);
+            setPaymentMethod(null);
+            setIsSubmitting(false);
             return;
         }
 
         // 2. 必填检查
         if (!formData.symbol || !formData.entryPrice || !formData.margin) {
             alert("【交易纪律】请完整填写交易要素，不可遗漏。");
+            setIsSubmitting(false);
             return;
         }
 
-        // 3. 盈亏比检查（软性提醒）
-        if (riskAnalysis.valid && riskAnalysis.rrRatio < 1.5) {
-            if (!window.confirm(`⚠️ 警告：当前盈亏比仅为 ${riskAnalysis.rrRatio}，不符合高胜率交易标准。是否强制记录？`)) {
-                return;
-            }
-        }
 
         const newTrade = {
             id: Date.now(),
             date: new Date().toLocaleDateString(),
             timestamp: Date.now(),
             ...formData,
+            direction: formData.tradeType === 'buy' ? 'long' : 'short', // 显式映射 tradeType 到 direction
             ...riskAnalysis,
             status: 'open', // open, win, loss
             profitLoss: 0 // 结单后更新
         };
 
-        setTrades([newTrade, ...trades]);
-
-        // 显示成功反馈
-        // 显示成功反馈
-        setShowSuccessToast(true);
-
-        // 保存自定义形态
-        if (formData.pattern && !customPatterns.includes(formData.pattern)) {
-            setCustomPatterns(prev => [...prev, formData.pattern]);
+        // 3. 盈亏比检查（软性提醒）
+        if (riskAnalysis.valid && riskAnalysis.rrRatio < 1.5) {
+            setPendingTrade(newTrade);
+            setShowRiskWarningModal(true);
+            setIsSubmitting(false);
+            return;
         }
 
-        // 重置表单 but keep some preferences
-        setFormData(prev => ({
-            ...prev,
-            symbol: '', entryPrice: '', stopLoss: '', takeProfit: '', notes: '', margin: ''
-        }));
+        await finalizeTrade(newTrade);
+        setIsSubmitting(false);
+    };
+
+    // Upgrade membership - Redirect to Creem payment page (using Checkout Session API)
+    const handleUpgrade = async () => {
+        if (isUpgrading) return;
+        setIsUpgrading(true);
+
+        try {
+            const config = CREEM_CONFIG[CREEM_CONFIG.CURRENT_ENV];
+            const productId = config.PRODUCT_ID;
+
+            // Call Supabase Edge Function to create Checkout Session
+            const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+                body: {
+                    productId,
+                    email: user?.email,
+                    successUrl: window.location.origin // Automatically get current domain
+                }
+            });
+
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+
+            if (data?.checkout_url) {
+                console.log('Redirecting to:', data.checkout_url);
+                window.open(data.checkout_url, '_blank');
+            } else {
+                throw new Error('No checkout URL returned');
+            }
+
+        } catch (err) {
+            console.error('Upgrade failed:', err);
+            alert('Failed to initiate payment: ' + err.message);
+        } finally {
+            setIsUpgrading(false);
+        }
     };
 
     // 模拟登录
     // 模拟登录 -> Supabase Login
     const handleLogin = async () => {
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(loginForm.email)) {
+            setErrorMessage(language === 'zh' ? '请输入有效的邮箱地址' : 'Please enter a valid email address');
+            setShowErrorToast(true);
+            setTimeout(() => setShowErrorToast(false), 3000);
+            return;
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
             email: loginForm.email,
             password: loginForm.password,
@@ -537,6 +820,16 @@ function GoldCatApp() {
             setTimeout(() => setShowErrorToast(false), 3000);
             return;
         }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(registerForm.email)) {
+            setErrorMessage(language === 'zh' ? '请输入有效的邮箱地址（例如：user@example.com）' : 'Please enter a valid email address (e.g., user@example.com)');
+            setShowErrorToast(true);
+            setTimeout(() => setShowErrorToast(false), 3000);
+            return;
+        }
+
         if (registerForm.password !== registerForm.confirmPassword) {
             setErrorMessage(t('auth.password_mismatch'));
             setShowErrorToast(true);
@@ -578,7 +871,7 @@ function GoldCatApp() {
     };
 
     // 确认结算
-    const confirmSettleTrade = () => {
+    const confirmSettleTrade = async () => {
         if (!closePnL) return;
         const pnlValue = parseFloat(closePnL);
         if (isNaN(pnlValue)) {
@@ -588,21 +881,46 @@ function GoldCatApp() {
             return;
         }
 
-        // 更新交易记录
-        setTrades(trades.map(t =>
-            t.id === selectedTradeId
-                ? { ...t, status: 'closed', profitLoss: pnlValue, violatedDiscipline }
-                : t
-        ));
+        try {
+            // 获取最新用户信息
+            const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+            if (authError || !currentUser) throw new Error('Auth session expired');
 
-        // 更新总资金
-        setTotalCapital(prev => prev + pnlValue);
+            // 1. 更新数据库
+            const { error } = await supabase
+                .from('trades')
+                .update({
+                    status: 'closed',
+                    profit_loss: pnlValue,
+                    violated_discipline: violatedDiscipline
+                })
+                .eq('id', selectedTradeId)
+                .eq('user_id', currentUser.id);
 
-        setShowCloseTradeModal(false);
-        setSelectedTradeId(null);
-        setShowSuccessToast(true);
+            if (error) {
+                console.error('Failed to update trade in database:', error);
+                alert('结算失败，请重试');
+                return;
+            }
+
+            // 2. 更新本地状态
+            setTrades(trades.map(t =>
+                t.id === selectedTradeId
+                    ? { ...t, status: 'closed', profitLoss: pnlValue, violatedDiscipline }
+                    : t
+            ));
+
+            // 更新总资金
+            setTotalCapital(prev => prev + pnlValue);
+
+            setShowCloseTradeModal(false);
+            setSelectedTradeId(null);
+            setShowSuccessToast(true);
+        } catch (err) {
+            console.error('Unexpected error settling trade:', err);
+            alert('结算失败: ' + err.message);
+        }
     };
-
     // 复盘交易
     const handleReviewTrade = (trade) => {
         setSelectedTradeId(trade.id);
@@ -610,25 +928,113 @@ function GoldCatApp() {
         setShowReviewModal(true);
     };
 
-    const saveReview = () => {
-        setTrades(trades.map(t =>
-            t.id === selectedTradeId
-                ? { ...t, review: reviewNotes }
-                : t
-        ));
-        setShowReviewModal(false);
-        setShowSuccessToast(true);
-    };
+    const saveReview = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
+        try {
+            // 获取最新用户信息
+            const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+            if (authError || !currentUser) throw new Error('Auth session expired');
 
-    const addPattern = () => {
-        if (newPattern && !patterns.includes(newPattern)) {
-            setPatterns([...patterns, newPattern]);
-            setNewPattern('');
+            // 1. 更新数据库
+            const { error } = await supabase
+                .from('trades')
+                .update({ review: reviewNotes })
+                .eq('id', selectedTradeId)
+                .eq('user_id', currentUser.id);
+
+            if (error) {
+                console.error('Failed to save review:', error);
+                alert('保存复盘失败，请重试');
+                return;
+            }
+
+            // 2. 更新本地状态
+            setTrades(trades.map(t =>
+                t.id === selectedTradeId
+                    ? { ...t, review: reviewNotes }
+                    : t
+            ));
+            setShowReviewModal(false);
+            setShowSuccessToast(true);
+        } catch (err) {
+            console.error('Unexpected error saving review:', err);
+            alert('保存复盘失败: ' + err.message);
+        } finally {
+            setIsSaving(false);
         }
     };
 
-    const removePattern = (p) => {
-        setPatterns(patterns.filter(item => item !== p));
+    const addPattern = async () => {
+        if (newPattern && !patterns.includes(newPattern)) {
+            const updatedPatterns = [...patterns, newPattern];
+            setPatterns(updatedPatterns);
+            setNewPattern('');
+
+            // Sync to database
+            if (user?.id) {
+                await supabase.from('user_patterns').upsert({
+                    user_id: user.id,
+                    patterns: updatedPatterns
+                });
+            }
+        }
+    };
+
+    const removePattern = async (p) => {
+        const updatedPatterns = patterns.filter(item => item !== p);
+        setPatterns(updatedPatterns);
+
+        // Sync to database
+        if (user?.id) {
+            await supabase.from('user_patterns').upsert({
+                user_id: user.id,
+                patterns: updatedPatterns
+            });
+        }
+    };
+
+    const resetPatterns = async () => {
+        const initialPatterns = getInitialPatterns(language);
+        setPatterns(initialPatterns);
+
+        // Sync to database
+        if (user?.id) {
+            await supabase.from('user_patterns').upsert({
+                user_id: user.id,
+                patterns: initialPatterns
+            });
+        }
+    };
+
+    // 删除交易
+    const removeTrade = async (tradeId) => {
+        if (!confirm(language === 'zh' ? '确定要删除这条交易记录吗？此操作不可恢复。' : 'Are you sure you want to delete this trade? This cannot be undone.')) return;
+
+        try {
+            // 1. 从数据库删除
+            if (user?.id) {
+                const { error } = await supabase
+                    .from('trades')
+                    .delete()
+                    .eq('id', tradeId)
+                    .eq('user_id', user.id);
+
+                if (error) throw error;
+            }
+
+            // 2. 更新本地状态
+            setTrades(prev => prev.filter(t => t.id !== tradeId));
+
+            // 如果删除的是当前正在结算的交易，清除 pendingTrade
+            if (pendingTrade?.id === tradeId) {
+                setPendingTrade(null);
+                setShowSettleModal(false);
+            }
+        } catch (err) {
+            console.error('Failed to delete trade:', err);
+            alert((language === 'zh' ? '删除失败: ' : 'Failed to delete: ') + err.message);
+        }
     };
 
     // 退出登录
@@ -700,6 +1106,92 @@ function GoldCatApp() {
         return { total, wins, winRate, totalPnL };
     }, [trades]);
 
+    // Trading Pair Risk Detection
+    const tradingPairRisk = useMemo(() => {
+        if (!formData.symbol) return null;
+
+        const pair = formData.symbol;
+        const pairTrades = trades.filter(t => t.symbol === pair && t.status === 'closed');
+
+        // Check 1: Same-day losses
+        const today = new Date().toDateString();
+        const todayLosses = pairTrades.filter(t => {
+            const tradeDate = new Date(t.createdAt || t.timestamp).toDateString();
+            return tradeDate === today && (t.profitLoss || 0) < 0;
+        }).length;
+
+        // Check 2: Historical loss rate
+        const totalTrades = pairTrades.length;
+        const losses = pairTrades.filter(t => (t.profitLoss || 0) < 0).length;
+        const lossRate = totalTrades > 0 ? (losses / totalTrades) : 0;
+
+        return {
+            todayLosses,
+            totalTrades,
+            lossRate,
+            showDailyWarning: todayLosses >= 2,
+            showHistoricalWarning: totalTrades >= 5 && lossRate > 0.8
+        };
+    }, [formData.symbol, trades]);
+
+
+    // 导出交易记录
+    // 导出交易记录
+    const handleExportTrades = () => {
+        if (trades.length === 0) return;
+
+        // Helper to escape CSV fields
+        const escapeCsvField = (field) => {
+            if (field === null || field === undefined) return '';
+            const stringField = String(field);
+            if (stringField.includes(',') || stringField.includes('\n') || stringField.includes('"')) {
+                return `"${stringField.replace(/"/g, '""')}"`;
+            }
+            return stringField;
+        };
+
+        // Define CSV headers
+        const headers = [
+            'Date', 'Symbol', 'Direction', 'Entry Price', 'Stop Loss', 'Take Profit',
+            'Status', 'Result', 'Profit/Loss', 'R:R Ratio', 'Pattern', 'Timeframe', 'Review'
+        ];
+
+        // Convert trades to CSV rows
+        const csvRows = trades.map(trade => {
+            const date = new Date(trade.date).toLocaleDateString();
+            const symbol = trade.symbol;
+            const direction = trade.direction === 'long' ? 'Long' : 'Short';
+            const entry = trade.entryPrice;
+            const sl = trade.stopLoss || '-';
+            const tp = trade.takeProfit || '-';
+            const status = trade.status;
+            const result = trade.result || '-';
+            const pnl = trade.profitLoss || 0;
+            const rr = trade.rrRatio;
+            const pattern = trade.pattern || '-';
+            const tf = trade.timeframe || '-';
+            const review = trade.review || '';
+
+            return [
+                date, symbol, direction, entry, sl, tp, status, result, pnl, rr, pattern, tf, review
+            ].map(escapeCsvField).join(',');
+        });
+
+        // Combine headers and rows
+        const csvContent = [headers.join(','), ...csvRows].join('\n');
+
+        // Create download link with BOM for Excel/WPS UTF-8 support
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `trades_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     // --- 4. 界面渲染 ---
 
     return (
@@ -716,7 +1208,7 @@ function GoldCatApp() {
                             <h1 className="text-lg font-black text-white tracking-tighter leading-none">
                                 {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v0.1.0</span>
                             </h1>
-                            <p className="text-[10px] text-gray-500 font-mono tracking-widest">{t('slogan')}</p>
+
                         </div>
                     </div>
 
@@ -730,7 +1222,7 @@ function GoldCatApp() {
                                     </span>
                                 </div>
                                 {!membership.isPremium && (
-                                    <button onClick={() => { setPaymentMethod(null); setShowPaymentModal(true); }} className="bg-amber-600 hover:bg-amber-500 text-black text-xs font-bold px-3 py-1.5 rounded-full animate-pulse flex items-center gap-1">
+                                    <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="bg-amber-600 hover:bg-amber-500 text-black text-xs font-bold px-3 py-1.5 rounded-full animate-pulse flex items-center gap-1">
                                         <Lock className="w-3 h-3" /> {t('nav.upgrade')}
                                     </button>
                                 )}
@@ -748,9 +1240,9 @@ function GoldCatApp() {
                         )}
                         <button
                             onClick={() => setLanguage(l => l === 'zh' ? 'en' : 'zh')}
-                            className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 text-xs font-bold text-gray-400 hover:text-white flex items-center justify-center"
+                            className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 text-xs font-bold text-gray-400 hover:text-white flex items-center justify-center transition-colors"
                         >
-                            {language === 'zh' ? 'EN' : '中'}
+                            <Globe className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
@@ -767,7 +1259,7 @@ function GoldCatApp() {
                             user={user}
                             isPremium={membership.isPremium}
                             onOpenSettings={() => setShowSettingsModal(true)}
-                            onUpgrade={() => { setPaymentMethod(null); setShowPaymentModal(true); }}
+                            onUpgrade={() => { setShowPaymentModal(true); setPaymentMethod(null); }}
                         />
                     </div>
                 )
@@ -834,9 +1326,6 @@ function GoldCatApp() {
 
                             <h1 className="text-5xl md:text-8xl font-black text-white mb-8 tracking-tight leading-tight drop-shadow-2xl">
                                 {t('home.title')}
-                                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-500 to-amber-600 pb-2">
-                                    {t('slogan')}
-                                </span>
                             </h1>
 
                             <p className="text-gray-300 text-lg md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
@@ -986,12 +1475,29 @@ function GoldCatApp() {
                                             </div>
                                         </div>
 
+                                        {/* Trading Pair Risk Warnings */}
+                                        {tradingPairRisk?.showDailyWarning && (
+                                            <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                                <div className="text-xs text-red-400 leading-relaxed">
+                                                    <span className="font-bold">{t('risk.daily_loss_warning')}</span>
+                                                    <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {tradingPairRisk?.showHistoricalWarning && (
+                                            <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                                                <div className="text-xs text-orange-400 leading-relaxed">
+                                                    <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
+                                                    <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* 第二行：资金管理 */}
                                         <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <Wallet className="w-4 h-4 text-amber-500" />
-                                                <span className="text-sm font-bold text-gray-300">{t('form.capital_management')}</span>
-                                            </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
@@ -1080,8 +1586,7 @@ function GoldCatApp() {
                                                     }}
                                                     className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
                                                 >
-                                                    <PlusCircle className="w-5 h-5" />
-                                                    {t('form.submit_btn')}
+                                                    {isSubmitting ? <span className="animate-spin">⌛</span> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
                                                 </button>)}
                                             <p className="text-center text-xs text-gray-600 mt-3">
                                                 {t('form.honest_note')}
@@ -1091,115 +1596,173 @@ function GoldCatApp() {
                                 </div>
 
                                 {/* 右侧：实时风控面板 */}
-                                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
-                                    <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
-                                        <Shield className="w-4 h-4 text-amber-500" />
-                                        {t('risk.title')}
-                                    </h3>
+                                <div className="space-y-6">
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
+                                        <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
+                                            <Shield className="w-4 h-4 text-amber-500" />
+                                            {t('risk.title')}
+                                        </h3>
 
-
-                                    {/* Total Capital Management */}
-                                    <div className="mb-4 p-3 bg-neutral-800 rounded-xl border border-neutral-700">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
-                                            {!isEditingCapital && (
-                                                <button onClick={() => setIsEditingCapital(true)} className="text-amber-500 hover:text-amber-400">
-                                                    <Edit3 className="w-3 h-3" />
-                                                </button>
+                                        {/* Total Capital Management */}
+                                        <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
+                                                {!isEditingCapital && (
+                                                    <button onClick={() => setIsEditingCapital(true)} className="text-amber-500 hover:text-amber-400">
+                                                        <Edit3 className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {isEditingCapital ? (
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        value={totalCapital}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (val === '' || val === '-') {
+                                                                setTotalCapital('');
+                                                            } else {
+                                                                const parsed = parseFloat(val);
+                                                                setTotalCapital(isNaN(parsed) ? 0 : parsed);
+                                                            }
+                                                        }}
+                                                        className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
+                                                        autoFocus
+                                                    />
+                                                    <button onClick={() => setIsEditingCapital(false)} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
+                                                </div>
+                                            ) : (
+                                                <div className="text-xl font-black font-mono text-white tracking-wider">
+                                                    ${(totalCapital || 0).toLocaleString()}
+                                                </div>
                                             )}
                                         </div>
-                                        {isEditingCapital ? (
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    value={totalCapital}
-                                                    onChange={(e) => setTotalCapital(parseFloat(e.target.value) || 0)}
-                                                    className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
-                                                    autoFocus
-                                                />
-                                                <button onClick={() => setIsEditingCapital(false)} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
+
+                                        <div className="space-y-4">
+                                            <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
+                                                <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
+                                                <div className="text-3xl font-black font-mono flex items-end gap-2">
+                                                    {riskAnalysis.rrRatio || '0.00'}
+                                                    <span className="text-sm font-normal text-gray-400 mb-1">
+                                                        {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        ) : (
-                                            <div className="text-xl font-black font-mono text-white tracking-wider">
-                                                ${totalCapital.toLocaleString()}
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="p-3 bg-neutral-800 rounded-lg">
+                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
+                                                    <div className="text-lg font-bold font-mono text-white notranslate">
+                                                        {riskAnalysis.positionSize.toLocaleString()} USDT
+                                                    </div>
+                                                </div>
+                                                <div className="p-3 bg-neutral-800 rounded-lg">
+                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
+                                                    <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
+                                                        {riskAnalysis.riskPercent}%
+                                                    </div>
+                                                </div>
                                             </div>
-                                        )}
+
+                                            {riskAnalysis.riskPercent > 10 && (
+                                                <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
+                                                    <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                                                    <p className="text-xs text-red-400 leading-relaxed">
+                                                        <span className="font-bold">{t('risk.warning_title')}</span>
+                                                        {t('risk.warning_msg')}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {riskAnalysis.accountRiskPercent > 10 && (
+                                                <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > 15 ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
+                                                    <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-500' : 'text-yellow-500'}`} />
+                                                    <div className="text-xs leading-relaxed">
+                                                        <p className={`font-bold ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-400' : 'text-yellow-400'}`}>
+                                                            {riskAnalysis.accountRiskPercent > 15 ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
+                                                        </p>
+                                                        <p className="text-gray-400">
+                                                            当前账户风险为 {riskAnalysis.accountRiskPercent}%，
+                                                            {riskAnalysis.accountRiskPercent > 15 ? '严重超出安全范围 (>15%)！建议大幅降低仓位。' : '已超出建议值 (10%)，请谨慎操作。'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="mt-4 pt-4 border-t border-neutral-800">
+                                                <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { id: 'trend', label: t('risk.check_trend') },
+                                                        { id: 'close', label: t('risk.check_close') },
+                                                        { id: 'structure', label: t('risk.check_structure') }
+                                                    ].map(item => (
+                                                        <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
+                                                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
+                                                                {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
+                                                            </div>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="hidden"
+                                                                checked={checklist[item.id]}
+                                                                onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                                            />
+                                                            <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
-                                            <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
-                                            <div className="text-3xl font-black font-mono flex items-end gap-2">
-                                                {riskAnalysis.rrRatio || '0.00'}
-                                                <span className="text-sm font-normal text-gray-400 mb-1">
-                                                    {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
-                                                </span>
+                                    {/* Market Sentiment (Moved from AI Analysis) */}
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+                                        <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
+                                            <Activity className="w-4 h-4 text-blue-400" />
+                                            <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
+                                        </div>
+
+                                        {/* BTC Price */}
+                                        <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
+                                                    <span className="text-[#F7931A] font-bold text-xs">₿</span>
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] text-gray-400">BTC/USDT</div>
+                                                    <div className="text-sm font-bold text-white">
+                                                        ${(btcMarket.price || 0).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                    {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-3 bg-neutral-800 rounded-lg">
-                                                <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
-                                                <div className="text-lg font-bold font-mono text-white notranslate">
-                                                    {riskAnalysis.positionSize.toLocaleString()} USDT
-                                                </div>
-                                            </div>
-                                            <div className="p-3 bg-neutral-800 rounded-lg">
-                                                <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
-                                                <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 5 ? 'text-red-500' : 'text-white'}`}>
-                                                    {riskAnalysis.riskPercent}%
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {riskAnalysis.riskPercent > 5 && (
-                                            <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
-                                                <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                                <p className="text-xs text-red-400 leading-relaxed">
-                                                    <span className="font-bold">{t('risk.warning_title')}</span>
-                                                    {t('risk.warning_msg')}
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        {riskAnalysis.accountRiskPercent > 2 && (
-                                            <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > 5 ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
-                                                <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > 5 ? 'text-red-500' : 'text-yellow-500'}`} />
-                                                <div className="text-xs leading-relaxed">
-                                                    <p className={`font-bold ${riskAnalysis.accountRiskPercent > 5 ? 'text-red-400' : 'text-yellow-400'}`}>
-                                                        {riskAnalysis.accountRiskPercent > 5 ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
-                                                    </p>
-                                                    <p className="text-gray-400">
-                                                        当前账户风险为 {riskAnalysis.accountRiskPercent}%，
-                                                        {riskAnalysis.accountRiskPercent > 5 ? '严重超出安全范围 (>5%)！建议大幅降低仓位。' : '已超出建议值 (2%)，请谨慎操作。'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="mt-4 pt-4 border-t border-neutral-800">
-                                            <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
-                                            <div className="space-y-2">
-                                                {[
-                                                    { id: 'trend', label: t('risk.check_trend') },
-                                                    { id: 'close', label: t('risk.check_close') },
-                                                    { id: 'structure', label: t('risk.check_structure') }
-                                                ].map(item => (
-                                                    <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
-                                                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
-                                                            {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
+                                        {/* Fear & Greed */}
+                                        <div className="flex flex-col items-center justify-center py-2">
+                                            {(() => {
+                                                const fearIndex = 30 + (new Date().getDate() % 20);
+                                                return (
+                                                    <>
+                                                        <div className="flex items-baseline gap-2 mb-2">
+                                                            <span className="text-2xl font-black text-white">{fearIndex}</span>
+                                                            <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
                                                         </div>
-                                                        <input
-                                                            type="checkbox"
-                                                            className="hidden"
-                                                            checked={checklist[item.id]}
-                                                            onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                                                        />
-                                                        <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
+                                                        <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                                                            <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
+                                        <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
+                                            {t('ai.sentiment_tip')}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1210,10 +1773,21 @@ function GoldCatApp() {
                             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
                                 <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
                                     <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
-                                    <div className="text-sm text-gray-400">
-                                        {t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span>
-                                        <span className="mx-2">|</span>
-                                        {t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span>
+                                    <div className="text-sm text-gray-400 flex items-center gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <span>交易数量: <span className="text-white font-bold">{trades.length}</span></span>
+                                            <span className="text-gray-600">|</span>
+                                            <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
+                                            <span className="text-gray-600">|</span>
+                                            <span>{t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span></span>
+                                        </div>
+                                        <button
+                                            onClick={handleExportTrades}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors"
+                                        >
+                                            <FileText className="w-3.5 h-3.5" />
+                                            {t('journal.export_csv')}
+                                        </button>
                                     </div>
                                 </div>
                                 {trades.length === 0 ? (
@@ -1231,7 +1805,8 @@ function GoldCatApp() {
                                                     <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.basis')}</th>
                                                     <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.rr')}</th>
                                                     <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.status')}</th>
-                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.action')}</th>
+                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.review')}</th>
+                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center">{t('journal.columns.action')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-neutral-800">
@@ -1243,11 +1818,6 @@ function GoldCatApp() {
                                                             <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
                                                                 {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
                                                             </div>
-                                                            {trade.review && (
-                                                                <div className="text-xs text-gray-500 mt-1 truncate max-w-[200px] flex items-center gap-1" title={trade.review}>
-                                                                    <Edit3 className="w-3 h-3 inline" /> {trade.review}
-                                                                </div>
-                                                            )}
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700">
@@ -1255,7 +1825,33 @@ function GoldCatApp() {
                                                             </span>
                                                             <span className="ml-2 text-gray-400">{trade.pattern || '-'}</span>
                                                         </td>
-                                                        <td className="px-6 py-4 font-mono">{trade.rrRatio}</td>
+                                                        <td className="px-6 py-4 font-mono group relative">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span>{trade.rrRatio}</span>
+                                                                <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
+                                                            </div>
+                                                            {/* Tooltip with price details */}
+                                                            <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
+                                                                <div className="space-y-1.5">
+                                                                    <div className="flex justify-between gap-3">
+                                                                        <span className="text-gray-400">{t('journal.entry_price')}</span>
+                                                                        <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
+                                                                    </div>
+                                                                    {trade.stopLoss && (
+                                                                        <div className="flex justify-between gap-3">
+                                                                            <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
+                                                                            <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {trade.takeProfit && (
+                                                                        <div className="flex justify-between gap-3">
+                                                                            <span className="text-gray-400">{t('journal.take_profit_price')}</span>
+                                                                            <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </td>
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center gap-2">
                                                                 {trade.status === 'open' ? (
@@ -1263,40 +1859,64 @@ function GoldCatApp() {
                                                                 ) : (
                                                                     <>
                                                                         <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                                            {trade.profitLoss >= 0 ? t('journal.status.profit') : t('journal.status.loss')} ${Math.abs(trade.profitLoss).toFixed(2)}
+                                                                            {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
                                                                         </span>
                                                                         {trade.violatedDiscipline && (
-                                                                            <span className="text-red-500 text-base" title="违反交易纪律">⚠️</span>
+                                                                            <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
                                                                         )}
                                                                     </>
                                                                 )}
                                                             </div>
                                                         </td>
+                                                        <td className="px-6 py-4">
+                                                            {trade.review ? (
+                                                                <div className="text-xs text-gray-400 w-48 line-clamp-2 break-words" title={trade.review}>
+                                                                    {trade.review}
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-neutral-700">-</span>
+                                                            )}
+                                                        </td>
                                                         <td className="px-6 py-4 flex gap-2">
                                                             {trade.status === 'open' ? (
-                                                                <button
-                                                                    onClick={() => handleSettleTrade(trade.id)}
-                                                                    className="text-amber-500 hover:text-amber-400 font-bold transition-colors text-xs border border-amber-500/30 px-2 py-1 rounded"
-                                                                >
-                                                                    {t('journal.settle')}
-                                                                </button>
+                                                                <div className="w-24 text-center">
+                                                                    <button
+                                                                        onClick={() => handleSettleTrade(trade.id)}
+                                                                        className="text-amber-500 hover:text-amber-400 font-bold transition-colors text-xs border border-amber-500/30 px-2 py-1 rounded w-full"
+                                                                    >
+                                                                        {t('journal.settle')}
+                                                                    </button>
+                                                                </div>
                                                             ) : (
-                                                                <span className="text-gray-600 cursor-not-allowed text-xs px-2 py-1">{t('journal.status.closed')}</span>
+                                                                <div className="w-24 text-center">
+                                                                    <span className="text-gray-600 cursor-not-allowed text-xs px-2 py-1">{t('journal.status.closed')}</span>
+                                                                </div>
                                                             )}
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     handleReviewTrade(trade);
                                                                 }}
-                                                                className={`text-xs transition-colors flex items-center gap-1 ${trade.review ? 'text-amber-500 font-bold' : 'text-gray-500 hover:text-white'}`}
+                                                                className={`text-xs transition-colors flex items-center justify-center gap-1 w-[80px] ${trade.review ? 'text-amber-500 font-bold' : 'text-gray-500 hover:text-white'}`}
                                                             >
                                                                 {trade.review ? (
                                                                     <>
-                                                                        <CheckCircle2 className="w-3 h-3" /> 已复盘
+                                                                        <CheckCircle2 className="w-3 h-3" /> {t('journal.reviewed')}
                                                                     </>
                                                                 ) : (
-                                                                    '复盘'
+                                                                    t('journal.review')
                                                                 )}
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setTradeToDelete(trade);
+                                                                    setShowDeleteModal(true);
+                                                                }}
+                                                                className="text-gray-600 hover:text-red-500 transition-colors p-1"
+                                                                title={language === 'zh' ? '删除交易' : 'Delete Trade'}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -1320,7 +1940,7 @@ function GoldCatApp() {
                                         <p className="text-gray-400 max-w-xl mb-8 text-lg relative z-10">
                                             {t('ai.locked_desc')}
                                         </p>
-                                        <button onClick={() => { setPaymentMethod(null); setShowPaymentModal(true); }} className="relative z-10 bg-amber-500 hover:bg-amber-400 text-black font-bold px-10 py-4 rounded-xl shadow-xl shadow-amber-500/20 text-lg hover:scale-105 transition-transform flex items-center gap-2">
+                                        <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="relative z-10 bg-amber-500 hover:bg-amber-400 text-black font-bold px-10 py-4 rounded-xl shadow-xl shadow-amber-500/20 text-lg hover:scale-105 transition-transform flex items-center gap-2">
                                             <Crown className="w-5 h-5" /> {t('ai.unlock_btn')}
                                         </button>
                                     </div>
@@ -1328,45 +1948,50 @@ function GoldCatApp() {
 
                                 {membership.isPremium && (
                                     <>
-                                        <div className="lg:col-span-2 space-y-6">
+                                        <div className="lg:col-span-3 space-y-6">
                                             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
                                                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                                                     <Brain className="w-5 h-5 text-amber-500" />
                                                     {t('ai.gene_title')}
                                                 </h3>
-                                                <div className="mb-6 bg-neutral-800/50 border border-neutral-700 rounded-xl p-4 flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
-                                                            <span className="text-[#F7931A] font-bold">₿</span>
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-xs text-gray-400">{t('ai.btc_sentiment')}</div>
-                                                            <div className="text-sm font-bold text-white">
-                                                                ${(btcMarket.price || 0).toLocaleString()}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className={`text-lg font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                            {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
-                                                        </div>
-                                                        <div className="text-xs text-gray-500">
-                                                            {Math.abs(btcMarket.change24h) < 0.5 ? '市场横盘震荡' : (btcMarket.change24h > 0 ? t('ai.bullish') : t('ai.bearish'))}
-                                                        </div>
-                                                    </div>
-                                                </div>
+
                                                 {(() => {
-                                                    // 1. Calculate Best Pattern
+                                                    // 只分析已结算的交易
+                                                    const settledTrades = trades.filter(t => t.status === 'closed');
+
+                                                    // 如果没有已结算的交易，显示提示信息
+                                                    if (settledTrades.length === 0) {
+                                                        return (
+                                                            <div className="text-center py-12">
+                                                                <div className="mb-4">
+                                                                    <Activity className="w-16 h-16 mx-auto text-gray-600" />
+                                                                </div>
+                                                                <div className="text-lg font-bold text-gray-400 mb-2">
+                                                                    {language === 'zh' ? '数据不足' : 'Insufficient Data'}
+                                                                </div>
+                                                                <div className="text-sm text-gray-500">
+                                                                    {language === 'zh'
+                                                                        ? '请至少结算一笔交易后，AI 才能为您生成分析报告。'
+                                                                        : 'Please settle at least one trade for AI analysis.'}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+
+                                                    // 1. Calculate Best Pattern (只用已结算的交易)
                                                     const patternStats = {};
-                                                    trades.forEach(t => {
-                                                        const p = t.pattern || '未记录';
+                                                    settledTrades.forEach(trade => {
+                                                        const p = trade.pattern || t('ai.unrecorded');
                                                         if (!patternStats[p]) patternStats[p] = { wins: 0, total: 0 };
                                                         patternStats[p].total++;
-                                                        if (t.profitLoss > 0) patternStats[p].wins++;
+                                                        if (trade.profitLoss > 0) patternStats[p].wins++;
                                                     });
-                                                    let bestPattern = '数据不足';
+                                                    let bestPattern = t('ai.not_enough_data');
                                                     let bestWinRate = 0;
                                                     Object.entries(patternStats).forEach(([pattern, stats]) => {
+                                                        // Skip 'Unrecorded' if possible, unless it's the only one
+                                                        if (pattern === t('ai.unrecorded') && Object.keys(patternStats).length > 1) return;
+
                                                         const rate = stats.wins / stats.total;
                                                         if (rate >= bestWinRate && stats.total >= 1) {
                                                             bestWinRate = rate;
@@ -1374,15 +1999,15 @@ function GoldCatApp() {
                                                         }
                                                     });
 
-                                                    // 2. Calculate Worst Timeframe
+                                                    // 2. Calculate Worst Timeframe (只用已结算的交易)
                                                     const tfStats = {};
-                                                    trades.forEach(t => {
-                                                        const tf = t.timeframe || '未记录';
+                                                    settledTrades.forEach(trade => {
+                                                        const tf = trade.timeframe || t('ai.unrecorded');
                                                         if (!tfStats[tf]) tfStats[tf] = { losses: 0, total: 0 };
                                                         tfStats[tf].total++;
-                                                        if (t.profitLoss < 0) tfStats[tf].losses++;
+                                                        if (trade.profitLoss < 0) tfStats[tf].losses++;
                                                     });
-                                                    let worstTimeframe = '数据不足';
+                                                    let worstTimeframe = t('ai.not_enough_data');
                                                     let worstLossRate = -1;
                                                     Object.entries(tfStats).forEach(([tf, stats]) => {
                                                         const rate = stats.losses / stats.total;
@@ -1392,15 +2017,15 @@ function GoldCatApp() {
                                                         }
                                                     });
 
-                                                    // 3. Calculate Discipline Score
+                                                    // 3. Calculate Discipline Score (只用已结算的交易)
                                                     // Base 100, deduct for bad R:R, deduct for large losses
                                                     let score = 100;
-                                                    if (trades.length > 0) {
-                                                        const badRRTrades = trades.filter(t => (parseFloat(t.rrRatio) || 0) < 1.5).length;
-                                                        score -= (badRRTrades / trades.length) * 30;
+                                                    if (settledTrades.length > 0) {
+                                                        const badRRTrades = settledTrades.filter(t => (parseFloat(t.rrRatio) || 0) < 1.5).length;
+                                                        score -= (badRRTrades / settledTrades.length) * 30;
 
-                                                        const losingTrades = trades.filter(t => t.profitLoss < 0);
-                                                        const winningTrades = trades.filter(t => t.profitLoss > 0);
+                                                        const losingTrades = settledTrades.filter(t => t.profitLoss < 0);
+                                                        const winningTrades = settledTrades.filter(t => t.profitLoss > 0);
 
                                                         const avgLoss = losingTrades.length > 0
                                                             ? losingTrades.reduce((acc, t) => acc + Math.abs(t.profitLoss), 0) / losingTrades.length
@@ -1412,12 +2037,12 @@ function GoldCatApp() {
                                                         if (avgLoss > avgWin) score -= 20;
                                                     }
 
-                                                    // 4. Review & PnL Check
-                                                    const reviewedTrades = trades.filter(t => t.review && t.review.length > 5).length;
-                                                    const reviewRate = trades.length > 0 ? reviewedTrades / trades.length : 0;
+                                                    // 4. Review & PnL Check (只用已结算的交易)
+                                                    const reviewedTrades = settledTrades.filter(t => t.review && t.review.length > 5).length;
+                                                    const reviewRate = settledTrades.length > 0 ? reviewedTrades / settledTrades.length : 0;
                                                     if (reviewRate < 0.5) score -= 10; // Deduct if less than 50% reviewed
 
-                                                    const totalPnL = trades.reduce((acc, t) => acc + (t.profitLoss || 0), 0);
+                                                    const totalPnL = settledTrades.reduce((acc, t) => acc + (t.profitLoss || 0), 0);
 
                                                     score = Math.max(0, Math.round(score));
 
@@ -1426,18 +2051,43 @@ function GoldCatApp() {
                                                             <div className="grid grid-cols-3 gap-4 mb-6">
                                                                 <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700">
                                                                     <div className="text-xs text-gray-500 mb-1">{t('ai.best_pattern')}</div>
-                                                                    <div className="text-lg font-bold text-green-400">{bestPattern}</div>
-                                                                    <div className="text-xs text-gray-600 mt-1">{t('journal.win_rate')} {bestPattern !== '数据不足' ? (bestWinRate * 100).toFixed(0) : 0}%</div>
+                                                                    {settledTrades.length < 5 ? (
+                                                                        <div className="text-sm text-gray-500 py-2">{language === 'zh' ? '数据不足' : 'Insufficient Data'}</div>
+                                                                    ) : (
+                                                                        <>
+                                                                            <div className="text-lg font-bold text-green-400">{bestPattern}</div>
+                                                                            <div className="text-xs text-gray-600 mt-1">{t('journal.win_rate')} {bestPattern !== t('ai.not_enough_data') ? (bestWinRate * 100).toFixed(0) : 0}%</div>
+                                                                        </>
+                                                                    )}
                                                                 </div>
                                                                 <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700">
                                                                     <div className="text-xs text-gray-500 mb-1">{t('ai.worst_timeframe')}</div>
-                                                                    <div className="text-lg font-bold text-red-400">{worstTimeframe}</div>
-                                                                    <div className="text-xs text-gray-600 mt-1">{t('journal.status.loss')} {worstTimeframe !== '数据不足' ? (worstLossRate * 100).toFixed(0) : 0}%</div>
+                                                                    {settledTrades.length < 5 ? (
+                                                                        <div className="text-sm text-gray-500 py-2">{language === 'zh' ? '数据不足' : 'Insufficient Data'}</div>
+                                                                    ) : (
+                                                                        <>
+                                                                            <div className="text-lg font-bold text-red-400">{worstTimeframe}</div>
+                                                                            <div className="text-xs text-gray-600 mt-1">{t('journal.status.loss')} {worstTimeframe !== t('ai.not_enough_data') ? (worstLossRate * 100).toFixed(0) : 0}%</div>
+                                                                        </>
+                                                                    )}
                                                                 </div>
-                                                                <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700">
-                                                                    <div className="text-xs text-gray-500 mb-1">{t('ai.discipline_score')}</div>
+                                                                <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700 relative group">
+                                                                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                        <div className="text-xs text-gray-500 border-b border-dashed border-gray-600 inline-block">{t('ai.discipline_score')}</div>
+                                                                        <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors cursor-help" />
+                                                                    </div>
                                                                     <div className={`text-lg font-bold ${score >= 80 ? 'text-green-500' : score >= 60 ? 'text-amber-500' : 'text-red-500'}`}>{score}/100</div>
                                                                     <div className="text-xs text-gray-600 mt-1">{score >= 80 ? t('ai.score_excellent') : score >= 60 ? t('ai.score_good') : t('ai.score_bad')}</div>
+
+                                                                    {/* Tooltip */}
+                                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                                                        <div className="font-bold text-white mb-1">评分规则：</div>
+                                                                        <ul className="list-disc list-inside space-y-1">
+                                                                            <li><span className="text-red-400">盈亏比 &lt; 1.5</span>：扣分 (权重最高)</li>
+                                                                            <li><span className="text-red-400">平均亏损 &gt; 盈利</span>：扣 20 分</li>
+                                                                            <li><span className="text-amber-500">复盘率 &lt; 50%</span>：扣 10 分</li>
+                                                                        </ul>
+                                                                    </div>
                                                                 </div>
                                                             </div>
 
@@ -1454,38 +2104,42 @@ function GoldCatApp() {
                                                                             {t('ai.diagnosis_pattern', { pattern: bestPattern })}
                                                                             {t('ai.diagnosis_timeframe', { timeframe: worstTimeframe })}
                                                                             {score < 60 && t('ai.diagnosis_discipline')}
-                                                                            {reviewRate < 0.5 && <span className="block text-amber-500 mt-1">⚠️ 您仅复盘了 {(reviewRate * 100).toFixed(0)}% 的交易。复盘是提升交易认知的关键！</span>}
+                                                                            {reviewRate < 0.5 && <span className="block text-amber-500 mt-1">⚠️ {t('ai.review_warning', { rate: (reviewRate * 100).toFixed(0) })}</span>}
                                                                             <span className={`block mt-2 font-bold ${totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                当前总盈亏: {totalPnL >= 0 ? '+' : ''}{totalPnL.toFixed(2)} USDT。
-                                                                                {totalPnL < 0 ? ' 请暂停交易，检查是否在抗单或频繁止损。' : ' 保持良好的盈利节奏！'}
+                                                                                {t('ai.pnl_status', {
+                                                                                    pnl: (totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2) + ' USDT',
+                                                                                    comment: totalPnL < 0 ? t('ai.pnl_comment_bad') : t('ai.pnl_comment_good')
+                                                                                })}
                                                                             </span>
 
                                                                             {/* 详细统计分析 */}
                                                                             <div className="mt-4 p-3 bg-neutral-900/50 rounded-lg border border-neutral-700">
-                                                                                <div className="text-xs font-bold text-amber-400 mb-2">📊 详细数据分析</div>
+                                                                                <div className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-2">
+                                                                                    <BarChart3 className="w-3 h-3" /> {t('ai.detailed_analysis')}
+                                                                                </div>
                                                                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                                                                     <div>
-                                                                                        <span className="text-gray-500">📈 做多胜率：</span>
+                                                                                        <span className="text-gray-500 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {t('ai.long_win_rate')}:</span>
                                                                                         <span className="text-green-400 font-bold">
                                                                                             {(() => {
-                                                                                                const longs = trades.filter(t => t.tradeType === 'buy' && t.status === 'closed');
+                                                                                                const longs = settledTrades.filter(t => t.direction === 'long' || t.tradeType === 'buy');
                                                                                                 const longWins = longs.filter(t => t.profitLoss > 0).length;
                                                                                                 return longs.length > 0 ? ((longWins / longs.length) * 100).toFixed(0) + '%' : 'N/A';
                                                                                             })()}
                                                                                         </span>
                                                                                     </div>
                                                                                     <div>
-                                                                                        <span className="text-gray-500">📉 做空胜率：</span>
+                                                                                        <span className="text-gray-500 flex items-center gap-1"><TrendingDown className="w-3 h-3" /> {t('ai.short_win_rate')}:</span>
                                                                                         <span className="text-red-400 font-bold">
                                                                                             {(() => {
-                                                                                                const shorts = trades.filter(t => t.tradeType === 'sell' && t.status === 'closed');
+                                                                                                const shorts = settledTrades.filter(t => t.direction === 'short' || t.tradeType === 'sell');
                                                                                                 const shortWins = shorts.filter(t => t.profitLoss > 0).length;
                                                                                                 return shorts.length > 0 ? ((shortWins / shorts.length) * 100).toFixed(0) + '%' : 'N/A';
                                                                                             })()}
                                                                                         </span>
                                                                                     </div>
                                                                                     <div>
-                                                                                        <span className="text-gray-500">💰 平均盈利：</span>
+                                                                                        <span className="text-gray-500 flex items-center gap-1"><DollarSign className="w-3 h-3" /> {t('ai.avg_profit_label')}:</span>
                                                                                         <span className="text-green-400 font-bold">
                                                                                             {(() => {
                                                                                                 const wins = trades.filter(t => t.profitLoss > 0);
@@ -1495,7 +2149,7 @@ function GoldCatApp() {
                                                                                         </span>
                                                                                     </div>
                                                                                     <div>
-                                                                                        <span className="text-gray-500">📛 平均亏损：</span>
+                                                                                        <span className="text-gray-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {t('ai.avg_loss_label')}:</span>
                                                                                         <span className="text-red-400 font-bold">
                                                                                             {(() => {
                                                                                                 const losses = trades.filter(t => t.profitLoss < 0);
@@ -1505,18 +2159,20 @@ function GoldCatApp() {
                                                                                         </span>
                                                                                     </div>
                                                                                     <div className="col-span-2">
-                                                                                        <span className="text-gray-500">🎯 盈亏比：</span>
-                                                                                        <span className="text-amber-400 font-bold">
-                                                                                            {(() => {
-                                                                                                const wins = trades.filter(t => t.profitLoss > 0);
-                                                                                                const losses = trades.filter(t => t.profitLoss < 0);
-                                                                                                const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + t.profitLoss, 0) / wins.length : 0;
-                                                                                                const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, t) => sum + t.profitLoss, 0) / losses.length) : 1;
-                                                                                                const plRatio = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : 'N/A';
-                                                                                                return plRatio + ' ' + (plRatio >= 1.5 ? '✅' : plRatio >= 1 ? '⚠️' : '❌');
-                                                                                            })()}
-                                                                                        </span>
-                                                                                        <span className="text-gray-600 ml-2">(建议≥1.5)</span>
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <span className="text-gray-500 flex items-center gap-1"><Target className="w-3 h-3" /> {t('ai.rr_ratio_label')}:</span>
+                                                                                            <span className="text-amber-400 font-bold">
+                                                                                                {(() => {
+                                                                                                    const wins = trades.filter(t => t.profitLoss > 0);
+                                                                                                    const losses = trades.filter(t => t.profitLoss < 0);
+                                                                                                    const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + t.profitLoss, 0) / wins.length : 0;
+                                                                                                    const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, t) => sum + t.profitLoss, 0) / losses.length) : 1;
+                                                                                                    const plRatio = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : 'N/A';
+                                                                                                    return plRatio + ' ' + (plRatio >= 1.5 ? '✅' : plRatio >= 1 ? '⚠️' : '❌');
+                                                                                                })()}
+                                                                                            </span>
+                                                                                            <span className="text-gray-600 text-xs">{t('ai.rr_recommendation')}</span>
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -1524,49 +2180,34 @@ function GoldCatApp() {
                                                                     )}
                                                                 </p>
                                                             </div>
+
+                                                            {/* 资金曲线 */}
+                                                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                                                                <h3 className="text-lg font-bold text-white mb-4">{t('ai.equity_curve')}</h3>
+                                                                <div className="h-[250px] w-full">
+                                                                    <ResponsiveContainer width="100%" height="100%">
+                                                                        <AreaChart data={trades.filter(t => t.status === 'closed').slice().reverse().reduce((acc, t) => {
+                                                                            const lastVal = acc.length > 0 ? acc[acc.length - 1].val : 0;
+                                                                            const pnl = parseFloat(t.profitLoss) || 0;
+                                                                            acc.push({ i: acc.length, val: lastVal + pnl });
+                                                                            return acc;
+                                                                        }, [])}>
+                                                                            <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+                                                                            <XAxis dataKey="i" hide />
+                                                                            <YAxis domain={['auto', 'auto']} stroke="#525252" fontSize={10} />
+                                                                            <Tooltip contentStyle={{ backgroundColor: '#171717', border: '1px solid #404040' }} />
+                                                                            <Area type="monotone" dataKey="val" stroke="#fbbf24" fill="#fbbf24" fillOpacity={0.1} />
+                                                                        </AreaChart>
+                                                                    </ResponsiveContainer>
+                                                                </div>
+                                                            </div>
                                                         </>
                                                     );
                                                 })()}
                                             </div>
-
-                                            {/* 资金曲线 */}
-                                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-                                                <h3 className="text-lg font-bold text-white mb-4">{t('ai.equity_curve')}</h3>
-                                                <div className="h-[250px] w-full">
-                                                    <ResponsiveContainer width="100%" height="100%">
-                                                        <AreaChart data={trades.slice().reverse().reduce((acc, t) => {
-                                                            const lastVal = acc.length > 0 ? acc[acc.length - 1].val : 10000;
-                                                            const pnl = parseFloat(t.profitLoss) || 0;
-                                                            acc.push({ i: acc.length, val: lastVal + pnl });
-                                                            return acc;
-                                                        }, [])}>
-                                                            <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
-                                                            <XAxis dataKey="i" hide />
-                                                            <YAxis domain={['auto', 'auto']} stroke="#525252" fontSize={10} />
-                                                            <Tooltip contentStyle={{ backgroundColor: '#171717', border: '1px solid #404040' }} />
-                                                            <Area type="monotone" dataKey="val" stroke="#fbbf24" fill="#fbbf24" fillOpacity={0.1} />
-                                                        </AreaChart>
-                                                    </ResponsiveContainer>
-                                                </div>
-                                            </div>
                                         </div>
 
-                                        {/* 右侧：市场 AI 辅助 (保留功能) */}
-                                        <div className="lg:col-span-1 space-y-6">
-                                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-                                                <h3 className="text-sm font-bold text-gray-400 mb-4">市场情绪辅助</h3>
-                                                <div className="flex flex-col items-center justify-center py-4">
-                                                    <div className="text-4xl font-black text-white mb-2">32</div>
-                                                    <div className="text-xs bg-orange-500/20 text-orange-500 px-2 py-1 rounded mb-4">恐慌 (Fear)</div>
-                                                    <div className="w-full bg-neutral-800 h-2 rounded-full overflow-hidden">
-                                                        <div className="bg-gradient-to-r from-red-500 to-yellow-500 w-[32%] h-full"></div>
-                                                    </div>
-                                                </div>
-                                                <p className="text-xs text-gray-500 mt-4 text-center">
-                                                    当市场恐慌时，正是您执行交易纪律的最佳时机。切勿追涨杀跌。
-                                                </p>
-                                            </div>
-                                        </div>
+
                                     </>
                                 )}
                             </div>
@@ -1575,250 +2216,257 @@ function GoldCatApp() {
                 )}
             </main>
 
-            {/* 支付弹窗 - 新版三种支付方式 */}
-            {
-                showPaymentModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-                        <div className="bg-neutral-900 w-full max-w-2xl rounded-2xl border border-neutral-800 p-8 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Crown className="w-32 h-32 text-amber-500" />
-                            </div>
-                            <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">{t('payment.title')}</h3>
-                            <p className="text-gray-400 mb-8">{t('payment.subtitle')}</p>
+            {/* Payment Modal */}
+            {showPaymentModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+                    <div className="bg-neutral-900 w-full max-w-2xl rounded-2xl border border-neutral-800 p-8 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Crown className="w-32 h-32 text-amber-500" />
+                        </div>
+                        <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">{t('payment.title')}</h3>
+                        <p className="text-gray-400 mb-8">{t('payment.subtitle')}</p>
 
-                            {!isPaymentSuccess && (
-                                <button onClick={() => setShowPaymentModal(false)} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            )}
+                        {!isPaymentSuccess && (
+                            <button onClick={() => { setShowPaymentModal(false); setPaymentMethod(null); }} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
+                                <X className="w-5 h-5" />
+                            </button>
+                        )}
 
-                            {isPaymentSuccess ? (
-                                <div className="text-center py-12 animate-in fade-in zoom-in duration-300">
-                                    <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
-                                        <CheckCircle2 className="w-12 h-12 text-green-500" />
-                                    </div>
-                                    <h3 className="text-2xl font-black text-white mb-2">{t('payment.success_title')}</h3>
-                                    <p className="text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
-                                        {t('payment.success_desc')}
-                                    </p>
-                                    <button
-                                        onClick={() => {
-                                            setIsPaymentSuccess(false);
-                                            setShowPaymentModal(false);
-                                            setPaymentMethod(null);
-                                        }}
-                                        className="px-10 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all transform hover:scale-105"
-                                    >
-                                        {t('common.done')}
-                                    </button>
+                        {isPaymentSuccess ? (
+                            <div className="text-center py-12 animate-in fade-in zoom-in duration-300">
+                                <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
+                                    <CheckCircle2 className="w-12 h-12 text-green-500" />
                                 </div>
-                            ) : !paymentMethod ? (
-                                <>
-                                    {/* 选择支付方式 */}
-                                    <div className="mb-6">
-                                        <h4 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
-                                            <CreditCard className="w-4 h-4" />
-                                            {t('payment.method')}
-                                        </h4>
-                                        <div className="grid grid-cols-3 gap-4">
-                                            {/* USDT */}
-                                            <button
-                                                onClick={() => setPaymentMethod('usdt')}
-                                                className="group relative p-6 rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all"
-                                            >
-                                                <div className="absolute top-2 right-2">
-                                                    <div className="bg-amber-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">{t('payment.recommended')}</div>
+                                <h3 className="text-2xl font-black text-white mb-2">{t('payment.success_title')}</h3>
+                                <p className="text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
+                                    {t('payment.success_desc')}
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setIsPaymentSuccess(false);
+                                        setShowPaymentModal(false);
+                                        setPaymentMethod(null);
+                                    }}
+                                    className="px-10 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all transform hover:scale-105"
+                                >
+                                    {t('common.done')}
+                                </button>
+                            </div>
+                        ) : !paymentMethod ? (
+                            <>
+                                {/* 选择支付方式 */}
+                                <div className="mb-6">
+                                    <h4 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
+                                        <CreditCard className="w-4 h-4" />
+                                        {t('payment.method')}
+                                    </h4>
+                                    <div className="grid grid-cols-3 gap-4">
+                                        {/* USDT */}
+                                        <button
+                                            onClick={() => setPaymentMethod('usdt')}
+                                            className="group relative p-6 rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all"
+                                        >
+                                            <div className="absolute top-2 right-2">
+                                                <div className="bg-amber-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">{t('payment.recommended')}</div>
+                                            </div>
+                                            <Wallet className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                                            <div className="text-xl font-black text-white mb-1">{t('payment.usdt')}</div>
+                                            <div className="text-2xl font-black text-amber-500 mb-2">15.00</div>
+                                            <div className="text-xs text-gray-500">{t('payment.crypto_payment')}</div>
+                                        </button>
+
+                                        {/* 美元 */}
+                                        <button
+                                            onClick={handleUpgrade}
+                                            disabled={isUpgrading}
+                                            className="group relative p-6 rounded-2xl border-2 border-neutral-700 bg-neutral-800/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isUpgrading ? (
+                                                <div className="flex flex-col items-center justify-center h-full">
+                                                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                                                    <div className="text-sm text-blue-400 font-bold">Creating Session...</div>
                                                 </div>
-                                                <Wallet className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-                                                <div className="text-xl font-black text-white mb-1">{t('payment.usdt')}</div>
-                                                <div className="text-2xl font-black text-amber-500 mb-2">15.00</div>
-                                                <div className="text-xs text-gray-500">{t('payment.crypto_payment')}</div>
-                                            </button>
+                                            ) : (
+                                                <>
+                                                    <DollarSign className="w-12 h-12 text-blue-400 mx-auto mb-3" />
+                                                    <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
+                                                    <div className="text-2xl font-black text-blue-400 mb-2">$15.00</div>
+                                                    <div className="text-xs text-gray-500">{t('payment.card_paypal')}</div>
+                                                </>
+                                            )}
+                                        </button>
 
-                                            {/* 美元 */}
-                                            <a
-                                                href={`https://goldencattrading.lemonsqueezy.com/buy/ddb38db6-1d3c-490d-9ad7-bb13684f70a6?checkout[custom][user_id]=${user?.id}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="group relative p-6 rounded-2xl border-2 border-neutral-700 bg-neutral-800/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 transition-all"
-                                            >
-                                                <DollarSign className="w-12 h-12 text-blue-400 mx-auto mb-3" />
-                                                <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
-                                                <div className="text-2xl font-black text-blue-400 mb-2">$15.00</div>
-                                                <div className="text-xs text-gray-500">{t('payment.card_paypal')}</div>
-                                            </a>
-
-                                            {/* 人民币 */}
-                                            <button
-                                                onClick={() => setPaymentMethod('cny')}
-                                                className="group relative p-6 rounded-2xl border-2 border-neutral-700 bg-neutral-800/50 hover:border-green-500 hover:shadow-lg hover:shadow-green-500/20 transition-all"
-                                            >
-                                                <Coins className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                                                <div className="text-xl font-black text-white mb-1">{t('payment.cny')}</div>
-                                                <div className="text-2xl font-black text-green-400 mb-2">¥99.00</div>
-                                                <div className="text-xs text-gray-500">{t('payment.alipay_wechat')}</div>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-3 p-4 bg-neutral-800/50 rounded-xl border border-neutral-800">
-                                        <Crown className="w-5 h-5 text-amber-500" />
-                                        <div className="text-sm text-gray-400">
-                                            {t('payment.unlimited')} · {t('payment.ai_analysis')} · {t('payment.badge')}
-                                        </div>
-                                    </div>
-                                </>
-                            ) : paymentMethod === 'usdt' ? (
-                                <>
-                                    {/* USDT 手动支付界面 */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                            <ArrowRight className="w-4 h-4 rotate-180" /> 返回选择支付方式
+                                        {/* 人民币 */}
+                                        <button
+                                            onClick={() => setPaymentMethod('cny')}
+                                            className="group relative p-6 rounded-2xl border-2 border-neutral-700 bg-neutral-800/50 hover:border-green-500 hover:shadow-lg hover:shadow-green-500/20 transition-all"
+                                        >
+                                            <Coins className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                                            <div className="text-xl font-black text-white mb-1">{t('payment.cny')}</div>
+                                            <div className="text-2xl font-black text-green-400 mb-2">¥99.00</div>
+                                            <div className="text-xs text-gray-500">{t('payment.alipay_wechat')}</div>
                                         </button>
                                     </div>
+                                </div>
 
-                                    <div className="space-y-4">
-                                        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="text-xs text-gray-400">{t('payment.order_number')}</div>
-                                                <button
-                                                    onClick={() => {
-                                                        const orderNum = orderNumber || 'ORDER-' + Date.now();
-                                                        navigator.clipboard.writeText(orderNum);
-                                                        alert(t('payment.copied'));
-                                                    }}
-                                                    className="flex items-center gap-1 text-amber-500 hover:text-amber-400 text-xs"
-                                                >
-                                                    <Copy className="w-3 h-3" />
-                                                    {t('payment.copy')}
-                                                </button>
-                                            </div>
-                                            <div className="text-lg font-mono text-amber-500">{orderNumber || 'ORDER-' + Date.now()}</div>
+                                <div className="flex items-center gap-3 p-4 bg-neutral-800/50 rounded-xl border border-neutral-800">
+                                    <Crown className="w-5 h-5 text-amber-500" />
+                                    <div className="text-sm text-gray-400">
+                                        {t('payment.unlimited')} · {t('payment.ai_analysis')} · {t('payment.badge')}
+                                    </div>
+                                </div>
+                            </>
+                        ) : paymentMethod === 'usdt' ? (
+                            <>
+                                {/* USDT 手动支付界面 */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
+                                        <ArrowRight className="w-4 h-4 rotate-180" /> 返回选择支付方式
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="text-xs text-gray-400">{t('payment.order_number')}</div>
+                                            <button
+                                                onClick={() => {
+                                                    const orderNum = orderNumber || 'ORDER-' + Date.now();
+                                                    navigator.clipboard.writeText(orderNum);
+                                                    alert(t('payment.copied'));
+                                                }}
+                                                className="flex items-center gap-1 text-amber-500 hover:text-amber-400 text-xs"
+                                            >
+                                                <Copy className="w-3 h-3" />
+                                                {t('payment.copy')}
+                                            </button>
                                         </div>
+                                        <div className="text-lg font-mono text-amber-500">{orderNumber || 'ORDER-' + Date.now()}</div>
+                                    </div>
 
-                                        <div className="p-4 bg-neutral-800 rounded-xl">
-                                            <div className="text-xs text-gray-400 mb-2">{t('payment.receiving_address')}</div>
-                                            <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg">
-                                                <code className="text-xs font-mono text-white break-all">TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R</code>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText('TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R');
-                                                        alert(t('payment.copied'));
-                                                    }}
-                                                    className="ml-2 text-gray-400 hover:text-white"
-                                                >
-                                                    <Copy className="w-4 h-4" />
-                                                </button>
-                                            </div>
+                                    <div className="p-4 bg-neutral-800 rounded-xl">
+                                        <div className="text-xs text-gray-400 mb-2">{t('payment.receiving_address')}</div>
+                                        <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg">
+                                            <code className="text-xs font-mono text-white break-all">TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R</code>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText('TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R');
+                                                    alert(t('payment.copied'));
+                                                }}
+                                                className="ml-2 text-gray-400 hover:text-white"
+                                            >
+                                                <Copy className="w-4 h-4" />
+                                            </button>
                                         </div>
+                                    </div>
 
-                                        <div className="p-4 bg-neutral-800 rounded-xl">
-                                            <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                            <div className="text-3xl font-black text-amber-500">15.00 USDT</div>
+                                    <div className="p-4 bg-neutral-800 rounded-xl">
+                                        <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
+                                        <div className="text-3xl font-black text-amber-500">15.00 USDT</div>
+                                    </div>
+
+                                    <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                                        <div className="text-sm text-blue-400 mb-2 flex items-center gap-2">
+                                            <AlertCircle className="w-4 h-4" />
+                                            {t('payment.instructions')}
                                         </div>
+                                        <ul className="text-xs text-gray-400 space-y-1">
+                                            <li>• {t('payment.instruction_1')}</li>
+                                            <li>• {t('payment.instruction_2')}</li>
+                                            <li className="text-amber-400 font-semibold">• {t('payment.instruction_3')}</li>
+                                            <li>• {t('payment.instruction_4')}</li>
+                                        </ul>
+                                    </div>
 
-                                        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                                            <div className="text-sm text-blue-400 mb-2 flex items-center gap-2">
-                                                <AlertCircle className="w-4 h-4" />
-                                                {t('payment.instructions')}
-                                            </div>
-                                            <ul className="text-xs text-gray-400 space-y-1">
-                                                <li>• {t('payment.instruction_1')}</li>
-                                                <li>• {t('payment.instruction_2')}</li>
-                                                <li className="text-amber-400 font-semibold">• {t('payment.instruction_3')}</li>
-                                                <li>• {t('payment.instruction_4')}</li>
-                                            </ul>
-                                        </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 mb-2 block">{t('payment.txid_label')}</label>
+                                        <input
+                                            type="text"
+                                            value={paymentTxId}
+                                            onChange={(e) => setPaymentTxId(e.target.value)}
+                                            placeholder={t('payment.txid_placeholder')}
+                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono text-sm"
+                                        />
+                                    </div>
 
-                                        <div>
-                                            <label className="text-xs text-gray-400 mb-2 block">{t('payment.txid_label')}</label>
-                                            <input
-                                                type="text"
-                                                value={paymentTxId}
-                                                onChange={(e) => setPaymentTxId(e.target.value)}
-                                                placeholder={t('payment.txid_placeholder')}
-                                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono text-sm"
-                                            />
-                                        </div>
+                                    <button
+                                        onClick={async () => {
+                                            if (!paymentTxId) {
+                                                alert(t('payment.txid_placeholder'));
+                                                return;
+                                            }
 
-                                        <button
-                                            onClick={async () => {
-                                                if (!paymentTxId) {
-                                                    alert(t('payment.txid_placeholder'));
+                                            try {
+                                                // Create or update order in Supabase
+                                                const orderNum = orderNumber || `ORDER-${Date.now()}`;
+
+                                                const { error } = await supabase
+                                                    .from('orders')
+                                                    .insert({
+                                                        order_number: orderNum,
+                                                        user_id: user.id,
+                                                        user_email: user.email,
+                                                        amount: 15,
+                                                        currency: 'USDT',
+                                                        payment_method: 'usdt',
+                                                        txid: paymentTxId,
+                                                        status: 'paid'
+                                                    });
+
+                                                if (error) {
+                                                    console.error('Order creation error:', error);
+                                                    alert(t('common.error') + ': ' + error.message);
                                                     return;
                                                 }
 
-                                                try {
-                                                    // 创建或更新订单到 Supabase
-                                                    const orderNum = orderNumber || `ORDER-${Date.now()}`;
+                                                setIsPaymentSuccess(true);
+                                                setPaymentTxId('');
+                                                setOrderNumber('');
+                                            } catch (err) {
+                                                console.error('Unexpected error:', err);
+                                                alert(t('common.error'));
+                                            }
+                                        }}
+                                        className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
+                                    >
+                                        {t('payment.submit_review')}
+                                    </button>
+                                </div>
+                            </>
 
-                                                    const { error } = await supabase
-                                                        .from('orders')
-                                                        .insert({
-                                                            order_number: orderNum,
-                                                            user_id: user.id,
-                                                            user_email: user.email,
-                                                            amount: 15,
-                                                            currency: 'USDT',
-                                                            payment_method: 'usdt',
-                                                            txid: paymentTxId,
-                                                            status: 'paid'
-                                                        });
-
-                                                    if (error) {
-                                                        console.error('Order creation error:', error);
-                                                        alert(t('common.error') + ': ' + error.message);
-                                                        return;
-                                                    }
-
-                                                    setIsPaymentSuccess(true);
-                                                    setPaymentTxId('');
-                                                    setOrderNumber('');
-                                                } catch (err) {
-                                                    console.error('Unexpected error:', err);
-                                                    alert(t('common.error'));
-                                                }
-                                            }}
-                                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
-                                        >
-                                            {t('payment.submit_review')}
-                                        </button>
-                                    </div>
-                                </>
-
-                            ) : paymentMethod === 'cny' ? (
-                                <>
-                                    {/* 人民币支付 - Xorpay (待接入) */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                            <ArrowRight className="w-4 h-4 rotate-180" /> {t('payment.back')}
-                                        </button>
-                                    </div>
-                                    <div className="text-center py-8">
-                                        <Coins className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                                        <h4 className="text-xl font-bold text-white mb-2">{t('payment.cny')}</h4>
-                                        <p className="text-gray-400 mb-6">{t('payment.channel_connecting')}</p>
-                                        <button
-                                            disabled
-                                            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 text-gray-500 font-black text-lg rounded-xl cursor-not-allowed"
-                                        >
-                                            <Wallet className="w-5 h-5" />
-                                            {t('payment.coming_soon')}
-                                        </button>
-                                    </div>
-                                </>
-                            ) : null}
+                        ) : paymentMethod === 'cny' ? (
+                            <>
+                                {/* RMB Payment - Xorpay (to be integrated) */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
+                                        <ArrowRight className="w-4 h-4 rotate-180" /> {t('payment.back')}
+                                    </button>
+                                </div>
+                                <div className="text-center py-8">
+                                    <Coins className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                                    <h4 className="text-xl font-bold text-white mb-2">{t('payment.cny')}</h4>
+                                    <p className="text-gray-400 mb-6">{t('payment.channel_connecting')}</p>
+                                    <button
+                                        disabled
+                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 text-gray-500 font-black text-lg rounded-xl cursor-not-allowed"
+                                    >
+                                        <Wallet className="w-5 h-5" />
+                                        {t('payment.coming_soon')}
+                                    </button>
+                                </div>
+                            </>
+                        ) : null}
 
 
 
-                            <p className="text-center text-[10px] text-gray-600 mt-4 flex items-center justify-center gap-1">
-                                <Shield className="w-3 h-3" /> {t('payment.security')}
-                            </p>
+                        <p className="text-center text-[10px] text-gray-600 mt-4 flex items-center justify-center gap-1">
+                            <Shield className="w-3 h-3" /> {t('payment.security')}
+                        </p>
 
 
-                        </div>
                     </div>
-                )
+                </div>
+            )
             }
 
             {/* 成功提示 Toast */}
@@ -1916,14 +2564,15 @@ function GoldCatApp() {
                 showCloseTradeModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
                         <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
-                            <h3 className="text-lg font-bold text-white mb-4">{t('journal.settle')}</h3>
-                            <p className="text-xs text-gray-400 mb-2">实际盈亏 (USDT)</p>
+                            <h3 className="text-lg font-bold text-white mb-6">{t('journal.settle')}</h3>
                             <input
                                 type="number"
-                                placeholder="例如: 50 或 -20"
+                                placeholder="0"
                                 value={closePnL}
                                 onChange={e => setClosePnL(e.target.value)}
-                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono mb-4 text-lg"
+                                onFocus={e => e.target.value === '0' && setClosePnL('')}
+                                onBlur={e => e.target.value === '' && setClosePnL('0')}
+                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono mb-4 text-lg text-center"
                                 autoFocus
                             />
 
@@ -2000,26 +2649,63 @@ function GoldCatApp() {
                 showReviewModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
                         <div className="bg-[#1A1D24] w-full max-w-lg rounded-2xl border border-neutral-800 p-6 shadow-2xl">
-                            <h3 className="text-lg font-bold text-white mb-4">交易复盘</h3>
-                            <p className="text-xs text-gray-400 mb-4">记录这笔交易的心得、教训或改进点。</p>
+                            <h3 className="text-lg font-bold text-white mb-4">{t('journal.review_title')}</h3>
+                            <p className="text-xs text-gray-400 mb-4">{t('journal.review_desc')}</p>
                             <textarea
-                                value={reviewNote}
-                                onChange={e => setReviewNote(e.target.value)}
+                                value={reviewNotes}
+                                onChange={e => setReviewNotes(e.target.value)}
                                 className="w-full h-32 bg-neutral-900 border border-neutral-700 rounded-lg p-3 text-white focus:border-amber-500 focus:outline-none mb-6 resize-none"
-                                placeholder="在此输入复盘笔记..."
+                                placeholder={t('journal.review_placeholder')}
                             />
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowReviewModal(false)}
-                                    className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded-xl font-bold transition-colors"
+                                    disabled={isSaving}
+                                    className="flex-1 py-3 rounded-xl bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {t('common.cancel')}
+                                    {t('risk.cancel')}
                                 </button>
                                 <button
                                     onClick={saveReview}
-                                    className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-colors shadow-lg shadow-amber-500/20"
+                                    disabled={isSaving}
+                                    className="flex-1 py-3 rounded-xl bg-amber-500 text-black font-bold hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
-                                    保存复盘
+                                    {isSaving && <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
+                                    {isSaving ? t('common.loading') : t('form.save')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Risk Warning Modal */}
+            {
+                showRiskWarningModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-red-900/50 p-6 shadow-2xl">
+                            <div className="flex items-center gap-3 mb-4 text-red-500">
+                                <AlertTriangle className="w-8 h-8" />
+                                <h3 className="text-lg font-bold text-white">{t('risk.modal_title')}</h3>
+                            </div>
+                            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
+                                {t('risk.low_rr_warning').replace('{rr}', pendingTrade?.rrRatio)}
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowRiskWarningModal(false)}
+                                    className="flex-1 py-2 rounded-lg bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold text-sm transition-colors"
+                                >
+                                    {t('risk.cancel')}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        finalizeTrade(pendingTrade);
+                                        setShowRiskWarningModal(false);
+                                    }}
+                                    className="flex-1 py-2 rounded-lg bg-red-600/20 text-red-500 border border-red-600/50 hover:bg-red-600/30 font-bold text-sm transition-colors"
+                                >
+                                    {t('risk.confirm_force')}
                                 </button>
                             </div>
                         </div>
@@ -2035,7 +2721,7 @@ function GoldCatApp() {
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
                         <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-bold text-white">管理交易形态</h3>
+                                <h3 className="text-lg font-bold text-white">{t('form.manage_patterns')}</h3>
                                 <button onClick={() => setShowPatternModal(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
                             </div>
 
@@ -2061,6 +2747,16 @@ function GoldCatApp() {
                                         </button>
                                     </div>
                                 ))}
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-neutral-800">
+                                <button
+                                    onClick={resetPatterns}
+                                    className="w-full py-2 text-xs text-gray-500 hover:text-amber-500 hover:bg-neutral-900 rounded transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <RotateCcw className="w-3 h-3" />
+                                    {t('form.reset_default')}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -2092,14 +2788,14 @@ function GoldCatApp() {
                                             </div>
                                             {membership.isPremium && (
                                                 <div className="text-xs text-gray-500">
-                                                    {t('settings.expires_on')}: {membership.expiryDate ? new Date(membership.expiryDate).toLocaleDateString() : '2099-12-31'}
+                                                    {t('settings.expires_on')}: {membership.expiryDate ? new Date(membership.expiryDate).toLocaleDateString() : '-'}
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                     {!membership.isPremium && (
                                         <button
-                                            onClick={() => { setShowSettingsModal(false); setPaymentMethod(null); setShowPaymentModal(true); }}
+                                            onClick={() => { setShowSettingsModal(false); setShowPaymentModal(true); setPaymentMethod(null); }}
                                             className="text-xs bg-amber-500 text-black px-3 py-1.5 rounded-lg font-bold hover:bg-amber-400"
                                         >
                                             UPGRADE
@@ -2127,6 +2823,8 @@ function GoldCatApp() {
                                 </div>
                             </div>
 
+                            {/* Fortune Compass Settings (Hidden for now) */}
+                            {/*
                             <div className="mb-6">
                                 <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('settings.birth_date')}</label>
                                 <input
@@ -2170,6 +2868,7 @@ function GoldCatApp() {
                                     * {t('fortune.personalized')}
                                 </p>
                             </div>
+                            */}
 
                             <button
                                 onClick={() => {
@@ -2198,8 +2897,8 @@ function GoldCatApp() {
                                     <LogOut className="w-4 h-4" /> {t('auth.logout_confirm_btn')}
                                 </button>
                             </div>
-                        </div >
-                    </div >
+                        </div>
+                    </div>
                 )
             }
 
@@ -2315,145 +3014,53 @@ function GoldCatApp() {
                     <span className="text-blue-500">CALC:</span> Pos:{riskAnalysis.positionSize} Risk%:{riskAnalysis.riskPercent} RR:{riskAnalysis.rrRatio} Valid:{riskAnalysis.valid ? 'Y' : 'N'}
                 </div>
             </div>
-        </div >
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl scale-in-95 animate-in zoom-in-95 duration-200">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Trash2 className="w-8 h-8 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">
+                                {language === 'zh' ? '确认删除交易？' : 'Delete Trade?'}
+                            </h3>
+                            <p className="text-gray-400 text-sm">
+                                {language === 'zh'
+                                    ? '此操作将永久删除该交易记录，无法恢复。'
+                                    : 'This action will permanently delete this trade record. It cannot be undone.'}
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setTradeToDelete(null);
+                                }}
+                                className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-bold transition-colors"
+                            >
+                                {language === 'zh' ? '取消' : 'Cancel'}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (tradeToDelete) {
+                                        removeTrade(tradeToDelete.id);
+                                        setShowDeleteModal(false);
+                                        setTradeToDelete(null);
+                                    }
+                                }}
+                                className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-900/20"
+                            >
+                                {language === 'zh' ? '确认删除' : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 
-// --- Sub-components ---
-
-const FortuneCompass = ({ language, t, user, isPremium, onOpenSettings, onUpgrade }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [fortune, setFortune] = useState(null);
-    const todayStr = new Date().toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-
-    useEffect(() => {
-        const today = new Date().toISOString().split('T')[0];
-        setFortune(getDailyFortune(today, user?.birthDate));
-    }, [user?.birthDate]);
-
-    if (!fortune) return null;
-
-    // Locked State for Non-Premium
-    if (!isPremium) {
-        return (
-            <div className="bg-gradient-to-r from-[#1a1a1a] to-[#0f0f0f] border border-neutral-800 rounded-2xl p-6 relative overflow-hidden shadow-xl group cursor-pointer mt-8" onClick={onUpgrade}>
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center text-center p-4">
-                    <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center mb-3 border border-neutral-700 group-hover:scale-110 transition-transform">
-                        <Lock className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-1">{t('fortune.title')}</h3>
-                    <p className="text-xs text-amber-500 font-bold">{t('settings.upgrade_to_unlock')}</p>
-                </div>
-                {/* Blurred Content Preview */}
-                <div className="opacity-20 blur-sm pointer-events-none flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
-                            <Compass className="w-6 h-6 text-amber-500" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-white">{t('fortune.title')}</h3>
-                            <p className="text-xs text-gray-500">{todayStr}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="bg-gradient-to-r from-[#1a1a1a] to-[#0f0f0f] border border-amber-900/30 rounded-2xl p-1 relative overflow-hidden shadow-2xl mt-8">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-900/20 via-transparent to-transparent"></div>
-                <div className="absolute -right-10 -top-10 w-40 h-40 border-[20px] border-amber-500/5 rounded-full"></div>
-                <div className="absolute -left-10 -bottom-10 w-60 h-60 border-[40px] border-amber-500/5 rounded-full"></div>
-            </div>
-
-            <div className="relative z-10 bg-[#141414] rounded-xl p-4 md:p-6 transition-all duration-500">
-                {!isOpen ? (
-                    <div className="flex items-center justify-between cursor-pointer group" onClick={() => setIsOpen(true)}>
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/30 group-hover:rotate-180 transition-transform duration-700">
-                                <Compass className="w-6 h-6 text-amber-500" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                    {t('fortune.title')}
-                                    {user?.birthDate && <span className="text-[10px] px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full border border-purple-500/30 flex items-center gap-1"><Sparkles className="w-3 h-3" /> {t('fortune.personalized')}</span>}
-                                </h3>
-                                <p className="text-xs text-gray-500 flex items-center gap-2">
-                                    <span>{todayStr}</span>
-                                    <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                                    <span>{t('fortune.open_compass')}</span>
-                                </p>
-                            </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-amber-500 transition-colors" />
-                    </div>
-                ) : (
-                    <div className="animate-in fade-in zoom-in duration-500">
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="flex items-center gap-2">
-                                <Compass className="w-5 h-5 text-amber-500" />
-                                <h3 className="text-lg font-bold text-amber-500">{t('fortune.title')}</h3>
-                                <span className="text-xs text-gray-500 ml-2 font-mono">{todayStr}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {!user?.birthDate && (
-                                    <button onClick={(e) => { e.stopPropagation(); onOpenSettings(); }} className="text-xs text-amber-500 hover:underline flex items-center gap-1 mr-2">
-                                        <Sparkles className="w-3 h-3" /> {t('fortune.setup_birth')}
-                                    </button>
-                                )}
-                                <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-white transition-colors">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Hexagram */}
-                            <div className="col-span-1 md:col-span-1 flex flex-col items-center justify-center p-4 bg-neutral-900/50 rounded-xl border border-neutral-800 text-center relative overflow-hidden">
-                                {user?.birthDate && <div className="absolute top-2 right-2 text-[10px] text-purple-400 flex items-center gap-1"><Sparkles className="w-3 h-3" /> {t('fortune.personalized')}</div>}
-                                <div className="text-6xl font-black text-white mb-2 leading-none font-serif opacity-90">{fortune.hexagram.symbol}</div>
-                                <div className="text-lg font-bold text-amber-500 mb-1">{fortune.hexagram.name[language]}</div>
-                                <div className={`text-xs px-2 py-1 rounded-full mb-3 ${fortune.hexagram.type === 'bullish' ? 'bg-red-900/30 text-red-400 border-red-900/50' : fortune.hexagram.type === 'bearish' ? 'bg-green-900/30 text-green-400 border-green-900/50' : 'bg-gray-800 text-gray-400'}`}>
-                                    {fortune.hexagram.meaning[language]}
-                                </div>
-                            </div>
-
-                            {/* Almanac */}
-                            <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-4">
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3 p-3 bg-neutral-900/50 rounded-lg border border-neutral-800">
-                                        <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 font-bold border border-red-500/20 text-xs">
-                                            {t('fortune.suit')}
-                                        </div>
-                                        <div className="font-bold text-white">{fortune.suit[language]}</div>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-3 bg-neutral-900/50 rounded-lg border border-neutral-800">
-                                        <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 font-bold border border-green-500/20 text-xs">
-                                            {t('fortune.avoid')}
-                                        </div>
-                                        <div className="font-bold text-white">{fortune.avoid[language]}</div>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-lg border border-neutral-800">
-                                        <span className="text-xs text-gray-500">{t('fortune.lucky_direction')}</span>
-                                        <span className="font-bold text-amber-500">{t(`fortune.directions.${fortune.direction}`)}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-lg border border-neutral-800">
-                                        <span className="text-xs text-gray-500">{t('fortune.lucky_color')}</span>
-                                        <span className="font-bold text-white">{t(`fortune.colors.${fortune.color}`)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
 export default GoldCatApp;
+
