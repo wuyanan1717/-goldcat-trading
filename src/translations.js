@@ -1,6 +1,6 @@
 export const translations = {
     zh: {
-        app_title: "金猫系统 v4",
+        app_title: "GoldCat Terminal",
         slogan: "THE MANUAL TRADING FORGE",
         nav: {
             new_trade: "录入交易 (纪律)",
@@ -290,7 +290,7 @@ export const translations = {
         }
     },
     en: {
-        app_title: "GoldCat Terminal v4",
+        app_title: "GoldCat Terminal",
         slogan: "THE MANUAL TRADING FORGE",
         nav: {
             new_trade: "New Trade",
@@ -305,8 +305,9 @@ export const translations = {
         home: {
             title: "Manual Recording is Discipline",
             slogan: "GoldCat - Your Guardian of Wealth",
-            desc_1: "Why record manually? Because it shows respect for every trade.",
-            desc_2: "Reject impulsive entries. Never ignore stop-losses. Through strict procedural recording, let trading return to rationality, making profit a byproduct of discipline.",
+            desc_1: "GoldCat is a professional trading journal tool designed to help traders build discipline through structured record-keeping.",
+            desc_2: "Why record manually? Because it shows respect for every trade.",
+            desc_3: "Reject impulsive entries. Never ignore stop-losses. Through strict procedural recording, let trading return to rationality, making profit a byproduct of discipline.",
             start_btn: "Start the Journey",
             feature_manual_title: "Deep Review",
             feature_manual_desc: "Every manual entry is a deep dialogue with the market, reinforcing your trading memory.",

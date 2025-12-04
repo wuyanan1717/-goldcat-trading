@@ -127,6 +127,7 @@ function GoldCatApp() {
     const [isSaving, setIsSaving] = useState(false);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const [showTermsModal, setShowTermsModal] = useState(false);
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
 
     // 多语言支持
     const [language, setLanguage] = useState(() => {
@@ -1214,7 +1215,7 @@ function GoldCatApp() {
                         </div>
                         <div>
                             <h1 className="text-lg font-black text-white tracking-tighter leading-none">
-                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v0.1.0</span>
+                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v1.0</span>
                             </h1>
 
                         </div>
@@ -1256,21 +1257,6 @@ function GoldCatApp() {
                 </div>
             </nav>
 
-            {/* Risk Disclaimer Banner */}
-            <div className="bg-gradient-to-r from-amber-900/20 to-red-900/20 border-y border-amber-500/30 backdrop-blur-sm">
-                <div className="max-w-7xl mx-auto px-4 py-3">
-                    <div className="flex items-center gap-3">
-                        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                        <p className="text-sm text-gray-300">
-                            {language === 'zh' ? (
-                                <span><strong className="text-amber-400">风险提示：</strong>GoldCat 仅提供交易记录工具，不构成任何投资建议。交易有风险，投资需谨慎。</span>
-                            ) : (
-                                <span><strong className="text-amber-400">Risk Disclaimer:</strong> GoldCat is a trading journal tool only and does not constitute investment advice. Trading involves risk. Please invest responsibly.</span>
-                            )}
-                        </p>
-                    </div>
-                </div>
-            </div>
 
             {/* Fortune Compass Widget - Moved below per user request */}
             {/*
@@ -1353,7 +1339,7 @@ function GoldCatApp() {
                             </h1>
 
                             <p className="text-gray-300 text-lg md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
-                                {t('home.desc_1')} {t('home.desc_2')}
+                                {t('home.desc_1')} {t('home.desc_2')} {t('home.desc_3')}
                             </p>
 
                             <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-20">
@@ -3030,20 +3016,39 @@ function GoldCatApp() {
             }
 
             {/* Footer with Privacy and Terms */}
-            <div className="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-neutral-800 py-3 px-4 z-[9999] flex justify-center items-center gap-6">
-                <button
-                    onClick={() => setShowPrivacyModal(true)}
-                    className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
-                >
-                    {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
-                </button>
-                <span className="text-gray-600">|</span>
-                <button
-                    onClick={() => setShowTermsModal(true)}
-                    className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
-                >
-                    {language === 'zh' ? '服务条款' : 'Terms of Service'}
-                </button>
+            <div className="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-neutral-800 py-3 px-4 z-[9999]">
+                <div className="flex justify-center items-center gap-6">
+                    <button
+                        onClick={() => setShowPrivacyModal(true)}
+                        className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
+                    >
+                        {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
+                    </button>
+                    <span className="text-gray-600">|</span>
+                    <button
+                        onClick={() => setShowTermsModal(true)}
+                        className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
+                    >
+                        {language === 'zh' ? '服务条款' : 'Terms of Service'}
+                    </button>
+                    <span className="text-gray-600">|</span>
+                    <button
+                        onClick={() => setShowDisclaimer(!showDisclaimer)}
+                        className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline flex items-center gap-1"
+                    >
+                        <AlertTriangle className="w-3 h-3" />
+                        {language === 'zh' ? '风险提示' : 'Risk Disclaimer'}
+                    </button>
+                </div>
+                {showDisclaimer && (
+                    <div className="max-w-3xl mx-auto mt-2 px-4 py-2 bg-amber-900/10 border border-amber-500/20 rounded text-xs text-gray-300">
+                        {language === 'zh' ? (
+                            <span><strong className="text-amber-400">风险提示：</strong>GoldCat 仅提供交易记录工具，不构成任何投资建议。交易有风险，投资需谨慎。</span>
+                        ) : (
+                            <span><strong className="text-amber-400">Risk Disclaimer:</strong> GoldCat is a trading journal tool only and does not constitute investment advice. Trading involves risk. Please invest responsibly.</span>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Delete Confirmation Modal */}
