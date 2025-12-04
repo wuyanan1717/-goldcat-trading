@@ -3020,28 +3020,21 @@ function GoldCatApp() {
                 )
             }
 
-            {/* Persistent Debug Footer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-neutral-800 p-2 text-[10px] font-mono text-gray-500 z-[9999] flex justify-between items-center notranslate">
-                <div className="flex items-center gap-4">
-                    <span className="text-amber-500">DATA:</span> M:{formData.margin} L:{formData.leverage} E:{formData.entryPrice} S:{formData.stopLoss} T:{formData.takeProfit}
-                </div>
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => setShowPrivacyModal(true)}
-                        className="text-gray-400 hover:text-amber-500 transition-colors underline"
-                    >
-                        {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
-                    </button>
-                    <button
-                        onClick={() => setShowTermsModal(true)}
-                        className="text-gray-400 hover:text-amber-500 transition-colors underline"
-                    >
-                        {language === 'zh' ? '服务条款' : 'Terms of Service'}
-                    </button>
-                </div>
-                <div>
-                    <span className="text-blue-500">CALC:</span> Pos:{riskAnalysis.positionSize} Risk%:{riskAnalysis.riskPercent} RR:{riskAnalysis.rrRatio} Valid:{riskAnalysis.valid ? 'Y' : 'N'}
-                </div>
+            {/* Footer with Privacy and Terms */}
+            <div className="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-neutral-800 py-3 px-4 z-[9999] flex justify-center items-center gap-6">
+                <button
+                    onClick={() => setShowPrivacyModal(true)}
+                    className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
+                >
+                    {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
+                </button>
+                <span className="text-gray-600">|</span>
+                <button
+                    onClick={() => setShowTermsModal(true)}
+                    className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
+                >
+                    {language === 'zh' ? '服务条款' : 'Terms of Service'}
+                </button>
             </div>
 
             {/* Delete Confirmation Modal */}
