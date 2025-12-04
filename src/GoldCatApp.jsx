@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { getCheckoutUrl, CREEM_CONFIG } from './creemConfig';
+import { PrivacyPolicyModal, TermsOfServiceModal } from './PolicyModals';
 import {
     TrendingUp, TrendingDown, DollarSign, Package, AlertCircle, BarChart3, Target,
     Award, Plus, X, Crown, Calendar, CreditCard, Wallet, User, LogOut, Trash2,
@@ -124,6 +125,8 @@ function GoldCatApp() {
         content: ''
     });
     const [isSaving, setIsSaving] = useState(false);
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
 
     // 多语言支持
     // 多语言支持
@@ -2996,7 +2999,7 @@ function GoldCatApp() {
                                     </button>
                                     <button
                                         onClick={() => {
-                                            const email = 'support@goldcat-test.com';
+                                            const email = 'goldcatservice@gmail.com';
                                             navigator.clipboard.writeText(email);
                                             setErrorMessage(language === 'zh' ? '邮箱已复制: ' + email : 'Email copied: ' + email);
                                             setShowSuccessToast(true);
@@ -3019,8 +3022,22 @@ function GoldCatApp() {
 
             {/* Persistent Debug Footer */}
             <div className="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-neutral-800 p-2 text-[10px] font-mono text-gray-500 z-[9999] flex justify-between items-center notranslate">
-                <div>
+                <div className="flex items-center gap-4">
                     <span className="text-amber-500">DATA:</span> M:{formData.margin} L:{formData.leverage} E:{formData.entryPrice} S:{formData.stopLoss} T:{formData.takeProfit}
+                </div>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => setShowPrivacyModal(true)}
+                        className="text-gray-400 hover:text-amber-500 transition-colors underline"
+                    >
+                        {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
+                    </button>
+                    <button
+                        onClick={() => setShowTermsModal(true)}
+                        className="text-gray-400 hover:text-amber-500 transition-colors underline"
+                    >
+                        {language === 'zh' ? '服务条款' : 'Terms of Service'}
+                    </button>
                 </div>
                 <div>
                     <span className="text-blue-500">CALC:</span> Pos:{riskAnalysis.positionSize} Risk%:{riskAnalysis.riskPercent} RR:{riskAnalysis.rrRatio} Valid:{riskAnalysis.valid ? 'Y' : 'N'}
@@ -3070,6 +3087,10 @@ function GoldCatApp() {
                     </div>
                 </div>
             )}
+
+            {/* Privacy Policy and Terms Modals */}
+            <PrivacyPolicyModal show={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} language={language} />
+            <TermsOfServiceModal show={showTermsModal} onClose={() => setShowTermsModal(false)} language={language} />
         </div>
     );
 }
