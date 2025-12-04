@@ -129,19 +129,12 @@ function GoldCatApp() {
     const [showTermsModal, setShowTermsModal] = useState(false);
 
     // 多语言支持
-    // 多语言支持
     const [language, setLanguage] = useState(() => {
         // 1. 优先使用用户手动选择的语言
         const saved = localStorage.getItem('goldcat_language');
         if (saved) return saved;
 
-        // 2. 其次根据浏览器语言判断 (模拟 IP 判断)
-        const browserLang = navigator.language || navigator.userLanguage;
-        if (browserLang && (browserLang.toLowerCase() === 'zh' || browserLang.toLowerCase().startsWith('zh-'))) {
-            return 'zh';
-        }
-
-        // 3. 默认英语
+        // 2. 默认英语（不再根据浏览器语言自动判断）
         return 'en';
     });
 
@@ -1261,7 +1254,23 @@ function GoldCatApp() {
                         </button>
                     </div>
                 </div>
-            </nav >
+            </nav>
+
+            {/* Risk Disclaimer Banner */}
+            <div className="bg-gradient-to-r from-amber-900/20 to-red-900/20 border-y border-amber-500/30 backdrop-blur-sm">
+                <div className="max-w-7xl mx-auto px-4 py-3">
+                    <div className="flex items-center gap-3">
+                        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                        <p className="text-sm text-gray-300">
+                            {language === 'zh' ? (
+                                <span><strong className="text-amber-400">风险提示：</strong>GoldCat 仅提供交易记录工具，不构成任何投资建议。交易有风险，投资需谨慎。</span>
+                            ) : (
+                                <span><strong className="text-amber-400">Risk Disclaimer:</strong> GoldCat is a trading journal tool only and does not constitute investment advice. Trading involves risk. Please invest responsibly.</span>
+                            )}
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             {/* Fortune Compass Widget - Moved below per user request */}
             {/*
