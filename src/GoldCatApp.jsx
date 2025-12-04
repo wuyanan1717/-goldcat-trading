@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { getCheckoutUrl, CREEM_CONFIG } from './creemConfig';
 import { PrivacyPolicyModal, TermsOfServiceModal } from './PolicyModals';
+import ParticleLogo from './ParticleLogo';
 import {
     TrendingUp, TrendingDown, DollarSign, Package, AlertCircle, BarChart3, Target,
     Award, Plus, X, Crown, Calendar, CreditCard, Wallet, User, LogOut, Trash2,
@@ -113,6 +114,7 @@ function GoldCatApp() {
     const [isRegisterMode, setIsRegisterMode] = useState(false);
     const [registerForm, setRegisterForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
     const [showSuccessToast, setShowSuccessToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
     const [showErrorToast, setShowErrorToast] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -155,7 +157,7 @@ function GoldCatApp() {
 
         // Simple parameter replacement
         Object.entries(params).forEach(([k, v]) => {
-            value = value.replace(`{${k}}`, v);
+            value = value.replace(new RegExp('{' + k + '}', 'g'), v);
         });
         return value;
     };
@@ -490,7 +492,7 @@ function GoldCatApp() {
     // Generate order number when USDT payment method is selected
     useEffect(() => {
         if (paymentMethod === 'usdt' && !orderNumber) {
-            setOrderNumber(`ORDER-${Date.now()}`);
+            setOrderNumber(`ORDER - ${Date.now()} `);
         }
     }, [paymentMethod, orderNumber]);
 
@@ -1215,7 +1217,7 @@ function GoldCatApp() {
                         </div>
                         <div>
                             <h1 className="text-lg font-black text-white tracking-tighter leading-none">
-                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v1.0</span>
+                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v4</span>
                             </h1>
 
                         </div>
@@ -1327,6 +1329,11 @@ function GoldCatApp() {
 
                             {/* Vignette for seamless blending */}
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
+
+                            {/* Particle Logo Effect */}
+                            <div className="absolute inset-0 z-5 opacity-60">
+                                <ParticleLogo />
+                            </div>
                         </div>
 
                         <div className="relative z-10 max-w-5xl mx-auto animate-in fade-in zoom-in duration-1000 slide-in-from-bottom-8 py-20">
@@ -1339,7 +1346,7 @@ function GoldCatApp() {
                             </h1>
 
                             <p className="text-gray-300 text-lg md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
-                                {t('home.desc_1')} {t('home.desc_2')} {t('home.desc_3')}
+                                {t('home.desc_1')} {t('home.desc_2')}
                             </p>
 
                             <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-20">
@@ -2272,18 +2279,21 @@ function GoldCatApp() {
                                     </h4>
                                     <div className="grid grid-cols-3 gap-4">
                                         {/* USDT */}
-                                        <button
-                                            onClick={() => setPaymentMethod('usdt')}
-                                            className="group relative p-6 rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all"
-                                        >
-                                            <div className="absolute top-2 right-2">
-                                                <div className="bg-amber-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">{t('payment.recommended')}</div>
-                                            </div>
-                                            <Wallet className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-                                            <div className="text-xl font-black text-white mb-1">{t('payment.usdt')}</div>
-                                            <div className="text-2xl font-black text-amber-500 mb-2">15.00</div>
-                                            <div className="text-xs text-gray-500">{t('payment.crypto_payment')}</div>
-                                        </button>
+                                        {/* USDT - Hidden for Creem Review */}
+                                        {false && (
+                                            <button
+                                                onClick={() => setPaymentMethod('usdt')}
+                                                className="group relative p-6 rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all"
+                                            >
+                                                <div className="absolute top-2 right-2">
+                                                    <div className="bg-amber-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">{t('payment.recommended')}</div>
+                                                </div>
+                                                <Wallet className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                                                <div className="text-xl font-black text-white mb-1">{t('payment.usdt')}</div>
+                                                <div className="text-2xl font-black text-amber-500 mb-2">15.00</div>
+                                                <div className="text-xs text-gray-500">{t('payment.crypto_payment')}</div>
+                                            </button>
+                                        )}
 
                                         {/* 美元 */}
                                         <button
@@ -2302,20 +2312,26 @@ function GoldCatApp() {
                                                     <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
                                                     <div className="text-2xl font-black text-blue-400 mb-2">$15.00</div>
                                                     <div className="text-xs text-gray-500">{t('payment.card_paypal')}</div>
+                                                    <div className="mt-3 text-[10px] text-green-400 font-bold bg-green-500/10 px-2 py-1 rounded-full inline-block">
+                                                        One-time payment for lifetime access
+                                                    </div>
                                                 </>
                                             )}
                                         </button>
 
                                         {/* 人民币 */}
-                                        <button
-                                            onClick={() => setPaymentMethod('cny')}
-                                            className="group relative p-6 rounded-2xl border-2 border-neutral-700 bg-neutral-800/50 hover:border-green-500 hover:shadow-lg hover:shadow-green-500/20 transition-all"
-                                        >
-                                            <Coins className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                                            <div className="text-xl font-black text-white mb-1">{t('payment.cny')}</div>
-                                            <div className="text-2xl font-black text-green-400 mb-2">¥99.00</div>
-                                            <div className="text-xs text-gray-500">{t('payment.alipay_wechat')}</div>
-                                        </button>
+                                        {/* 人民币 - Hidden for Creem Review */}
+                                        {false && (
+                                            <button
+                                                onClick={() => setPaymentMethod('cny')}
+                                                className="group relative p-6 rounded-2xl border-2 border-neutral-700 bg-neutral-800/50 hover:border-green-500 hover:shadow-lg hover:shadow-green-500/20 transition-all"
+                                            >
+                                                <Coins className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                                                <div className="text-xl font-black text-white mb-1">{t('payment.cny')}</div>
+                                                <div className="text-2xl font-black text-green-400 mb-2">¥99.00</div>
+                                                <div className="text-xs text-gray-500">{t('payment.alipay_wechat')}</div>
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -2343,7 +2359,8 @@ function GoldCatApp() {
                                                 onClick={() => {
                                                     const orderNum = orderNumber || 'ORDER-' + Date.now();
                                                     navigator.clipboard.writeText(orderNum);
-                                                    alert(t('payment.copied'));
+                                                    setToastMessage(t('payment.copied'));
+                                                    setShowSuccessToast(true);
                                                 }}
                                                 className="flex items-center gap-1 text-amber-500 hover:text-amber-400 text-xs"
                                             >
@@ -2361,7 +2378,8 @@ function GoldCatApp() {
                                             <button
                                                 onClick={() => {
                                                     navigator.clipboard.writeText('TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R');
-                                                    alert(t('payment.copied'));
+                                                    setToastMessage(t('payment.copied'));
+                                                    setShowSuccessToast(true);
                                                 }}
                                                 className="ml-2 text-gray-400 hover:text-white"
                                             >
@@ -2402,7 +2420,8 @@ function GoldCatApp() {
                                     <button
                                         onClick={async () => {
                                             if (!paymentTxId) {
-                                                alert(t('payment.txid_placeholder'));
+                                                setErrorMessage(t('payment.txid_placeholder'));
+                                                setShowErrorToast(true);
                                                 return;
                                             }
 
@@ -2425,7 +2444,8 @@ function GoldCatApp() {
 
                                                 if (error) {
                                                     console.error('Order creation error:', error);
-                                                    alert(t('common.error') + ': ' + error.message);
+                                                    setErrorMessage(t('common.error') + ': ' + error.message);
+                                                    setShowErrorToast(true);
                                                     return;
                                                 }
 
@@ -2434,7 +2454,8 @@ function GoldCatApp() {
                                                 setOrderNumber('');
                                             } catch (err) {
                                                 console.error('Unexpected error:', err);
-                                                alert(t('common.error'));
+                                                setErrorMessage(t('common.error'));
+                                                setShowErrorToast(true);
                                             }
                                         }}
                                         className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
@@ -2488,7 +2509,7 @@ function GoldCatApp() {
                                 <CheckCircle2 className="w-5 h-5 text-green-400" />
                             </div>
                             <div>
-                                <div className="font-bold text-sm tracking-wide">{t('common.success')}</div>
+                                <div className="font-bold text-sm tracking-wide">{toastMessage || t('common.success')}</div>
                             </div>
                             <button onClick={() => setShowSuccessToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">
                                 <X className="w-4 h-4" />
@@ -2820,7 +2841,7 @@ function GoldCatApp() {
                                 <div className="space-y-2">
                                     <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
                                         <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
-                                        <span>{t('fortune.title')} ({t('fortune.personalized')})</span>
+                                        <span>{t('payment.ai_analysis')}</span>
                                     </div>
                                     <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
                                         <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
@@ -2996,7 +3017,7 @@ function GoldCatApp() {
                                         onClick={() => {
                                             const email = 'goldcatservice@gmail.com';
                                             navigator.clipboard.writeText(email);
-                                            setErrorMessage(language === 'zh' ? '邮箱已复制: ' + email : 'Email copied: ' + email);
+                                            setToastMessage(t('payment.copied'));
                                             setShowSuccessToast(true);
                                         }}
                                         className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 hover:scale-105"
