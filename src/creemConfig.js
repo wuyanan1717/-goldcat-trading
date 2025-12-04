@@ -10,13 +10,13 @@ export const CREEM_CONFIG = {
 
     // 生产环境（正式上线后使用）
     PRODUCTION: {
-        PRODUCT_ID: '', // 待填写：正式环境的 Product ID
-        CHECKOUT_URL: '', // 待填写：正式环境的 Checkout URL
+        PRODUCT_ID: 'prod_2eQVR7OEf1I3N4Ji34KPlJ', // 正式环境 Product ID
+        CHECKOUT_URL: 'https://www.creem.io/payment/prod_2eQVR7OEf1I3N4Ji34KPlJ', // 正式环境 Checkout URL
     },
 
     // 当前使用的环境（切换这里即可）
     // 'TEST' 或 'PRODUCTION'
-    CURRENT_ENV: 'TEST',
+    CURRENT_ENV: 'PRODUCTION',
 };
 
 // 获取当前Checkout URL的辅助函数
