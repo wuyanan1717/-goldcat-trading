@@ -646,7 +646,9 @@ function GoldCatApp() {
 
             if (authError || !currentUser) {
                 console.error('Auth error:', authError);
-                alert('您的登录会话已过期，请重新登录后再试。');
+                setErrorMessage('您的登录会话已过期，请重新登录后再试。');
+                setShowErrorToast(true);
+                setTimeout(() => setShowErrorToast(false), 3000);
                 return;
             }
 
@@ -685,7 +687,9 @@ function GoldCatApp() {
             if (error) {
                 console.error('Failed to save trade to database:', error);
                 console.error('Error details:', JSON.stringify(error, null, 2));
-                alert('保存交易记录失败: ' + error.message);
+                setErrorMessage('保存交易记录失败: ' + error.message);
+                setShowErrorToast(true);
+                setTimeout(() => setShowErrorToast(false), 3000);
                 return;
             }
 
@@ -701,7 +705,9 @@ function GoldCatApp() {
             setChecklist({ trend: false, close: false, structure: false });
         } catch (err) {
             console.error('Unexpected error saving trade:', err);
-            alert('保存交易记录失败: ' + err.message);
+            setErrorMessage('保存交易记录失败: ' + err.message);
+            setShowErrorToast(true);
+            setTimeout(() => setShowErrorToast(false), 3000);
         }
     };
     const handleSubmitTrade = async () => {
@@ -918,7 +924,9 @@ function GoldCatApp() {
             setShowSuccessToast(true);
         } catch (err) {
             console.error('Unexpected error settling trade:', err);
-            alert('结算失败: ' + err.message);
+            setErrorMessage('结算失败: ' + err.message);
+            setShowErrorToast(true);
+            setTimeout(() => setShowErrorToast(false), 3000);
         }
     };
     // 复盘交易
@@ -945,7 +953,9 @@ function GoldCatApp() {
 
             if (error) {
                 console.error('Failed to save review:', error);
-                alert('保存复盘失败，请重试');
+                setErrorMessage('保存复盘失败，请重试');
+                setShowErrorToast(true);
+                setTimeout(() => setShowErrorToast(false), 3000);
                 return;
             }
 
@@ -959,7 +969,9 @@ function GoldCatApp() {
             setShowSuccessToast(true);
         } catch (err) {
             console.error('Unexpected error saving review:', err);
-            alert('保存复盘失败: ' + err.message);
+            setErrorMessage('保存复盘失败: ' + err.message);
+            setShowErrorToast(true);
+            setTimeout(() => setShowErrorToast(false), 3000);
         } finally {
             setIsSaving(false);
         }
