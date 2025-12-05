@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { getCheckoutUrl, CREEM_CONFIG } from './creemConfig';
-import { PrivacyPolicyModal, TermsOfServiceModal } from './PolicyModals';
+import PrivacyPolicyPage from './PrivacyPolicyPage';
+import TermsOfServicePage from './TermsOfServicePage';
 import ParticleLogo from './ParticleLogo';
 import {
     TrendingUp, TrendingDown, DollarSign, Package, AlertCircle, BarChart3, Target,
@@ -9,7 +10,7 @@ import {
     Infinity, Activity, Zap, FileText, Brain, Sparkles, CheckCircle2, AlertTriangle,
     Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, Lock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
-    PlusCircle, Check, RotateCcw, Info
+    PlusCircle, Check, RotateCcw, Info, Loader2
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -127,8 +128,7 @@ function GoldCatApp() {
         content: ''
     });
     const [isSaving, setIsSaving] = useState(false);
-    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-    const [showTermsModal, setShowTermsModal] = useState(false);
+    const [currentPage, setCurrentPage] = useState('main'); // 'main' | 'privacy' | 'terms'
     const [showDisclaimer, setShowDisclaimer] = useState(false);
 
     // 多语言支持
@@ -812,6 +812,7 @@ function GoldCatApp() {
             setTimeout(() => setShowErrorToast(false), 3000);
         } else {
             setShowLoginModal(false);
+            setToastMessage(language === 'zh' ? '登录成功' : 'Login Successful');
             setShowSuccessToast(true);
         }
     };
@@ -1206,7 +1207,7 @@ function GoldCatApp() {
     // --- 4. 界面渲染 ---
 
     return (
-        <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate overflow-auto" translate="no">
+        <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate overflow-auto flex flex-col min-h-screen" translate="no">
 
             {/* 顶部导航 */}
             <nav className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-50 shadow-xl">
@@ -1331,7 +1332,7 @@ function GoldCatApp() {
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
 
                             {/* Particle Logo Effect */}
-                            <div className="absolute inset-0 z-5 opacity-60">
+                            <div className="absolute inset-0 z-[5] opacity-60">
                                 <ParticleLogo />
                             </div>
                         </div>
@@ -1603,7 +1604,7 @@ function GoldCatApp() {
                                                     }}
                                                     className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
                                                 >
-                                                    {isSubmitting ? <span className="animate-spin">⌛</span> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
+                                                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
                                                 </button>)}
                                             <p className="text-center text-xs text-gray-600 mt-3">
                                                 {t('form.honest_note')}
@@ -1792,7 +1793,7 @@ function GoldCatApp() {
                                     <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
                                     <div className="text-sm text-gray-400 flex items-center gap-4">
                                         <div className="flex items-center gap-2">
-                                            <span>交易数量: <span className="text-white font-bold">{trades.length}</span></span>
+                                            <span>{t('journal.total_trades')}: <span className="text-white font-bold">{trades.length}</span></span>
                                             <span className="text-gray-600">|</span>
                                             <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
                                             <span className="text-gray-600">|</span>
@@ -3037,17 +3038,17 @@ function GoldCatApp() {
             }
 
             {/* Footer with Privacy and Terms */}
-            <div className="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-neutral-800 py-3 px-4 z-[9999]">
+            <div className="w-full bg-black/90 border-t border-neutral-800 py-3 px-4 z-[9999] mt-auto">
                 <div className="flex justify-center items-center gap-6">
                     <button
-                        onClick={() => setShowPrivacyModal(true)}
+                        onClick={() => setCurrentPage('privacy')}
                         className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
                     >
                         {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
                     </button>
                     <span className="text-gray-600">|</span>
                     <button
-                        onClick={() => setShowTermsModal(true)}
+                        onClick={() => setCurrentPage('terms')}
                         className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
                     >
                         {language === 'zh' ? '服务条款' : 'Terms of Service'}
@@ -3116,9 +3117,17 @@ function GoldCatApp() {
                 </div>
             )}
 
-            {/* Privacy Policy and Terms Modals */}
-            <PrivacyPolicyModal show={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} language={language} />
-            <TermsOfServiceModal show={showTermsModal} onClose={() => setShowTermsModal(false)} language={language} />
+            {/* Page Routing: Privacy Policy and Terms of Service Pages */}
+            {currentPage === 'privacy' && (
+                <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
+                    <PrivacyPolicyPage language={language} onBack={() => setCurrentPage('main')} />
+                </div>
+            )}
+            {currentPage === 'terms' && (
+                <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
+                    <TermsOfServicePage language={language} onBack={() => setCurrentPage('main')} />
+                </div>
+            )}
         </div>
     );
 }

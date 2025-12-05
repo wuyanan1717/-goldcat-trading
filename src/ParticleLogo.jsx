@@ -38,6 +38,11 @@ const ParticleLogo = () => {
         image.src = '/goldcat_logo_transparent.png';
         image.crossOrigin = 'Anonymous';
 
+        image.onerror = () => {
+            console.error("Failed to load logo image for particles");
+            setIsLoaded(true); // Stop spinner even if failed
+        };
+
         image.onload = () => {
             // Draw image to offscreen canvas to get data
             const offscreenCanvas = document.createElement('canvas');

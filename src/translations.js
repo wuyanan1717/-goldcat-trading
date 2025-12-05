@@ -128,6 +128,7 @@ export const translations = {
         },
         journal: {
             title: "交易流水",
+            total_trades: "交易数量",
             win_rate: "胜率",
             net_pnl: "净盈亏",
             empty_state: "暂无数据，请前往“录入交易”开始您的第一笔记录。",
@@ -393,6 +394,7 @@ export const translations = {
         },
         journal: {
             title: "Trade Journal",
+            total_trades: "Total Trades",
             win_rate: "Win Rate",
             net_pnl: "Net PnL",
             empty_state: "No data. Go to 'New Trade' to start.",
