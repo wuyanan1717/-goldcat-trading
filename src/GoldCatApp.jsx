@@ -3016,7 +3016,7 @@ function GoldCatApp() {
                                     </button>
                                     <button
                                         onClick={() => {
-                                            const email = 'goldcatservice@gmail.com';
+                                            const email = 'support@goldcat.trade';
                                             navigator.clipboard.writeText(email);
                                             setToastMessage(t('payment.copied'));
                                             setShowSuccessToast(true);

@@ -83,7 +83,7 @@ const TermsOfServicePage = ({ language, onBack }) => {
                 },
                 {
                     title: "11. 联系我们",
-                    content: "如果您对这些条款有任何疑问，请通过 goldcatservice@gmail.com 联系我们。"
+                    content: "如果您对这些条款有任何疑问，请通过 support@goldcat.trade 联系我们。"
                 }
             ]
         },
@@ -167,7 +167,7 @@ const TermsOfServicePage = ({ language, onBack }) => {
                 },
                 {
                     title: "11. Contact Us",
-                    content: "If you have any questions about these Terms, please contact us at goldcatservice@gmail.com."
+                    content: "If you have any questions about these Terms, please contact us at support@goldcat.trade."
                 }
             ]
         }

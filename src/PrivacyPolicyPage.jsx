@@ -69,7 +69,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                 },
                 {
                     title: "10. 联系我们",
-                    content: "如果您对本隐私政策有任何疑问，请通过 goldcatservice@gmail.com 联系我们。"
+                    content: "如果您对本隐私政策有任何疑问，请通过 support@goldcat.trade 联系我们。"
                 }
             ]
         },
@@ -139,7 +139,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                 },
                 {
                     title: "10. Contact Us",
-                    content: "If you have any questions about this Privacy Policy, please contact us at goldcatservice@gmail.com."
+                    content: "If you have any questions about this Privacy Policy, please contact us at support@goldcat.trade."
                 }
             ]
         }
