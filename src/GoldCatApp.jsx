@@ -1323,7 +1323,7 @@ function GoldCatApp() {
             }
             */}
 
-            <main className="max-w-7xl mx-auto px-4 py-6">
+            <main className="w-full max-w-7xl mx-auto px-4 py-6">
 
                 {/* 登录引导 */}
                 {/* 登录引导 (Landing Page Redesign) */}
@@ -1911,7 +1911,18 @@ function GoldCatApp() {
 
                         {/* --- 2. 交易日记列表 --- */}
                         {activeTab === 'journal' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+                            <div
+                                className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4"
+                                ref={(el) => {
+                                    if (el) {
+                                        console.log('🔍 Journal Tab Grid Container Width:', el.offsetWidth);
+                                        const child = el.querySelector('.lg\\:col-span-3');
+                                        if (child) {
+                                            console.log('🔍 Journal Tab Content Width:', child.offsetWidth);
+                                        }
+                                    }
+                                }}
+                            >
                                 <div className="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
                                     <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
                                         <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
