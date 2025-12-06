@@ -1089,10 +1089,20 @@ function GoldCatApp() {
     };
 
     const confirmLogout = async () => {
-        await supabase.auth.signOut();
-        // State updates handled by onAuthStateChange
-        setActiveTab('new_trade');
-        setShowLogoutModal(false);
+        try {
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error('Logout failed:', error);
+        } finally {
+            // Force clear local state
+            setUser(null);
+            setTrades([]);
+            setTotalCapital(0);
+            setMembership({ isPremium: false, expiryDate: null, maxTrades: 20 });
+            localStorage.removeItem(`goldcat_membership_${user?.email}`); // Clear specific user cache
+            setActiveTab('new_trade');
+            setShowLogoutModal(false);
+        }
     };
 
     // 反馈提交
