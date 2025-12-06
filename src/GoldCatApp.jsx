@@ -2080,272 +2080,270 @@ function GoldCatApp() {
                                     )}
 
                                     {membership.isPremium && (
-                                        <>
-                                            <div className="w-full space-y-6">
-                                                <div className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-                                                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                                                        <Brain className="w-5 h-5 text-amber-500" />
-                                                        {t('ai.gene_title')}
-                                                    </h3>
+                                        <div className="lg:col-span-3 space-y-6">
+                                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                                                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                                                    <Brain className="w-5 h-5 text-amber-500" />
+                                                    {t('ai.gene_title')}
+                                                </h3>
 
-                                                    {(() => {
-                                                        // 只分析已结算的交易
-                                                        const settledTrades = trades.filter(t => t.status === 'closed');
+                                                {(() => {
+                                                    // 只分析已结算的交易
+                                                    const settledTrades = trades.filter(t => t.status === 'closed');
 
-                                                        // 如果没有已结算的交易，显示提示信息
-                                                        if (settledTrades.length === 0) {
-                                                            return (
-                                                                <div className="text-center py-12">
-                                                                    <div className="mb-4">
-                                                                        <Activity className="w-16 h-16 mx-auto text-gray-600" />
-                                                                    </div>
-                                                                    <div className="text-lg font-bold text-gray-400 mb-2">
-                                                                        {language === 'zh' ? '数据不足' : 'Insufficient Data'}
-                                                                    </div>
-                                                                    <div className="text-sm text-gray-500">
-                                                                        {language === 'zh'
-                                                                            ? '请至少结算一笔交易后，AI 才能为您生成分析报告。'
-                                                                            : 'Please settle at least one trade for AI analysis.'}
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        }
-
-                                                        // 1. Calculate Best Pattern (只用已结算的交易)
-                                                        const patternStats = {};
-                                                        settledTrades.forEach(trade => {
-                                                            const p = trade.pattern || t('ai.unrecorded');
-                                                            if (!patternStats[p]) patternStats[p] = { wins: 0, total: 0 };
-                                                            patternStats[p].total++;
-                                                            if (trade.profitLoss > 0) patternStats[p].wins++;
-                                                        });
-                                                        let bestPattern = t('ai.not_enough_data');
-                                                        let bestWinRate = 0;
-                                                        Object.entries(patternStats).forEach(([pattern, stats]) => {
-                                                            // Skip 'Unrecorded' if possible, unless it's the only one
-                                                            if (pattern === t('ai.unrecorded') && Object.keys(patternStats).length > 1) return;
-
-                                                            const rate = stats.wins / stats.total;
-                                                            if (rate >= bestWinRate && stats.total >= 1) {
-                                                                bestWinRate = rate;
-                                                                bestPattern = pattern;
-                                                            }
-                                                        });
-
-                                                        // 2. Calculate Worst Timeframe (只用已结算的交易)
-                                                        const tfStats = {};
-                                                        settledTrades.forEach(trade => {
-                                                            const tf = trade.timeframe || t('ai.unrecorded');
-                                                            if (!tfStats[tf]) tfStats[tf] = { losses: 0, total: 0 };
-                                                            tfStats[tf].total++;
-                                                            if (trade.profitLoss < 0) tfStats[tf].losses++;
-                                                        });
-                                                        let worstTimeframe = t('ai.not_enough_data');
-                                                        let worstLossRate = -1;
-                                                        Object.entries(tfStats).forEach(([tf, stats]) => {
-                                                            const rate = stats.losses / stats.total;
-                                                            if (rate > worstLossRate && stats.total >= 1) {
-                                                                worstLossRate = rate;
-                                                                worstTimeframe = tf;
-                                                            }
-                                                        });
-
-                                                        // 3. Calculate Discipline Score (只用已结算的交易)
-                                                        // Base 100, deduct for bad R:R, deduct for large losses
-                                                        let score = 100;
-                                                        if (settledTrades.length > 0) {
-                                                            const badRRTrades = settledTrades.filter(t => (parseFloat(t.rrRatio) || 0) < 1.5).length;
-                                                            score -= (badRRTrades / settledTrades.length) * 30;
-
-                                                            const losingTrades = settledTrades.filter(t => t.profitLoss < 0);
-                                                            const winningTrades = settledTrades.filter(t => t.profitLoss > 0);
-
-                                                            const avgLoss = losingTrades.length > 0
-                                                                ? losingTrades.reduce((acc, t) => acc + Math.abs(t.profitLoss), 0) / losingTrades.length
-                                                                : 0;
-                                                            const avgWin = winningTrades.length > 0
-                                                                ? winningTrades.reduce((acc, t) => acc + t.profitLoss, 0) / winningTrades.length
-                                                                : 1; // Avoid division by zero if no wins
-
-                                                            if (avgLoss > avgWin) score -= 20;
-                                                        }
-
-                                                        // 4. Review & PnL Check (只用已结算的交易)
-                                                        const reviewedTrades = settledTrades.filter(t => t.review && t.review.length > 5).length;
-                                                        const reviewRate = settledTrades.length > 0 ? reviewedTrades / settledTrades.length : 0;
-                                                        if (reviewRate < 0.5) score -= 10; // Deduct if less than 50% reviewed
-
-                                                        const totalPnL = settledTrades.reduce((acc, t) => acc + (t.profitLoss || 0), 0);
-
-                                                        score = Math.max(0, Math.round(score));
-
+                                                    // 如果没有已结算的交易，显示提示信息
+                                                    if (settledTrades.length === 0) {
                                                         return (
-                                                            <>
-                                                                <div className="grid grid-cols-3 gap-4 mb-6">
-                                                                    <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700">
-                                                                        <div className="text-xs text-gray-500 mb-1">{t('ai.best_pattern')}</div>
-                                                                        {settledTrades.length < 5 ? (
-                                                                            <div className="text-sm text-gray-500 py-2">{language === 'zh' ? '数据不足' : 'Insufficient Data'}</div>
-                                                                        ) : (
-                                                                            <>
-                                                                                <div className="text-lg font-bold text-green-400">{bestPattern}</div>
-                                                                                <div className="text-xs text-gray-600 mt-1">{t('journal.win_rate')} {bestPattern !== t('ai.not_enough_data') ? (bestWinRate * 100).toFixed(0) : 0}%</div>
-                                                                            </>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700">
-                                                                        <div className="text-xs text-gray-500 mb-1">{t('ai.worst_timeframe')}</div>
-                                                                        {settledTrades.length < 5 ? (
-                                                                            <div className="text-sm text-gray-500 py-2">{language === 'zh' ? '数据不足' : 'Insufficient Data'}</div>
-                                                                        ) : (
-                                                                            <>
-                                                                                <div className="text-lg font-bold text-red-400">{worstTimeframe}</div>
-                                                                                <div className="text-xs text-gray-600 mt-1">{t('journal.status.loss')} {worstTimeframe !== t('ai.not_enough_data') ? (worstLossRate * 100).toFixed(0) : 0}%</div>
-                                                                            </>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700 relative group">
-                                                                        <div className="flex items-center justify-center gap-1.5 mb-1">
-                                                                            <div className="text-xs text-gray-500 border-b border-dashed border-gray-600 inline-block">{t('ai.discipline_score')}</div>
-                                                                            <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors cursor-help" />
-                                                                        </div>
-                                                                        <div className={`text-lg font-bold ${score >= 80 ? 'text-green-500' : score >= 60 ? 'text-amber-500' : 'text-red-500'}`}>{score}/100</div>
-                                                                        <div className="text-xs text-gray-600 mt-1">{score >= 80 ? t('ai.score_excellent') : score >= 60 ? t('ai.score_good') : t('ai.score_bad')}</div>
+                                                            <div className="text-center py-12">
+                                                                <div className="mb-4">
+                                                                    <Activity className="w-16 h-16 mx-auto text-gray-600" />
+                                                                </div>
+                                                                <div className="text-lg font-bold text-gray-400 mb-2">
+                                                                    {language === 'zh' ? '数据不足' : 'Insufficient Data'}
+                                                                </div>
+                                                                <div className="text-sm text-gray-500">
+                                                                    {language === 'zh'
+                                                                        ? '请至少结算一笔交易后，AI 才能为您生成分析报告。'
+                                                                        : 'Please settle at least one trade for AI analysis.'}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
 
-                                                                        {/* Tooltip */}
-                                                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                                                            <div className="font-bold text-white mb-1">评分规则：</div>
-                                                                            <ul className="list-disc list-inside space-y-1">
-                                                                                <li><span className="text-red-400">盈亏比 &lt; 1.5</span>：扣分 (权重最高)</li>
-                                                                                <li><span className="text-red-400">平均亏损 &gt; 盈利</span>：扣 20 分</li>
-                                                                                <li><span className="text-amber-500">复盘率 &lt; 50%</span>：扣 10 分</li>
-                                                                            </ul>
-                                                                        </div>
+                                                    // 1. Calculate Best Pattern (只用已结算的交易)
+                                                    const patternStats = {};
+                                                    settledTrades.forEach(trade => {
+                                                        const p = trade.pattern || t('ai.unrecorded');
+                                                        if (!patternStats[p]) patternStats[p] = { wins: 0, total: 0 };
+                                                        patternStats[p].total++;
+                                                        if (trade.profitLoss > 0) patternStats[p].wins++;
+                                                    });
+                                                    let bestPattern = t('ai.not_enough_data');
+                                                    let bestWinRate = 0;
+                                                    Object.entries(patternStats).forEach(([pattern, stats]) => {
+                                                        // Skip 'Unrecorded' if possible, unless it's the only one
+                                                        if (pattern === t('ai.unrecorded') && Object.keys(patternStats).length > 1) return;
+
+                                                        const rate = stats.wins / stats.total;
+                                                        if (rate >= bestWinRate && stats.total >= 1) {
+                                                            bestWinRate = rate;
+                                                            bestPattern = pattern;
+                                                        }
+                                                    });
+
+                                                    // 2. Calculate Worst Timeframe (只用已结算的交易)
+                                                    const tfStats = {};
+                                                    settledTrades.forEach(trade => {
+                                                        const tf = trade.timeframe || t('ai.unrecorded');
+                                                        if (!tfStats[tf]) tfStats[tf] = { losses: 0, total: 0 };
+                                                        tfStats[tf].total++;
+                                                        if (trade.profitLoss < 0) tfStats[tf].losses++;
+                                                    });
+                                                    let worstTimeframe = t('ai.not_enough_data');
+                                                    let worstLossRate = -1;
+                                                    Object.entries(tfStats).forEach(([tf, stats]) => {
+                                                        const rate = stats.losses / stats.total;
+                                                        if (rate > worstLossRate && stats.total >= 1) {
+                                                            worstLossRate = rate;
+                                                            worstTimeframe = tf;
+                                                        }
+                                                    });
+
+                                                    // 3. Calculate Discipline Score (只用已结算的交易)
+                                                    // Base 100, deduct for bad R:R, deduct for large losses
+                                                    let score = 100;
+                                                    if (settledTrades.length > 0) {
+                                                        const badRRTrades = settledTrades.filter(t => (parseFloat(t.rrRatio) || 0) < 1.5).length;
+                                                        score -= (badRRTrades / settledTrades.length) * 30;
+
+                                                        const losingTrades = settledTrades.filter(t => t.profitLoss < 0);
+                                                        const winningTrades = settledTrades.filter(t => t.profitLoss > 0);
+
+                                                        const avgLoss = losingTrades.length > 0
+                                                            ? losingTrades.reduce((acc, t) => acc + Math.abs(t.profitLoss), 0) / losingTrades.length
+                                                            : 0;
+                                                        const avgWin = winningTrades.length > 0
+                                                            ? winningTrades.reduce((acc, t) => acc + t.profitLoss, 0) / winningTrades.length
+                                                            : 1; // Avoid division by zero if no wins
+
+                                                        if (avgLoss > avgWin) score -= 20;
+                                                    }
+
+                                                    // 4. Review & PnL Check (只用已结算的交易)
+                                                    const reviewedTrades = settledTrades.filter(t => t.review && t.review.length > 5).length;
+                                                    const reviewRate = settledTrades.length > 0 ? reviewedTrades / settledTrades.length : 0;
+                                                    if (reviewRate < 0.5) score -= 10; // Deduct if less than 50% reviewed
+
+                                                    const totalPnL = settledTrades.reduce((acc, t) => acc + (t.profitLoss || 0), 0);
+
+                                                    score = Math.max(0, Math.round(score));
+
+                                                    return (
+                                                        <>
+                                                            <div className="grid grid-cols-3 gap-4 mb-6">
+                                                                <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700">
+                                                                    <div className="text-xs text-gray-500 mb-1">{t('ai.best_pattern')}</div>
+                                                                    {settledTrades.length < 5 ? (
+                                                                        <div className="text-sm text-gray-500 py-2">{language === 'zh' ? '数据不足' : 'Insufficient Data'}</div>
+                                                                    ) : (
+                                                                        <>
+                                                                            <div className="text-lg font-bold text-green-400">{bestPattern}</div>
+                                                                            <div className="text-xs text-gray-600 mt-1">{t('journal.win_rate')} {bestPattern !== t('ai.not_enough_data') ? (bestWinRate * 100).toFixed(0) : 0}%</div>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                                <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700">
+                                                                    <div className="text-xs text-gray-500 mb-1">{t('ai.worst_timeframe')}</div>
+                                                                    {settledTrades.length < 5 ? (
+                                                                        <div className="text-sm text-gray-500 py-2">{language === 'zh' ? '数据不足' : 'Insufficient Data'}</div>
+                                                                    ) : (
+                                                                        <>
+                                                                            <div className="text-lg font-bold text-red-400">{worstTimeframe}</div>
+                                                                            <div className="text-xs text-gray-600 mt-1">{t('journal.status.loss')} {worstTimeframe !== t('ai.not_enough_data') ? (worstLossRate * 100).toFixed(0) : 0}%</div>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                                <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700 relative group">
+                                                                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                        <div className="text-xs text-gray-500 border-b border-dashed border-gray-600 inline-block">{t('ai.discipline_score')}</div>
+                                                                        <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors cursor-help" />
+                                                                    </div>
+                                                                    <div className={`text-lg font-bold ${score >= 80 ? 'text-green-500' : score >= 60 ? 'text-amber-500' : 'text-red-500'}`}>{score}/100</div>
+                                                                    <div className="text-xs text-gray-600 mt-1">{score >= 80 ? t('ai.score_excellent') : score >= 60 ? t('ai.score_good') : t('ai.score_bad')}</div>
+
+                                                                    {/* Tooltip */}
+                                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                                                        <div className="font-bold text-white mb-1">评分规则：</div>
+                                                                        <ul className="list-disc list-inside space-y-1">
+                                                                            <li><span className="text-red-400">盈亏比 &lt; 1.5</span>：扣分 (权重最高)</li>
+                                                                            <li><span className="text-red-400">平均亏损 &gt; 盈利</span>：扣 20 分</li>
+                                                                            <li><span className="text-amber-500">复盘率 &lt; 50%</span>：扣 10 分</li>
+                                                                        </ul>
                                                                     </div>
                                                                 </div>
+                                                            </div>
 
-                                                                <div className="bg-neutral-800/30 p-5 rounded-xl border border-neutral-800">
-                                                                    <h4 className="text-sm font-bold text-gray-300 mb-3 flex items-center gap-2">
-                                                                        <MessageSquare className="w-4 h-4 text-blue-400" /> {t('ai.diagnosis_title')}
-                                                                    </h4>
-                                                                    <p className="text-sm text-gray-400 leading-relaxed">
-                                                                        {t('ai.diagnosis_intro', { count: trades.length })}
-                                                                        {trades.length < 5 ? (
-                                                                            t('ai.diagnosis_short')
-                                                                        ) : (
-                                                                            <>
-                                                                                {t('ai.diagnosis_pattern', { pattern: bestPattern })}
-                                                                                {t('ai.diagnosis_timeframe', { timeframe: worstTimeframe })}
-                                                                                {score < 60 && t('ai.diagnosis_discipline')}
-                                                                                {reviewRate < 0.5 && <span className="block text-amber-500 mt-1">⚠️ {t('ai.review_warning', { rate: (reviewRate * 100).toFixed(0) })}</span>}
-                                                                                <span className={`block mt-2 font-bold ${totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                    {t('ai.pnl_status', {
-                                                                                        pnl: (totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2) + ' USDT',
-                                                                                        comment: totalPnL < 0 ? t('ai.pnl_comment_bad') : t('ai.pnl_comment_good')
-                                                                                    })}
-                                                                                </span>
+                                                            <div className="bg-neutral-800/30 p-5 rounded-xl border border-neutral-800">
+                                                                <h4 className="text-sm font-bold text-gray-300 mb-3 flex items-center gap-2">
+                                                                    <MessageSquare className="w-4 h-4 text-blue-400" /> {t('ai.diagnosis_title')}
+                                                                </h4>
+                                                                <p className="text-sm text-gray-400 leading-relaxed">
+                                                                    {t('ai.diagnosis_intro', { count: trades.length })}
+                                                                    {trades.length < 5 ? (
+                                                                        t('ai.diagnosis_short')
+                                                                    ) : (
+                                                                        <>
+                                                                            {t('ai.diagnosis_pattern', { pattern: bestPattern })}
+                                                                            {t('ai.diagnosis_timeframe', { timeframe: worstTimeframe })}
+                                                                            {score < 60 && t('ai.diagnosis_discipline')}
+                                                                            {reviewRate < 0.5 && <span className="block text-amber-500 mt-1">⚠️ {t('ai.review_warning', { rate: (reviewRate * 100).toFixed(0) })}</span>}
+                                                                            <span className={`block mt-2 font-bold ${totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                {t('ai.pnl_status', {
+                                                                                    pnl: (totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2) + ' USDT',
+                                                                                    comment: totalPnL < 0 ? t('ai.pnl_comment_bad') : t('ai.pnl_comment_good')
+                                                                                })}
+                                                                            </span>
 
-                                                                                {/* 详细统计分析 */}
-                                                                                <div className="mt-4 p-3 bg-neutral-900/50 rounded-lg border border-neutral-700">
-                                                                                    <div className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-2">
-                                                                                        <BarChart3 className="w-3 h-3" /> {t('ai.detailed_analysis')}
+                                                                            {/* 详细统计分析 */}
+                                                                            <div className="mt-4 p-3 bg-neutral-900/50 rounded-lg border border-neutral-700">
+                                                                                <div className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-2">
+                                                                                    <BarChart3 className="w-3 h-3" /> {t('ai.detailed_analysis')}
+                                                                                </div>
+                                                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                                                                    <div>
+                                                                                        <span className="text-gray-500 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {t('ai.long_win_rate')}:</span>
+                                                                                        <span className="text-green-400 font-bold">
+                                                                                            {(() => {
+                                                                                                const longs = settledTrades.filter(t => t.direction === 'long' || t.tradeType === 'buy');
+                                                                                                const longWins = longs.filter(t => t.profitLoss > 0).length;
+                                                                                                return longs.length > 0 ? ((longWins / longs.length) * 100).toFixed(0) + '%' : 'N/A';
+                                                                                            })()}
+                                                                                        </span>
                                                                                     </div>
-                                                                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                                                                        <div>
-                                                                                            <span className="text-gray-500 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {t('ai.long_win_rate')}:</span>
-                                                                                            <span className="text-green-400 font-bold">
-                                                                                                {(() => {
-                                                                                                    const longs = settledTrades.filter(t => t.direction === 'long' || t.tradeType === 'buy');
-                                                                                                    const longWins = longs.filter(t => t.profitLoss > 0).length;
-                                                                                                    return longs.length > 0 ? ((longWins / longs.length) * 100).toFixed(0) + '%' : 'N/A';
-                                                                                                })()}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                        <div>
-                                                                                            <span className="text-gray-500 flex items-center gap-1"><TrendingDown className="w-3 h-3" /> {t('ai.short_win_rate')}:</span>
-                                                                                            <span className="text-red-400 font-bold">
-                                                                                                {(() => {
-                                                                                                    const shorts = settledTrades.filter(t => t.direction === 'short' || t.tradeType === 'sell');
-                                                                                                    const shortWins = shorts.filter(t => t.profitLoss > 0).length;
-                                                                                                    return shorts.length > 0 ? ((shortWins / shorts.length) * 100).toFixed(0) + '%' : 'N/A';
-                                                                                                })()}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                        <div>
-                                                                                            <span className="text-gray-500 flex items-center gap-1"><DollarSign className="w-3 h-3" /> {t('ai.avg_profit_label')}:</span>
-                                                                                            <span className="text-green-400 font-bold">
+                                                                                    <div>
+                                                                                        <span className="text-gray-500 flex items-center gap-1"><TrendingDown className="w-3 h-3" /> {t('ai.short_win_rate')}:</span>
+                                                                                        <span className="text-red-400 font-bold">
+                                                                                            {(() => {
+                                                                                                const shorts = settledTrades.filter(t => t.direction === 'short' || t.tradeType === 'sell');
+                                                                                                const shortWins = shorts.filter(t => t.profitLoss > 0).length;
+                                                                                                return shorts.length > 0 ? ((shortWins / shorts.length) * 100).toFixed(0) + '%' : 'N/A';
+                                                                                            })()}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <span className="text-gray-500 flex items-center gap-1"><DollarSign className="w-3 h-3" /> {t('ai.avg_profit_label')}:</span>
+                                                                                        <span className="text-green-400 font-bold">
+                                                                                            {(() => {
+                                                                                                const wins = trades.filter(t => t.profitLoss > 0);
+                                                                                                const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + t.profitLoss, 0) / wins.length : 0;
+                                                                                                return '+$' + avgWin.toFixed(2);
+                                                                                            })()}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <span className="text-gray-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {t('ai.avg_loss_label')}:</span>
+                                                                                        <span className="text-red-400 font-bold">
+                                                                                            {(() => {
+                                                                                                const losses = trades.filter(t => t.profitLoss < 0);
+                                                                                                const avgLoss = losses.length > 0 ? losses.reduce((sum, t) => sum + Math.abs(t.profitLoss), 0) / losses.length : 0;
+                                                                                                return '-$' + avgLoss.toFixed(2);
+                                                                                            })()}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="col-span-2">
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <span className="text-gray-500 flex items-center gap-1"><Target className="w-3 h-3" /> {t('ai.rr_ratio_label')}:</span>
+                                                                                            <span className="text-amber-400 font-bold">
                                                                                                 {(() => {
                                                                                                     const wins = trades.filter(t => t.profitLoss > 0);
-                                                                                                    const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + t.profitLoss, 0) / wins.length : 0;
-                                                                                                    return '+$' + avgWin.toFixed(2);
-                                                                                                })()}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                        <div>
-                                                                                            <span className="text-gray-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {t('ai.avg_loss_label')}:</span>
-                                                                                            <span className="text-red-400 font-bold">
-                                                                                                {(() => {
                                                                                                     const losses = trades.filter(t => t.profitLoss < 0);
-                                                                                                    const avgLoss = losses.length > 0 ? losses.reduce((sum, t) => sum + Math.abs(t.profitLoss), 0) / losses.length : 0;
-                                                                                                    return '-$' + avgLoss.toFixed(2);
+                                                                                                    const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + t.profitLoss, 0) / wins.length : 0;
+                                                                                                    const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, t) => sum + t.profitLoss, 0) / losses.length) : 1;
+                                                                                                    const plRatio = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : 'N/A';
+                                                                                                    return plRatio + ' ' + (plRatio >= 1.5 ? '✅' : plRatio >= 1 ? '⚠️' : '❌');
                                                                                                 })()}
                                                                                             </span>
-                                                                                        </div>
-                                                                                        <div className="col-span-2">
-                                                                                            <div className="flex items-center gap-2">
-                                                                                                <span className="text-gray-500 flex items-center gap-1"><Target className="w-3 h-3" /> {t('ai.rr_ratio_label')}:</span>
-                                                                                                <span className="text-amber-400 font-bold">
-                                                                                                    {(() => {
-                                                                                                        const wins = trades.filter(t => t.profitLoss > 0);
-                                                                                                        const losses = trades.filter(t => t.profitLoss < 0);
-                                                                                                        const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + t.profitLoss, 0) / wins.length : 0;
-                                                                                                        const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, t) => sum + t.profitLoss, 0) / losses.length) : 1;
-                                                                                                        const plRatio = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : 'N/A';
-                                                                                                        return plRatio + ' ' + (plRatio >= 1.5 ? '✅' : plRatio >= 1 ? '⚠️' : '❌');
-                                                                                                    })()}
-                                                                                                </span>
-                                                                                                <span className="text-gray-600 text-xs">{t('ai.rr_recommendation')}</span>
-                                                                                            </div>
+                                                                                            <span className="text-gray-600 text-xs">{t('ai.rr_recommendation')}</span>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
-                                                                            </>
-                                                                        )}
-                                                                    </p>
-                                                                </div>
+                                                                            </div>
+                                                                        </>
+                                                                    )}
+                                                                </p>
+                                                            </div>
 
-                                                                {/* 资金曲线 */}
-                                                                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-                                                                    <h3 className="text-lg font-bold text-white mb-4">{t('ai.equity_curve')}</h3>
-                                                                    <div className="h-[250px] w-full">
-                                                                        <ResponsiveContainer width="100%" height="100%">
-                                                                            <AreaChart data={trades.filter(t => t.status === 'closed').slice().reverse().reduce((acc, t) => {
-                                                                                const lastVal = acc.length > 0 ? acc[acc.length - 1].val : 0;
-                                                                                const pnl = parseFloat(t.profitLoss) || 0;
-                                                                                acc.push({ i: acc.length, val: lastVal + pnl });
-                                                                                return acc;
-                                                                            }, [])}>
-                                                                                <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
-                                                                                <XAxis dataKey="i" hide />
-                                                                                <YAxis domain={['auto', 'auto']} stroke="#525252" fontSize={10} />
-                                                                                <Tooltip contentStyle={{ backgroundColor: '#171717', border: '1px solid #404040' }} />
-                                                                                <Area type="monotone" dataKey="val" stroke="#fbbf24" fill="#fbbf24" fillOpacity={0.1} />
-                                                                            </AreaChart>
-                                                                        </ResponsiveContainer>
-                                                                    </div>
+                                                            {/* 资金曲线 */}
+                                                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                                                                <h3 className="text-lg font-bold text-white mb-4">{t('ai.equity_curve')}</h3>
+                                                                <div className="h-[250px] w-full">
+                                                                    <ResponsiveContainer width="100%" height="100%">
+                                                                        <AreaChart data={trades.filter(t => t.status === 'closed').slice().reverse().reduce((acc, t) => {
+                                                                            const lastVal = acc.length > 0 ? acc[acc.length - 1].val : 0;
+                                                                            const pnl = parseFloat(t.profitLoss) || 0;
+                                                                            acc.push({ i: acc.length, val: lastVal + pnl });
+                                                                            return acc;
+                                                                        }, [])}>
+                                                                            <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+                                                                            <XAxis dataKey="i" hide />
+                                                                            <YAxis domain={['auto', 'auto']} stroke="#525252" fontSize={10} />
+                                                                            <Tooltip contentStyle={{ backgroundColor: '#171717', border: '1px solid #404040' }} />
+                                                                            <Area type="monotone" dataKey="val" stroke="#fbbf24" fill="#fbbf24" fillOpacity={0.1} />
+                                                                        </AreaChart>
+                                                                    </ResponsiveContainer>
                                                                 </div>
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </div>
+                                                            </div>
+                                                        </>
+                                                    );
+                                                })()}
                                             </div>
-
-
-                                        </>
+                                        </div>
                                     )}
                                 </div>
-
                             )
+                        }
+
+                        )
                         }
                     </>
                 )}
