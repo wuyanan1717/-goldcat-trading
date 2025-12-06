@@ -155,7 +155,12 @@ function GoldCatApp() {
         }
         if (!value) return path;
 
-        // Simple parameter replacement
+        // If it's an object or array, return it directly (for lists like features)
+        if (typeof value !== 'string') {
+            return value;
+        }
+
+        // Simple parameter replacement for strings
         Object.entries(params).forEach(([k, v]) => {
             value = value.replace(new RegExp('{' + k + '}', 'g'), v);
         });
