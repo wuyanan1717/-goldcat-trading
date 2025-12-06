@@ -1947,7 +1947,7 @@ function GoldCatApp() {
                                                         <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.basis')}</th>
                                                         <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.rr')}</th>
                                                         <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.status')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center">{t('journal.columns.action')}</th>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[160px]">{t('journal.columns.action')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-neutral-800">
@@ -2009,49 +2009,51 @@ function GoldCatApp() {
                                                                     )}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4 text-center">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        if (trade.status === 'open') {
-                                                                            handleSettleTrade(trade.id);
-                                                                        }
-                                                                    }}
-                                                                    disabled={trade.status !== 'open'}
-                                                                    className={`
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            if (trade.status === 'open') {
+                                                                                handleSettleTrade(trade.id);
+                                                                            }
+                                                                        }}
+                                                                        disabled={trade.status !== 'open'}
+                                                                        className={`
                                                                     px-3 py-1 rounded border text-xs font-bold transition-all
                                                                     ${trade.status === 'open'
-                                                                            ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
-                                                                            : 'border-transparent text-gray-600 cursor-not-allowed opacity-50'}
+                                                                                ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
+                                                                                : 'border-transparent text-gray-600 cursor-not-allowed opacity-50'}
                                                                 `}
-                                                                >
-                                                                    {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleReviewTrade(trade);
-                                                                    }}
-                                                                    className="ml-2 text-gray-500 hover:text-white transition-colors text-xs"
-                                                                >
-                                                                    {trade.review ? (
-                                                                        <>
-                                                                            <CheckCircle2 className="w-3 h-3" /> {t('journal.reviewed')}
-                                                                        </>
-                                                                    ) : (
-                                                                        t('journal.review')
-                                                                    )}
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setTradeToDelete(trade);
-                                                                        setShowDeleteModal(true);
-                                                                    }}
-                                                                    className="text-gray-600 hover:text-red-500 transition-colors p-1"
-                                                                    title={language === 'zh' ? '删除交易' : 'Delete Trade'}
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
+                                                                    >
+                                                                        {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleReviewTrade(trade);
+                                                                        }}
+                                                                        className="text-gray-500 hover:text-white transition-colors text-xs"
+                                                                    >
+                                                                        {trade.review ? (
+                                                                            <>
+                                                                                <CheckCircle2 className="w-3 h-3" /> {t('journal.reviewed')}
+                                                                            </>
+                                                                        ) : (
+                                                                            t('journal.review')
+                                                                        )}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setTradeToDelete(trade);
+                                                                            setShowDeleteModal(true);
+                                                                        }}
+                                                                        className="text-gray-600 hover:text-red-500 transition-colors p-1"
+                                                                        title={language === 'zh' ? '删除交易' : 'Delete Trade'}
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}
