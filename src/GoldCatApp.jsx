@@ -2063,10 +2063,10 @@ function GoldCatApp() {
                         {/* --- 3. AI 行为诊断 (核心卖点) --- */}
                         {
                             activeTab === 'ai_analysis' && (
-                                <div className="grid grid-cols-1 gap-6 animate-in fade-in">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
                                     {/* 会员锁定遮罩 */}
                                     {!membership.isPremium && (
-                                        <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-16 text-center border border-amber-500/30 relative overflow-hidden">
+                                        <div className="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-6 text-center border border-amber-500/30 relative overflow-hidden">
                                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
                                             <Lock className="w-16 h-16 text-amber-500 mb-6 relative z-10" />
                                             <h2 className="text-3xl font-black text-white mb-4 relative z-10">{t('ai.locked_title')}</h2>
