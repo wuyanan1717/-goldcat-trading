@@ -1943,10 +1943,10 @@ function GoldCatApp() {
                                                 <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
                                                     <tr>
                                                         <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.date')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.symbol')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.setup')}</th>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.symbol_dir')}</th>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.basis')}</th>
                                                         <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.rr')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.pnl')}</th>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.status')}</th>
                                                         <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center">{t('journal.columns.action')}</th>
                                                     </tr>
                                                 </thead>
@@ -2024,7 +2024,7 @@ function GoldCatApp() {
                                                                             : 'border-transparent text-gray-600 cursor-not-allowed opacity-50'}
                                                                 `}
                                                                 >
-                                                                    {trade.status === 'open' ? t('journal.actions.settle') : t('journal.actions.settled')}
+                                                                    {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => {
