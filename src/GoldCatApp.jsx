@@ -1953,31 +1953,34 @@ function GoldCatApp() {
                                             <table className="w-full text-left text-sm whitespace-nowrap">
                                                 <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
                                                     <tr>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.date')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.symbol_dir')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.basis')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.rr')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.status')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[160px]">{t('journal.columns.action')}</th>
+                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.date')}</th>
+                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[120px]">{t('journal.columns.symbol_dir')}</th>
+                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[180px]">{t('journal.columns.basis')}</th>
+                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[80px]">{t('journal.columns.rr')}</th>
+                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.status')}</th>
+                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">复盘内容</th>
+                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[180px]">操作</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-neutral-800">
                                                     {trades.map(trade => (
                                                         <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
-                                                            <td className="px-6 py-4 font-mono text-gray-400">{trade.date}</td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="font-bold text-white">{trade.symbol}</div>
+                                                            <td className="px-4 py-4 font-mono text-gray-400 text-xs">{trade.date}</td>
+                                                            <td className="px-4 py-4">
+                                                                <div className="font-bold text-white text-sm">{trade.symbol}</div>
                                                                 <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
                                                                     {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4">
-                                                                <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700">
-                                                                    {trade.timeframe}
-                                                                </span>
-                                                                <span className="ml-2 text-gray-400">{trade.pattern || '-'}</span>
+                                                            <td className="px-4 py-4">
+                                                                <div className="flex flex-col gap-1">
+                                                                    <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700 inline-block w-fit">
+                                                                        {trade.timeframe}
+                                                                    </span>
+                                                                    <span className="text-gray-400 text-xs">{trade.pattern || '-'}</span>
+                                                                </div>
                                                             </td>
-                                                            <td className="px-6 py-4 font-mono group relative">
+                                                            <td className="px-4 py-4 font-mono group relative text-sm">
                                                                 <div className="flex items-center gap-1.5">
                                                                     <span>{trade.rrRatio}</span>
                                                                     <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
@@ -2004,7 +2007,7 @@ function GoldCatApp() {
                                                                     </div>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4">
+                                                            <td className="px-4 py-4">
                                                                 <div className="flex items-center gap-2">
                                                                     {trade.status === 'open' ? (
                                                                         <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
@@ -2019,6 +2022,15 @@ function GoldCatApp() {
                                                                         </>
                                                                     )}
                                                                 </div>
+                                                            </td>
+                                                            <td className="px-4 py-4 max-w-[300px]">
+                                                                {trade.review ? (
+                                                                    <div className="text-xs text-gray-300 truncate" title={trade.review}>
+                                                                        {trade.review}
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-xs text-gray-600 italic">未复盘</span>
+                                                                )}
                                                             </td>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center justify-center gap-2">
