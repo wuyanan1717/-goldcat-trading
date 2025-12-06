@@ -28,7 +28,7 @@ export const translations = {
         },
         pricing: {
             title: "选择您的套餐",
-            subtitle: "记录交易，提升技能",
+            subtitle: "专业工具助您养成良好交易习惯",
             free_title: "免费",
             free_price: "免费",
             free_desc: "非常适合入门",
@@ -351,7 +351,7 @@ export const translations = {
         },
         pricing: {
             title: "Choose Your Plan",
-            subtitle: "Track trades and improve your skills",
+            subtitle: "Build better trading habits with professional tools",
             free_title: "Free",
             free_price: "Free",
             free_desc: "Perfect for getting started",
