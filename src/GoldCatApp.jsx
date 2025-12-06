@@ -718,6 +718,7 @@ function GoldCatApp() {
 
             // 2. 更新本地状态
             setTrades([trade, ...trades]);
+            setToastMessage(t('common.success'));
             setShowSuccessToast(true);
 
             // 重置表单 but keep some preferences
