@@ -2063,19 +2063,21 @@ function GoldCatApp() {
                         {/* --- 3. AI 行为诊断 (核心卖点) --- */}
                         {
                             activeTab === 'ai_analysis' && (
-                                <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
                                     {/* 会员锁定遮罩 */}
                                     {!membership.isPremium && (
-                                        <div className="w-full lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-6 border border-amber-500/30 relative overflow-hidden flex flex-col items-center text-center">
+                                        <div className="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30 relative overflow-hidden">
                                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-                                            <Lock className="w-16 h-16 text-amber-500 mb-6 relative z-10" />
-                                            <h2 className="text-3xl font-black text-white mb-4 relative z-10">{t('ai.locked_title')}</h2>
-                                            <p className="text-gray-400 mb-8 text-lg relative z-10 max-w-2xl mx-auto">
-                                                {t('ai.locked_desc')}
-                                            </p>
-                                            <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="relative z-10 bg-amber-500 hover:bg-amber-400 text-black font-bold px-10 py-4 rounded-xl shadow-xl shadow-amber-500/20 text-lg hover:scale-105 transition-transform flex items-center gap-2">
-                                                <Crown className="w-5 h-5" /> {t('ai.unlock_btn')}
-                                            </button>
+                                            <div className="max-w-2xl mx-auto text-center">
+                                                <Lock className="w-16 h-16 text-amber-500 mb-6 mx-auto relative z-10" />
+                                                <h2 className="text-3xl font-black text-white mb-4 relative z-10">{t('ai.locked_title')}</h2>
+                                                <p className="text-gray-400 mb-8 text-lg relative z-10">
+                                                    {t('ai.locked_desc')}
+                                                </p>
+                                                <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="relative z-10 bg-amber-500 hover:bg-amber-400 text-black font-bold px-10 py-4 rounded-xl shadow-xl shadow-amber-500/20 text-lg hover:scale-105 transition-transform inline-flex items-center gap-2">
+                                                    <Crown className="w-5 h-5" /> {t('ai.unlock_btn')}
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
 
