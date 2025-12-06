@@ -1396,6 +1396,84 @@ function GoldCatApp() {
                                     <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_ai_desc')}</p>
                                 </div>
                             </div>
+
+                            {/* --- Pricing Section (Added for Compliance) --- */}
+                            <div className="mt-32 mb-20 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
+                                <div className="text-center mb-16">
+                                    <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight">{t('pricing.title')}</h2>
+                                    <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                                        {t('pricing.subtitle')}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative group-hover:gap-12 transition-all duration-500">
+                                    {/* Free Plan */}
+                                    <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col">
+                                        <div className="mb-8">
+                                            <h3 className="text-xl font-bold text-white mb-2">{t('pricing.free_title')}</h3>
+                                            <div className="flex items-baseline gap-1 mb-4">
+                                                <span className="text-4xl font-black text-white">{t('pricing.free_price')}</span>
+                                            </div>
+                                            <p className="text-gray-400 text-sm">{t('pricing.free_desc')}</p>
+                                        </div>
+                                        <div className="border-t border-white/10 my-8"></div>
+                                        <ul className="space-y-4 mb-8 flex-1">
+                                            {t('pricing.free_features', { returnObjects: true }).map((feature, i) => (
+                                                <li key={i} className="flex items-start gap-3 text-gray-300">
+                                                    <Check className="w-5 h-5 text-gray-500 shrink-0" />
+                                                    <span className="text-sm">{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <button
+                                            onClick={() => {
+                                                setIsRegisterMode(true);
+                                                setShowLoginModal(true);
+                                            }}
+                                            className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all"
+                                        >
+                                            {t('pricing.start_free')}
+                                        </button>
+                                    </div>
+
+                                    {/* Lifetime Plan */}
+                                    <div className="relative bg-black/80 backdrop-blur-md border border-amber-500/30 rounded-3xl p-8 hover:border-amber-500 transition-all hover:-translate-y-2 duration-300 shadow-[0_0_50px_rgba(245,158,11,0.1)] flex flex-col scale-105 z-10">
+                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg">
+                                            <Crown className="w-3 h-3" /> {t('pricing.pro_badge')}
+                                        </div>
+                                        <div className="mb-8">
+                                            <h3 className="text-xl font-bold text-amber-500 mb-2 flex items-center gap-2">
+                                                {t('pricing.pro_title')}
+                                            </h3>
+                                            <div className="flex items-baseline gap-1 mb-1">
+                                                <span className="text-5xl font-black text-white">{t('pricing.pro_price')}</span>
+                                            </div>
+                                            <p className="text-amber-500/80 text-xs font-bold uppercase tracking-wide mb-3">{t('pricing.pro_type')}</p>
+                                            <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
+                                        </div>
+                                        <div className="border-t border-white/10 my-8"></div>
+                                        <ul className="space-y-4 mb-8 flex-1">
+                                            {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
+                                                <li key={i} className="flex items-start gap-3 text-white">
+                                                    <div className="bg-amber-500/20 rounded-full p-0.5">
+                                                        <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                                                    </div>
+                                                    <span className="text-sm font-medium">{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <button
+                                            onClick={() => {
+                                                setIsRegisterMode(true);
+                                                setShowLoginModal(true);
+                                            }}
+                                            className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02]"
+                                        >
+                                            {t('pricing.get_pro')}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

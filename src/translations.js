@@ -23,7 +23,36 @@ export const translations = {
             feature_discipline_title: "纪律养成",
             feature_discipline_desc: "强制性的风控检查流程，帮您管住手，从根源上杜绝情绪化交易。",
             feature_ai_title: "AI 智能进化",
-            feature_ai_desc: "您的私人交易教练。AI 深度分析您的每一笔交易数据，精准识别情绪波动与策略漏洞，助您构建稳定盈利系统。"
+            feature_ai_desc: "您的私人交易教练。AI 深度分析您的每一笔交易数据，精准识别情绪波动与策略漏洞，助您构建稳定盈利系统。",
+            pricing: {
+                title: "选择您的套餐",
+                subtitle: "通过更好的风控和数据分析，获得 GoldCat 的最佳体验",
+                free_title: "免费",
+                free_price: "免费",
+                free_desc: "非常适合入门",
+                free_badge: "基础版",
+                free_features: [
+                    "基础交易记录 (50条/月)",
+                    "有限的 AI 分析点数",
+                    "基础社区支持",
+                    "标准风控计算"
+                ],
+                pro_title: "终身会员",
+                pro_price: "$199",
+                pro_badge: "最受欢迎",
+                pro_type: "一次性付费，终身使用",
+                pro_desc: "专业交易者的不二之选",
+                pro_features: [
+                    "无限交易记录",
+                    "无限 AI 深度复盘",
+                    "高级风控策略推荐",
+                    "专属客服支持 (support@goldcat.trade)",
+                    "优先体验新功能",
+                    "无广告纯净体验"
+                ],
+                start_free: "免费开始",
+                get_pro: "升级到终身版"
+            }
         },
         auth: {
             login_title: "登录金猫系统",
@@ -315,7 +344,36 @@ export const translations = {
             feature_discipline_title: "Discipline Building",
             feature_discipline_desc: "Mandatory risk control checks help you stay disciplined and eliminate emotional trading at the source.",
             feature_ai_title: "AI Evolution",
-            feature_ai_desc: "Your personal trading coach. AI analyzes your trade data to identify emotional patterns and strategy flaws, helping you build a profitable system."
+            feature_ai_desc: "Your private trading coach. AI deeply analyzes every trade, identifying emotional fluctuations and strategy flaws to help you build a profitable system.",
+            pricing: {
+                title: "Choose Your Plan",
+                subtitle: "Get the best GoldCat experience with better risk control and data analysis",
+                free_title: "Free",
+                free_price: "Free",
+                free_desc: "Perfect for getting started",
+                free_badge: "Basic",
+                free_features: [
+                    "Basic Trade Logging (50/month)",
+                    "Limited AI Analysis Credits",
+                    "Basic Community Support",
+                    "Standard Risk Calculation"
+                ],
+                pro_title: "Lifetime",
+                pro_price: "$199",
+                pro_badge: "Most Popular",
+                pro_type: "One-time payment, lifetime access",
+                pro_desc: "The choice for professional traders",
+                pro_features: [
+                    "Unlimited Trade Logging",
+                    "Unlimited AI Deep Review",
+                    "Advanced Risk Strategy Recommendations",
+                    "Dedicated Support (support@goldcat.trade)",
+                    "Priority Access to New Features",
+                    "Ad-free Experience"
+                ],
+                start_free: "Start for Free",
+                get_pro: "Get Lifetime Access"
+            }
         },
         auth: {
             login_title: "Login to GoldCat",
