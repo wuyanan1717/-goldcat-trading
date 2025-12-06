@@ -2032,8 +2032,9 @@ function GoldCatApp() {
                                                                     <span className="text-xs text-gray-600 italic">未复盘</span>
                                                                 )}
                                                             </td>
-                                                            <td className="px-6 py-4">
+                                                            <td className="px-4 py-4">
                                                                 <div className="flex items-center justify-center gap-2">
+                                                                    {/* Settle/Closed button */}
                                                                     <button
                                                                         onClick={() => {
                                                                             if (trade.status === 'open') {
@@ -2042,39 +2043,49 @@ function GoldCatApp() {
                                                                         }}
                                                                         disabled={trade.status !== 'open'}
                                                                         className={`
-                                                                    px-3 py-1 rounded border text-xs font-bold transition-all
-                                                                    ${trade.status === 'open'
+                                                                            px-3 py-1.5 rounded border text-xs font-bold transition-all min-w-[70px]
+                                                                            ${trade.status === 'open'
                                                                                 ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
-                                                                                : 'border-transparent text-gray-600 cursor-not-allowed opacity-50'}
-                                                                `}
+                                                                                : 'border-neutral-700 text-gray-600 cursor-not-allowed bg-neutral-800/50'}
+                                                                        `}
                                                                     >
                                                                         {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
                                                                     </button>
+
+                                                                    {/* Review button */}
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
                                                                             handleReviewTrade(trade);
                                                                         }}
-                                                                        className="text-gray-500 hover:text-white transition-colors text-xs"
+                                                                        className={`
+                                                                            px-3 py-1.5 rounded text-xs font-medium transition-all min-w-[70px] flex items-center justify-center gap-1
+                                                                            ${trade.review
+                                                                                ? 'bg-green-900/30 text-green-400 border border-green-500/30 hover:bg-green-900/50'
+                                                                                : 'bg-neutral-800 text-gray-400 border border-neutral-700 hover:bg-neutral-700 hover:text-white'}
+                                                                        `}
                                                                     >
                                                                         {trade.review ? (
                                                                             <>
-                                                                                <CheckCircle2 className="w-3 h-3" /> {t('journal.reviewed')}
+                                                                                <CheckCircle2 className="w-3 h-3" />
+                                                                                <span>已复盘</span>
                                                                             </>
                                                                         ) : (
-                                                                            t('journal.review')
+                                                                            <span>复盘</span>
                                                                         )}
                                                                     </button>
+
+                                                                    {/* Delete button */}
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
                                                                             setTradeToDelete(trade);
                                                                             setShowDeleteModal(true);
                                                                         }}
-                                                                        className="text-gray-600 hover:text-red-500 transition-colors p-1"
+                                                                        className="p-2 rounded border border-neutral-700 text-gray-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-900/20 transition-all"
                                                                         title={language === 'zh' ? '删除交易' : 'Delete Trade'}
                                                                     >
-                                                                        <Trash2 className="w-4 h-4" />
+                                                                        <Trash2 className="w-3.5 h-3.5" />
                                                                     </button>
                                                                 </div>
                                                             </td>
