@@ -192,7 +192,7 @@ function GoldCatApp() {
         entryPrice: '',
         stopLoss: '',
         takeProfit: '',
-        pattern: '',
+        pattern: getInitialPatterns('en')[0],
         timeframe: '4h',
         notes: ''
     });
