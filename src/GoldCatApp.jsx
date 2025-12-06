@@ -1510,360 +1510,362 @@ function GoldCatApp() {
 
                         {/* --- 1. 录入交易 (核心) --- */}
                         {activeTab === 'new_trade' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
-                                {/* 左侧：录入表单 */}
-                                <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-                                    <div className="flex justify-between items-center mb-6 border-b border-neutral-800 pb-4">
-                                        <h2 className="text-xl font-black text-white flex items-center gap-2">
-                                            <Target className="w-5 h-5 text-amber-500" />
-                                            {t('form.title')}
-                                        </h2>
-                                        <span className="text-xs bg-neutral-800 text-gray-400 px-2 py-1 rounded">
-                                            {t('form.today_trade_count', { count: trades.filter(t => t.date === new Date().toLocaleDateString()).length + 1 })}
-                                        </span>
+                            <div className="max-w-4xl mx-auto">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+                                    {/* 左侧：录入表单 */}
+                                    <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+                                        <div className="flex justify-between items-center mb-6 border-b border-neutral-800 pb-4">
+                                            <h2 className="text-xl font-black text-white flex items-center gap-2">
+                                                <Target className="w-5 h-5 text-amber-500" />
+                                                {t('form.title')}
+                                            </h2>
+                                            <span className="text-xs bg-neutral-800 text-gray-400 px-2 py-1 rounded">
+                                                {t('form.today_trade_count', { count: trades.filter(t => t.date === new Date().toLocaleDateString()).length + 1 })}
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            {/* 第一行：基础信息 */}
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div className="col-span-2 md:col-span-1">
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.direction')}</label>
+                                                    <div className="flex bg-neutral-800 rounded-lg p-1">
+                                                        <button
+                                                            onClick={() => handleInputChange('tradeType', 'buy')}
+                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'buy' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                                        >{t('form.long')}</button>
+                                                        <button
+                                                            onClick={() => handleInputChange('tradeType', 'sell')}
+                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'sell' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                                        >{t('form.short')}</button>
+                                                    </div>
+                                                </div>
+                                                <div className="col-span-2 md:col-span-1">
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
+                                                    <input
+                                                        type="text" placeholder="BTC/USDT" value={formData.symbol}
+                                                        onChange={e => handleInputChange('symbol', e.target.value.toUpperCase())}
+                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
+                                                    />
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>
+                                                    <select
+                                                        value={formData.timeframe}
+                                                        onChange={e => handleInputChange('timeframe', e.target.value)}
+                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
+                                                    >
+                                                        {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <label className="block text-xs text-gray-500">{t('form.pattern')}</label>
+                                                        <button onClick={() => setShowPatternModal(true)} className="text-[10px] text-amber-500 hover:underline flex items-center gap-1">
+                                                            <Settings className="w-3 h-3" /> {t('form.manage')}
+                                                        </button>
+                                                    </div>
+                                                    <select
+                                                        value={formData.pattern}
+                                                        onChange={e => handleInputChange('pattern', e.target.value)}
+                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
+                                                    >
+                                                        {patterns.map(p => (
+                                                            <option key={p} value={p}>{p}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* Trading Pair Risk Warnings */}
+                                            {tradingPairRisk?.showDailyWarning && (
+                                                <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                    <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                                    <div className="text-xs text-red-400 leading-relaxed">
+                                                        <span className="font-bold">{t('risk.daily_loss_warning')}</span>
+                                                        <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {tradingPairRisk?.showHistoricalWarning && (
+                                                <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                    <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                                                    <div className="text-xs text-orange-400 leading-relaxed">
+                                                        <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
+                                                        <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* 第二行：资金管理 */}
+                                            <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
+                                                        <input
+                                                            type="number" placeholder="1000" value={formData.margin}
+                                                            onChange={e => handleInputChange('margin', e.target.value)}
+                                                            step="any"
+                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-500 mb-1.5">{t('form.leverage')}</label>
+                                                        <input
+                                                            type="number" placeholder="10" value={formData.leverage}
+                                                            onChange={e => handleInputChange('leverage', e.target.value)}
+                                                            step="any"
+                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* 第三行：点位执行 */}
+                                            <div className="grid grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
+                                                    <input
+                                                        type="number" placeholder="0.00" value={formData.entryPrice}
+                                                        onChange={e => handleInputChange('entryPrice', e.target.value)}
+                                                        step="any"
+                                                        className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono font-bold notranslate"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5 text-red-400">{t('form.stop_loss')}</label>
+                                                    <input
+                                                        type="number" placeholder="0.00" value={formData.stopLoss}
+                                                        onChange={e => handleInputChange('stopLoss', e.target.value)}
+                                                        step="any"
+                                                        className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
+                                                    />
+                                                    {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
+                                                    {formData.entryPrice && formData.stopLoss && formData.margin && (
+                                                        <div className="text-[10px] text-gray-500 mt-1">
+                                                            预计亏损: <span className="text-red-500">
+                                                                ${Math.abs(((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
+                                                    <input
+                                                        type="number" placeholder="0.00" value={formData.takeProfit}
+                                                        onChange={e => handleInputChange('takeProfit', e.target.value)}
+                                                        step="any"
+                                                        className={`w-full bg-neutral-800 border ${validationErrors.takeProfit ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-green-500 focus:outline-none font-mono notranslate`}
+                                                    />
+                                                    {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
+                                                    {formData.entryPrice && formData.takeProfit && formData.margin && (
+                                                        <div className="text-[10px] text-gray-500 mt-1">
+                                                            预计盈利: <span className="text-green-500">
+                                                                ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* 提交按钮区域 */}
+                                            <div className="pt-4">
+                                                {!membership.isPremium && trades.length >= membership.maxTrades ? (
+                                                    <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
+                                                        <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
+                                                        <span className="text-xs font-normal">{t('form.quota_desc')}</span>
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!riskAnalysis.valid) {
+                                                                setIsShaking(true);
+                                                                setTimeout(() => setIsShaking(false), 500);
+                                                                return;
+                                                            }
+                                                            handleSubmitTrade();
+                                                        }}
+                                                        className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
+                                                    >
+                                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
+                                                    </button>)}
+                                                <p className="text-center text-xs text-gray-600 mt-3">
+                                                    {t('form.honest_note')}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
 
+                                    {/* 右侧：实时风控面板 */}
                                     <div className="space-y-6">
-                                        {/* 第一行：基础信息 */}
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            <div className="col-span-2 md:col-span-1">
-                                                <label className="block text-xs text-gray-500 mb-1.5">{t('form.direction')}</label>
-                                                <div className="flex bg-neutral-800 rounded-lg p-1">
-                                                    <button
-                                                        onClick={() => handleInputChange('tradeType', 'buy')}
-                                                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'buy' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                    >{t('form.long')}</button>
-                                                    <button
-                                                        onClick={() => handleInputChange('tradeType', 'sell')}
-                                                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'sell' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                    >{t('form.short')}</button>
-                                                </div>
-                                            </div>
-                                            <div className="col-span-2 md:col-span-1">
-                                                <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
-                                                <input
-                                                    type="text" placeholder="BTC/USDT" value={formData.symbol}
-                                                    onChange={e => handleInputChange('symbol', e.target.value.toUpperCase())}
-                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
-                                                />
-                                            </div>
-                                            <div className="col-span-1">
-                                                <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>
-                                                <select
-                                                    value={formData.timeframe}
-                                                    onChange={e => handleInputChange('timeframe', e.target.value)}
-                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                >
-                                                    {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="col-span-1">
-                                                <div className="flex justify-between items-center mb-1.5">
-                                                    <label className="block text-xs text-gray-500">{t('form.pattern')}</label>
-                                                    <button onClick={() => setShowPatternModal(true)} className="text-[10px] text-amber-500 hover:underline flex items-center gap-1">
-                                                        <Settings className="w-3 h-3" /> {t('form.manage')}
-                                                    </button>
-                                                </div>
-                                                <select
-                                                    value={formData.pattern}
-                                                    onChange={e => handleInputChange('pattern', e.target.value)}
-                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                >
-                                                    {patterns.map(p => (
-                                                        <option key={p} value={p}>{p}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
+                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
+                                            <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
+                                                <Shield className="w-4 h-4 text-amber-500" />
+                                                {t('risk.title')}
+                                            </h3>
 
-                                        {/* Trading Pair Risk Warnings */}
-                                        {tradingPairRisk?.showDailyWarning && (
-                                            <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                                                <div className="text-xs text-red-400 leading-relaxed">
-                                                    <span className="font-bold">{t('risk.daily_loss_warning')}</span>
-                                                    <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
+                                            {/* Total Capital Management */}
+                                            <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
+                                                    {!isEditingCapital && (
+                                                        <button onClick={() => setIsEditingCapital(true)} className="text-amber-500 hover:text-amber-400">
+                                                            <Edit3 className="w-3 h-3" />
+                                                        </button>
+                                                    )}
                                                 </div>
-                                            </div>
-                                        )}
-
-                                        {tradingPairRisk?.showHistoricalWarning && (
-                                            <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                                                <div className="text-xs text-orange-400 leading-relaxed">
-                                                    <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
-                                                    <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* 第二行：资金管理 */}
-                                        <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
-                                                    <input
-                                                        type="number" placeholder="1000" value={formData.margin}
-                                                        onChange={e => handleInputChange('margin', e.target.value)}
-                                                        step="any"
-                                                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.leverage')}</label>
-                                                    <input
-                                                        type="number" placeholder="10" value={formData.leverage}
-                                                        onChange={e => handleInputChange('leverage', e.target.value)}
-                                                        step="any"
-                                                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* 第三行：点位执行 */}
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
-                                                <input
-                                                    type="number" placeholder="0.00" value={formData.entryPrice}
-                                                    onChange={e => handleInputChange('entryPrice', e.target.value)}
-                                                    step="any"
-                                                    className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono font-bold notranslate"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1.5 text-red-400">{t('form.stop_loss')}</label>
-                                                <input
-                                                    type="number" placeholder="0.00" value={formData.stopLoss}
-                                                    onChange={e => handleInputChange('stopLoss', e.target.value)}
-                                                    step="any"
-                                                    className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
-                                                />
-                                                {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
-                                                {formData.entryPrice && formData.stopLoss && formData.margin && (
-                                                    <div className="text-[10px] text-gray-500 mt-1">
-                                                        预计亏损: <span className="text-red-500">
-                                                            ${Math.abs(((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
-                                                        </span>
+                                                {isEditingCapital ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            type="number"
+                                                            value={totalCapital}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (val === '' || val === '-') {
+                                                                    setTotalCapital('');
+                                                                } else {
+                                                                    const parsed = parseFloat(val);
+                                                                    setTotalCapital(isNaN(parsed) ? 0 : parsed);
+                                                                }
+                                                            }}
+                                                            className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
+                                                            autoFocus
+                                                        />
+                                                        <button onClick={() => setIsEditingCapital(false)} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xl font-black font-mono text-white tracking-wider">
+                                                        ${(totalCapital || 0).toLocaleString()}
                                                     </div>
                                                 )}
                                             </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
-                                                <input
-                                                    type="number" placeholder="0.00" value={formData.takeProfit}
-                                                    onChange={e => handleInputChange('takeProfit', e.target.value)}
-                                                    step="any"
-                                                    className={`w-full bg-neutral-800 border ${validationErrors.takeProfit ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-green-500 focus:outline-none font-mono notranslate`}
-                                                />
-                                                {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
-                                                {formData.entryPrice && formData.takeProfit && formData.margin && (
-                                                    <div className="text-[10px] text-gray-500 mt-1">
-                                                        预计盈利: <span className="text-green-500">
-                                                            ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
+
+                                            <div className="space-y-4">
+                                                <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
+                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
+                                                    <div className="text-3xl font-black font-mono flex items-end gap-2">
+                                                        {riskAnalysis.rrRatio || '0.00'}
+                                                        <span className="text-sm font-normal text-gray-400 mb-1">
+                                                            {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
                                                         </span>
                                                     </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="p-3 bg-neutral-800 rounded-lg">
+                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
+                                                        <div className="text-lg font-bold font-mono text-white notranslate">
+                                                            {riskAnalysis.positionSize.toLocaleString()} USDT
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-3 bg-neutral-800 rounded-lg">
+                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
+                                                        <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
+                                                            {riskAnalysis.riskPercent}%
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {riskAnalysis.riskPercent > 10 && (
+                                                    <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
+                                                        <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                                                        <p className="text-xs text-red-400 leading-relaxed">
+                                                            <span className="font-bold">{t('risk.warning_title')}</span>
+                                                            {t('risk.warning_msg')}
+                                                        </p>
+                                                    </div>
                                                 )}
+
+                                                {riskAnalysis.accountRiskPercent > 10 && (
+                                                    <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > 15 ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
+                                                        <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-500' : 'text-yellow-500'}`} />
+                                                        <div className="text-xs leading-relaxed">
+                                                            <p className={`font-bold ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-400' : 'text-yellow-400'}`}>
+                                                                {riskAnalysis.accountRiskPercent > 15 ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
+                                                            </p>
+                                                            <p className="text-gray-400">
+                                                                当前账户风险为 {riskAnalysis.accountRiskPercent}%，
+                                                                {riskAnalysis.accountRiskPercent > 15 ? '严重超出安全范围 (>15%)！建议大幅降低仓位。' : '已超出建议值 (10%)，请谨慎操作。'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="mt-4 pt-4 border-t border-neutral-800">
+                                                    <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
+                                                    <div className="space-y-2">
+                                                        {[
+                                                            { id: 'trend', label: t('risk.check_trend') },
+                                                            { id: 'close', label: t('risk.check_close') },
+                                                            { id: 'structure', label: t('risk.check_structure') }
+                                                        ].map(item => (
+                                                            <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
+                                                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
+                                                                    {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
+                                                                </div>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="hidden"
+                                                                    checked={checklist[item.id]}
+                                                                    onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                                                />
+                                                                <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* 提交按钮区域 */}
-                                        <div className="pt-4">
-                                            {!membership.isPremium && trades.length >= membership.maxTrades ? (
-                                                <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
-                                                    <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
-                                                    <span className="text-xs font-normal">{t('form.quota_desc')}</span>
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => {
-                                                        if (!riskAnalysis.valid) {
-                                                            setIsShaking(true);
-                                                            setTimeout(() => setIsShaking(false), 500);
-                                                            return;
-                                                        }
-                                                        handleSubmitTrade();
-                                                    }}
-                                                    className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
-                                                >
-                                                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
-                                                </button>)}
-                                            <p className="text-center text-xs text-gray-600 mt-3">
-                                                {t('form.honest_note')}
+                                        {/* Market Sentiment (Moved from AI Analysis) */}
+                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+                                            <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
+                                                <Activity className="w-4 h-4 text-blue-400" />
+                                                <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
+                                            </div>
+
+                                            {/* BTC Price */}
+                                            <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
+                                                        <span className="text-[#F7931A] font-bold text-xs">₿</span>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-[10px] text-gray-400">BTC/USDT</div>
+                                                        <div className="text-sm font-bold text-white">
+                                                            ${(btcMarket.price || 0).toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                        {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Fear & Greed */}
+                                            <div className="flex flex-col items-center justify-center py-2">
+                                                {(() => {
+                                                    const fearIndex = 30 + (new Date().getDate() % 20);
+                                                    return (
+                                                        <>
+                                                            <div className="flex items-baseline gap-2 mb-2">
+                                                                <span className="text-2xl font-black text-white">{fearIndex}</span>
+                                                                <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
+                                                            </div>
+                                                            <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                                                                <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
+                                                            </div>
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
+                                            <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
+                                                {t('ai.sentiment_tip')}
                                             </p>
                                         </div>
-                                    </div>
-                                </div>
-
-                                {/* 右侧：实时风控面板 */}
-                                <div className="space-y-6">
-                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
-                                        <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
-                                            <Shield className="w-4 h-4 text-amber-500" />
-                                            {t('risk.title')}
-                                        </h3>
-
-                                        {/* Total Capital Management */}
-                                        <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
-                                                {!isEditingCapital && (
-                                                    <button onClick={() => setIsEditingCapital(true)} className="text-amber-500 hover:text-amber-400">
-                                                        <Edit3 className="w-3 h-3" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                            {isEditingCapital ? (
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        value={totalCapital}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            if (val === '' || val === '-') {
-                                                                setTotalCapital('');
-                                                            } else {
-                                                                const parsed = parseFloat(val);
-                                                                setTotalCapital(isNaN(parsed) ? 0 : parsed);
-                                                            }
-                                                        }}
-                                                        className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
-                                                        autoFocus
-                                                    />
-                                                    <button onClick={() => setIsEditingCapital(false)} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
-                                                </div>
-                                            ) : (
-                                                <div className="text-xl font-black font-mono text-white tracking-wider">
-                                                    ${(totalCapital || 0).toLocaleString()}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
-                                                <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
-                                                <div className="text-3xl font-black font-mono flex items-end gap-2">
-                                                    {riskAnalysis.rrRatio || '0.00'}
-                                                    <span className="text-sm font-normal text-gray-400 mb-1">
-                                                        {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="p-3 bg-neutral-800 rounded-lg">
-                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
-                                                    <div className="text-lg font-bold font-mono text-white notranslate">
-                                                        {riskAnalysis.positionSize.toLocaleString()} USDT
-                                                    </div>
-                                                </div>
-                                                <div className="p-3 bg-neutral-800 rounded-lg">
-                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
-                                                    <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
-                                                        {riskAnalysis.riskPercent}%
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {riskAnalysis.riskPercent > 10 && (
-                                                <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
-                                                    <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                                    <p className="text-xs text-red-400 leading-relaxed">
-                                                        <span className="font-bold">{t('risk.warning_title')}</span>
-                                                        {t('risk.warning_msg')}
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {riskAnalysis.accountRiskPercent > 10 && (
-                                                <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > 15 ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
-                                                    <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-500' : 'text-yellow-500'}`} />
-                                                    <div className="text-xs leading-relaxed">
-                                                        <p className={`font-bold ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-400' : 'text-yellow-400'}`}>
-                                                            {riskAnalysis.accountRiskPercent > 15 ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
-                                                        </p>
-                                                        <p className="text-gray-400">
-                                                            当前账户风险为 {riskAnalysis.accountRiskPercent}%，
-                                                            {riskAnalysis.accountRiskPercent > 15 ? '严重超出安全范围 (>15%)！建议大幅降低仓位。' : '已超出建议值 (10%)，请谨慎操作。'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className="mt-4 pt-4 border-t border-neutral-800">
-                                                <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
-                                                <div className="space-y-2">
-                                                    {[
-                                                        { id: 'trend', label: t('risk.check_trend') },
-                                                        { id: 'close', label: t('risk.check_close') },
-                                                        { id: 'structure', label: t('risk.check_structure') }
-                                                    ].map(item => (
-                                                        <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
-                                                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
-                                                                {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
-                                                            </div>
-                                                            <input
-                                                                type="checkbox"
-                                                                className="hidden"
-                                                                checked={checklist[item.id]}
-                                                                onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                                                            />
-                                                            <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
-                                                        </label>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Market Sentiment (Moved from AI Analysis) */}
-                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-                                        <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
-                                            <Activity className="w-4 h-4 text-blue-400" />
-                                            <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
-                                        </div>
-
-                                        {/* BTC Price */}
-                                        <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
-                                                    <span className="text-[#F7931A] font-bold text-xs">₿</span>
-                                                </div>
-                                                <div>
-                                                    <div className="text-[10px] text-gray-400">BTC/USDT</div>
-                                                    <div className="text-sm font-bold text-white">
-                                                        ${(btcMarket.price || 0).toLocaleString()}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                    {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Fear & Greed */}
-                                        <div className="flex flex-col items-center justify-center py-2">
-                                            {(() => {
-                                                const fearIndex = 30 + (new Date().getDate() % 20);
-                                                return (
-                                                    <>
-                                                        <div className="flex items-baseline gap-2 mb-2">
-                                                            <span className="text-2xl font-black text-white">{fearIndex}</span>
-                                                            <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
-                                                        </div>
-                                                        <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
-                                                            <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
-                                                        </div>
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-                                        <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
-                                            {t('ai.sentiment_tip')}
-                                        </p>
                                     </div>
                                 </div>
                             </div>
