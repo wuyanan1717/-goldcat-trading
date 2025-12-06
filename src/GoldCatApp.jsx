@@ -2063,10 +2063,10 @@ function GoldCatApp() {
                         {/* --- 3. AI 行为诊断 (核心卖点) --- */}
                         {
                             activeTab === 'ai_analysis' && (
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
+                                <>
                                     {/* 会员锁定遮罩 */}
                                     {!membership.isPremium && (
-                                        <div className="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30 relative overflow-hidden">
+                                        <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30 relative overflow-hidden">
                                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
                                             <div className="max-w-2xl mx-auto text-center">
                                                 <Lock className="w-16 h-16 text-amber-500 mb-6 mx-auto relative z-10" />
@@ -2083,7 +2083,7 @@ function GoldCatApp() {
 
                                     {membership.isPremium && (
                                         <>
-                                            <div className="lg:col-span-3 space-y-6">
+                                            <div className="space-y-6">
                                                 <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
                                                     <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                                                         <Brain className="w-5 h-5 text-amber-500" />
@@ -2345,611 +2345,610 @@ function GoldCatApp() {
 
                                         </>
                                     )}
-                                </div>
 
-                            )
+                                    )
                         }
-                    </>
-                )}
-            </main >
-
-            {/* Payment Modal */}
-            {
-                showPaymentModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-                        <div className="bg-neutral-900 w-full max-w-2xl rounded-2xl border border-neutral-800 p-8 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Crown className="w-32 h-32 text-amber-500" />
-                            </div>
-                            <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">{t('payment.title')}</h3>
-                            <p className="text-gray-400 mb-8">{t('payment.subtitle')}</p>
-
-                            {!isPaymentSuccess && (
-                                <button onClick={() => { setShowPaymentModal(false); setPaymentMethod(null); }} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            )}
-
-                            {isPaymentSuccess ? (
-                                <div className="text-center py-12 animate-in fade-in zoom-in duration-300">
-                                    <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
-                                        <CheckCircle2 className="w-12 h-12 text-green-500" />
-                                    </div>
-                                    <h3 className="text-2xl font-black text-white mb-2">{t('payment.success_title')}</h3>
-                                    <p className="text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
-                                        {t('payment.success_desc')}
-                                    </p>
-                                    <button
-                                        onClick={() => {
-                                            setIsPaymentSuccess(false);
-                                            setShowPaymentModal(false);
-                                            setPaymentMethod(null);
-                                        }}
-                                        className="px-10 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all transform hover:scale-105"
-                                    >
-                                        {t('common.done')}
-                                    </button>
-                                </div>
-                            ) : !paymentMethod ? (
-                                <>
-                                    {/* Price and Features Display */}
-                                    <div className="mb-6">
-                                        <div className="text-center mb-8 p-6 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl border-2 border-amber-500/30">
-                                            <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
-                                            <div className="text-5xl font-black text-white mb-2">$15.00</div>
-                                            <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block">
-                                                {t('payment.lifetime_access')}
-                                            </div>
-                                        </div>
-
-                                        {/* Feature List */}
-                                        <ul className="space-y-3 mb-6">
-                                            {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
-                                                <li key={i} className="flex items-center gap-3 text-white">
-                                                    <div className="bg-amber-500/20 rounded-full p-0.5">
-                                                        <Check className="w-4 h-4 text-amber-500 shrink-0" />
-                                                    </div>
-                                                    <span className="text-sm font-medium">{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-
-                                        {/* Payment Button */}
-                                        <button
-                                            onClick={handleUpgrade}
-                                            disabled={isUpgrading}
-                                            className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {isUpgrading ? (
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin"></div>
-                                                    <span>Creating Session...</span>
-                                                </div>
-                                            ) : (
-                                                t('pricing.get_pro')
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                                        <Shield className="w-4 h-4" />
-                                        <span>SSL 安全加密支付</span>
-                                    </div>
                                 </>
-                            ) : paymentMethod === 'usdt' ? (
-                                <>
-                                    {/* USDT 手动支付界面 */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                            <ArrowRight className="w-4 h-4 rotate-180" /> 返回选择支付方式
+                            )}
+                    </main >
+
+                {/* Payment Modal */}
+                {
+                    showPaymentModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+                            <div className="bg-neutral-900 w-full max-w-2xl rounded-2xl border border-neutral-800 p-8 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10">
+                                    <Crown className="w-32 h-32 text-amber-500" />
+                                </div>
+                                <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">{t('payment.title')}</h3>
+                                <p className="text-gray-400 mb-8">{t('payment.subtitle')}</p>
+
+                                {!isPaymentSuccess && (
+                                    <button onClick={() => { setShowPaymentModal(false); setPaymentMethod(null); }} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                )}
+
+                                {isPaymentSuccess ? (
+                                    <div className="text-center py-12 animate-in fade-in zoom-in duration-300">
+                                        <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
+                                            <CheckCircle2 className="w-12 h-12 text-green-500" />
+                                        </div>
+                                        <h3 className="text-2xl font-black text-white mb-2">{t('payment.success_title')}</h3>
+                                        <p className="text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
+                                            {t('payment.success_desc')}
+                                        </p>
+                                        <button
+                                            onClick={() => {
+                                                setIsPaymentSuccess(false);
+                                                setShowPaymentModal(false);
+                                                setPaymentMethod(null);
+                                            }}
+                                            className="px-10 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all transform hover:scale-105"
+                                        >
+                                            {t('common.done')}
                                         </button>
                                     </div>
-
-                                    <div className="space-y-4">
-                                        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="text-xs text-gray-400">{t('payment.order_number')}</div>
-                                                <button
-                                                    onClick={() => {
-                                                        const orderNum = orderNumber || 'ORDER-' + Date.now();
-                                                        navigator.clipboard.writeText(orderNum);
-                                                        setToastMessage(t('payment.copied'));
-                                                        setShowSuccessToast(true);
-                                                    }}
-                                                    className="flex items-center gap-1 text-amber-500 hover:text-amber-400 text-xs"
-                                                >
-                                                    <Copy className="w-3 h-3" />
-                                                    {t('payment.copy')}
-                                                </button>
+                                ) : !paymentMethod ? (
+                                    <>
+                                        {/* Price and Features Display */}
+                                        <div className="mb-6">
+                                            <div className="text-center mb-8 p-6 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl border-2 border-amber-500/30">
+                                                <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
+                                                <div className="text-5xl font-black text-white mb-2">$15.00</div>
+                                                <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block">
+                                                    {t('payment.lifetime_access')}
+                                                </div>
                                             </div>
-                                            <div className="text-lg font-mono text-amber-500">{orderNumber || 'ORDER-' + Date.now()}</div>
-                                        </div>
 
-                                        <div className="p-4 bg-neutral-800 rounded-xl">
-                                            <div className="text-xs text-gray-400 mb-2">{t('payment.receiving_address')}</div>
-                                            <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg">
-                                                <code className="text-xs font-mono text-white break-all">TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R</code>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText('TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R');
-                                                        setToastMessage(t('payment.copied'));
-                                                        setShowSuccessToast(true);
-                                                    }}
-                                                    className="ml-2 text-gray-400 hover:text-white"
-                                                >
-                                                    <Copy className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-4 bg-neutral-800 rounded-xl">
-                                            <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                            <div className="text-3xl font-black text-amber-500">15.00 USDT</div>
-                                        </div>
-
-                                        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                                            <div className="text-sm text-blue-400 mb-2 flex items-center gap-2">
-                                                <AlertCircle className="w-4 h-4" />
-                                                {t('payment.instructions')}
-                                            </div>
-                                            <ul className="text-xs text-gray-400 space-y-1">
-                                                <li>• {t('payment.instruction_1')}</li>
-                                                <li>• {t('payment.instruction_2')}</li>
-                                                <li className="text-amber-400 font-semibold">• {t('payment.instruction_3')}</li>
-                                                <li>• {t('payment.instruction_4')}</li>
+                                            {/* Feature List */}
+                                            <ul className="space-y-3 mb-6">
+                                                {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
+                                                    <li key={i} className="flex items-center gap-3 text-white">
+                                                        <div className="bg-amber-500/20 rounded-full p-0.5">
+                                                            <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                                                        </div>
+                                                        <span className="text-sm font-medium">{feature}</span>
+                                                    </li>
+                                                ))}
                                             </ul>
+
+                                            {/* Payment Button */}
+                                            <button
+                                                onClick={handleUpgrade}
+                                                disabled={isUpgrading}
+                                                className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isUpgrading ? (
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin"></div>
+                                                        <span>Creating Session...</span>
+                                                    </div>
+                                                ) : (
+                                                    t('pricing.get_pro')
+                                                )}
+                                            </button>
                                         </div>
 
-                                        <div>
-                                            <label className="text-xs text-gray-400 mb-2 block">{t('payment.txid_label')}</label>
-                                            <input
-                                                type="text"
-                                                value={paymentTxId}
-                                                onChange={(e) => setPaymentTxId(e.target.value)}
-                                                placeholder={t('payment.txid_placeholder')}
-                                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono text-sm"
-                                            />
+                                        <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                                            <Shield className="w-4 h-4" />
+                                            <span>SSL 安全加密支付</span>
+                                        </div>
+                                    </>
+                                ) : paymentMethod === 'usdt' ? (
+                                    <>
+                                        {/* USDT 手动支付界面 */}
+                                        <div className="flex items-center justify-between mb-4">
+                                            <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
+                                                <ArrowRight className="w-4 h-4 rotate-180" /> 返回选择支付方式
+                                            </button>
                                         </div>
 
-                                        <button
-                                            onClick={async () => {
-                                                if (!paymentTxId) {
-                                                    setErrorMessage(t('payment.txid_placeholder'));
-                                                    setShowErrorToast(true);
-                                                    return;
-                                                }
+                                        <div className="space-y-4">
+                                            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="text-xs text-gray-400">{t('payment.order_number')}</div>
+                                                    <button
+                                                        onClick={() => {
+                                                            const orderNum = orderNumber || 'ORDER-' + Date.now();
+                                                            navigator.clipboard.writeText(orderNum);
+                                                            setToastMessage(t('payment.copied'));
+                                                            setShowSuccessToast(true);
+                                                        }}
+                                                        className="flex items-center gap-1 text-amber-500 hover:text-amber-400 text-xs"
+                                                    >
+                                                        <Copy className="w-3 h-3" />
+                                                        {t('payment.copy')}
+                                                    </button>
+                                                </div>
+                                                <div className="text-lg font-mono text-amber-500">{orderNumber || 'ORDER-' + Date.now()}</div>
+                                            </div>
 
-                                                try {
-                                                    // Create or update order in Supabase
-                                                    const orderNum = orderNumber || `ORDER-${Date.now()}`;
+                                            <div className="p-4 bg-neutral-800 rounded-xl">
+                                                <div className="text-xs text-gray-400 mb-2">{t('payment.receiving_address')}</div>
+                                                <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg">
+                                                    <code className="text-xs font-mono text-white break-all">TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R</code>
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText('TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R');
+                                                            setToastMessage(t('payment.copied'));
+                                                            setShowSuccessToast(true);
+                                                        }}
+                                                        className="ml-2 text-gray-400 hover:text-white"
+                                                    >
+                                                        <Copy className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
 
-                                                    const { error } = await supabase
-                                                        .from('orders')
-                                                        .insert({
-                                                            order_number: orderNum,
-                                                            user_id: user.id,
-                                                            user_email: user.email,
-                                                            amount: 15,
-                                                            currency: 'USDT',
-                                                            payment_method: 'usdt',
-                                                            txid: paymentTxId,
-                                                            status: 'paid'
-                                                        });
+                                            <div className="p-4 bg-neutral-800 rounded-xl">
+                                                <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
+                                                <div className="text-3xl font-black text-amber-500">15.00 USDT</div>
+                                            </div>
 
-                                                    if (error) {
-                                                        console.error('Order creation error:', error);
-                                                        setErrorMessage(t('common.error') + ': ' + error.message);
+                                            <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                                                <div className="text-sm text-blue-400 mb-2 flex items-center gap-2">
+                                                    <AlertCircle className="w-4 h-4" />
+                                                    {t('payment.instructions')}
+                                                </div>
+                                                <ul className="text-xs text-gray-400 space-y-1">
+                                                    <li>• {t('payment.instruction_1')}</li>
+                                                    <li>• {t('payment.instruction_2')}</li>
+                                                    <li className="text-amber-400 font-semibold">• {t('payment.instruction_3')}</li>
+                                                    <li>• {t('payment.instruction_4')}</li>
+                                                </ul>
+                                            </div>
+
+                                            <div>
+                                                <label className="text-xs text-gray-400 mb-2 block">{t('payment.txid_label')}</label>
+                                                <input
+                                                    type="text"
+                                                    value={paymentTxId}
+                                                    onChange={(e) => setPaymentTxId(e.target.value)}
+                                                    placeholder={t('payment.txid_placeholder')}
+                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono text-sm"
+                                                />
+                                            </div>
+
+                                            <button
+                                                onClick={async () => {
+                                                    if (!paymentTxId) {
+                                                        setErrorMessage(t('payment.txid_placeholder'));
                                                         setShowErrorToast(true);
                                                         return;
                                                     }
 
-                                                    setIsPaymentSuccess(true);
-                                                    setPaymentTxId('');
-                                                    setOrderNumber('');
-                                                } catch (err) {
-                                                    console.error('Unexpected error:', err);
-                                                    setErrorMessage(t('common.error'));
-                                                    setShowErrorToast(true);
-                                                }
-                                            }}
-                                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
-                                        >
-                                            {t('payment.submit_review')}
-                                        </button>
-                                    </div>
-                                </>
+                                                    try {
+                                                        // Create or update order in Supabase
+                                                        const orderNum = orderNumber || `ORDER-${Date.now()}`;
 
-                            ) : paymentMethod === 'cny' ? (
-                                <>
-                                    {/* RMB Payment - Xorpay (to be integrated) */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                            <ArrowRight className="w-4 h-4 rotate-180" /> {t('payment.back')}
-                                        </button>
-                                    </div>
-                                    <div className="text-center py-8">
-                                        <Coins className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                                        <h4 className="text-xl font-bold text-white mb-2">{t('payment.cny')}</h4>
-                                        <p className="text-gray-400 mb-6">{t('payment.channel_connecting')}</p>
-                                        <button
-                                            disabled
-                                            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 text-gray-500 font-black text-lg rounded-xl cursor-not-allowed"
-                                        >
-                                            <Wallet className="w-5 h-5" />
-                                            {t('payment.coming_soon')}
-                                        </button>
-                                    </div>
-                                </>
-                            ) : null}
+                                                        const { error } = await supabase
+                                                            .from('orders')
+                                                            .insert({
+                                                                order_number: orderNum,
+                                                                user_id: user.id,
+                                                                user_email: user.email,
+                                                                amount: 15,
+                                                                currency: 'USDT',
+                                                                payment_method: 'usdt',
+                                                                txid: paymentTxId,
+                                                                status: 'paid'
+                                                            });
+
+                                                        if (error) {
+                                                            console.error('Order creation error:', error);
+                                                            setErrorMessage(t('common.error') + ': ' + error.message);
+                                                            setShowErrorToast(true);
+                                                            return;
+                                                        }
+
+                                                        setIsPaymentSuccess(true);
+                                                        setPaymentTxId('');
+                                                        setOrderNumber('');
+                                                    } catch (err) {
+                                                        console.error('Unexpected error:', err);
+                                                        setErrorMessage(t('common.error'));
+                                                        setShowErrorToast(true);
+                                                    }
+                                                }}
+                                                className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
+                                            >
+                                                {t('payment.submit_review')}
+                                            </button>
+                                        </div>
+                                    </>
+
+                                ) : paymentMethod === 'cny' ? (
+                                    <>
+                                        {/* RMB Payment - Xorpay (to be integrated) */}
+                                        <div className="flex items-center justify-between mb-4">
+                                            <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
+                                                <ArrowRight className="w-4 h-4 rotate-180" /> {t('payment.back')}
+                                            </button>
+                                        </div>
+                                        <div className="text-center py-8">
+                                            <Coins className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                                            <h4 className="text-xl font-bold text-white mb-2">{t('payment.cny')}</h4>
+                                            <p className="text-gray-400 mb-6">{t('payment.channel_connecting')}</p>
+                                            <button
+                                                disabled
+                                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 text-gray-500 font-black text-lg rounded-xl cursor-not-allowed"
+                                            >
+                                                <Wallet className="w-5 h-5" />
+                                                {t('payment.coming_soon')}
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : null}
 
 
 
-                            <p className="text-center text-[10px] text-gray-600 mt-4 flex items-center justify-center gap-1">
-                                <Shield className="w-3 h-3" /> {t('payment.security')}
-                            </p>
+                                <p className="text-center text-[10px] text-gray-600 mt-4 flex items-center justify-center gap-1">
+                                    <Shield className="w-3 h-3" /> {t('payment.security')}
+                                </p>
 
 
+                            </div>
                         </div>
-                    </div>
-                )
-            }
+                    )
+                }
 
-            {/* 成功提示 Toast */}
-            {
-                showSuccessToast && (
-                    <div className="fixed bottom-8 right-8 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        <div className="bg-black/60 backdrop-blur-xl border border-white/10 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 ring-1 ring-white/5">
-                            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-                                <CheckCircle2 className="w-5 h-5 text-green-400" />
-                            </div>
-                            <div>
-                                <div className="font-bold text-sm tracking-wide">{toastMessage || t('common.success')}</div>
-                            </div>
-                            <button onClick={() => setShowSuccessToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* 错误提示 Toast */}
-            {
-                showErrorToast && (
-                    <div className="fixed bottom-8 right-8 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        <div className="bg-black/60 backdrop-blur-xl border border-red-500/30 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 ring-1 ring-red-500/20">
-                            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                                <AlertCircle className="w-5 h-5 text-red-500" />
-                            </div>
-                            <div>
-                                <div className="font-bold text-sm tracking-wide text-red-400">{t('common.error')}</div>
-                                <div className="text-xs text-gray-400">{errorMessage}</div>
-                            </div>
-                            <button onClick={() => setShowErrorToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* 登录弹窗 */}
-            {
-                showLoginModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-                        <div className="bg-neutral-900 w-full max-w-sm rounded-2xl border border-neutral-800 p-8 shadow-2xl relative">
-                            <h3 className="text-2xl font-bold text-white mb-6">{isRegisterMode ? t('auth.register_title') : t('auth.login_title')}</h3>
-                            <div className="space-y-4">
-                                {isRegisterMode && (
-                                    <input
-                                        type="text" placeholder={t('auth.username')}
-                                        value={registerForm.username} onChange={e => setRegisterForm({ ...registerForm, username: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    />
-                                )}
-                                <input
-                                    type="email" placeholder={t('auth.email')}
-                                    value={isRegisterMode ? registerForm.email : loginForm.email}
-                                    onChange={e => isRegisterMode ? setRegisterForm({ ...registerForm, email: e.target.value }) : setLoginForm({ ...loginForm, email: e.target.value })}
-                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                />
-                                <input
-                                    type="password" placeholder={t('auth.password')}
-                                    value={isRegisterMode ? registerForm.password : loginForm.password}
-                                    onChange={e => isRegisterMode ? setRegisterForm({ ...registerForm, password: e.target.value }) : setLoginForm({ ...loginForm, password: e.target.value })}
-                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                />
-                                {isRegisterMode && (
-                                    <input
-                                        type="password" placeholder={t('auth.confirm_password')}
-                                        value={registerForm.confirmPassword} onChange={e => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    />
-                                )}
-
-                                <button onClick={isRegisterMode ? handleRegister : handleLogin} className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl">
-                                    {isRegisterMode ? t('auth.register_btn') : t('auth.login_btn')}
+                {/* 成功提示 Toast */}
+                {
+                    showSuccessToast && (
+                        <div className="fixed bottom-8 right-8 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                            <div className="bg-black/60 backdrop-blur-xl border border-white/10 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 ring-1 ring-white/5">
+                                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                                    <CheckCircle2 className="w-5 h-5 text-green-400" />
+                                </div>
+                                <div>
+                                    <div className="font-bold text-sm tracking-wide">{toastMessage || t('common.success')}</div>
+                                </div>
+                                <button onClick={() => setShowSuccessToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">
+                                    <X className="w-4 h-4" />
                                 </button>
+                            </div>
+                        </div>
+                    )
+                }
 
-                                <div className="flex justify-between items-center text-xs text-gray-500 mt-4">
-                                    <button onClick={() => setIsRegisterMode(!isRegisterMode)} className="text-amber-500 hover:underline">
-                                        {isRegisterMode ? t('auth.to_login') : t('auth.to_register')}
+                {/* 错误提示 Toast */}
+                {
+                    showErrorToast && (
+                        <div className="fixed bottom-8 right-8 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                            <div className="bg-black/60 backdrop-blur-xl border border-red-500/30 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 ring-1 ring-red-500/20">
+                                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                                    <AlertCircle className="w-5 h-5 text-red-500" />
+                                </div>
+                                <div>
+                                    <div className="font-bold text-sm tracking-wide text-red-400">{t('common.error')}</div>
+                                    <div className="text-xs text-gray-400">{errorMessage}</div>
+                                </div>
+                                <button onClick={() => setShowErrorToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* 登录弹窗 */}
+                {
+                    showLoginModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+                            <div className="bg-neutral-900 w-full max-w-sm rounded-2xl border border-neutral-800 p-8 shadow-2xl relative">
+                                <h3 className="text-2xl font-bold text-white mb-6">{isRegisterMode ? t('auth.register_title') : t('auth.login_title')}</h3>
+                                <div className="space-y-4">
+                                    {isRegisterMode && (
+                                        <input
+                                            type="text" placeholder={t('auth.username')}
+                                            value={registerForm.username} onChange={e => setRegisterForm({ ...registerForm, username: e.target.value })}
+                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                        />
+                                    )}
+                                    <input
+                                        type="email" placeholder={t('auth.email')}
+                                        value={isRegisterMode ? registerForm.email : loginForm.email}
+                                        onChange={e => isRegisterMode ? setRegisterForm({ ...registerForm, email: e.target.value }) : setLoginForm({ ...loginForm, email: e.target.value })}
+                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                    />
+                                    <input
+                                        type="password" placeholder={t('auth.password')}
+                                        value={isRegisterMode ? registerForm.password : loginForm.password}
+                                        onChange={e => isRegisterMode ? setRegisterForm({ ...registerForm, password: e.target.value }) : setLoginForm({ ...loginForm, password: e.target.value })}
+                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                    />
+                                    {isRegisterMode && (
+                                        <input
+                                            type="password" placeholder={t('auth.confirm_password')}
+                                            value={registerForm.confirmPassword} onChange={e => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                        />
+                                    )}
+
+                                    <button onClick={isRegisterMode ? handleRegister : handleLogin} className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl">
+                                        {isRegisterMode ? t('auth.register_btn') : t('auth.login_btn')}
                                     </button>
 
-                                </div>
-                            </div>
-                            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-500"><X className="w-5 h-5" /></button>
-                        </div>
-                    </div>
-                )
-            }
+                                    <div className="flex justify-between items-center text-xs text-gray-500 mt-4">
+                                        <button onClick={() => setIsRegisterMode(!isRegisterMode)} className="text-amber-500 hover:underline">
+                                            {isRegisterMode ? t('auth.to_login') : t('auth.to_register')}
+                                        </button>
 
-            {/* 结算弹窗 */}
-            {
-                showCloseTradeModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
-                            <h3 className="text-lg font-bold text-white mb-6">{t('journal.settle')}</h3>
-                            <input
-                                type="number"
-                                placeholder="0"
-                                value={closePnL}
-                                onChange={e => setClosePnL(e.target.value)}
-                                onFocus={e => e.target.value === '0' && setClosePnL('')}
-                                onBlur={e => e.target.value === '' && setClosePnL('0')}
-                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono mb-4 text-lg text-center"
-                                autoFocus
-                            />
-
-                            {/* 违反纪律标记 */}
-                            <div className="mb-6 p-3 bg-red-950/20 border border-red-900/30 rounded-lg">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={violatedDiscipline}
-                                        onChange={(e) => setViolatedDiscipline(e.target.checked)}
-                                        className="w-5 h-5 rounded border-red-600 text-red-500 focus:ring-red-500 focus:ring-offset-0 bg-red-900/20"
-                                    />
-                                    <div>
-                                        <div className="text-red-400 font-bold text-sm flex items-center gap-2">
-                                            <span>⚠️</span>
-                                            <span>{t('risk.violation')}</span>
-                                        </div>
-                                        <div className="text-red-300/60 text-xs mt-1">
-                                            {t('risk.violation_desc')}
-                                        </div>
                                     </div>
-                                </label>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowCloseTradeModal(false)}
-                                    className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded-xl font-bold transition-colors"
-                                >
-                                    {t('common.cancel')}
-                                </button>
-                                <button
-                                    onClick={confirmSettleTrade}
-                                    className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-colors shadow-lg shadow-amber-500/20"
-                                >
-                                    {t('common.confirm')}
-                                </button>
+                                </div>
+                                <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-500"><X className="w-5 h-5" /></button>
                             </div>
                         </div>
-                    </div>
-                )
-            }
+                    )
+                }
 
-            {/* 退出登录确认弹窗 */}
-            {
-                showLogoutModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl text-center">
-                            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <LogOut className="w-6 h-6 text-red-500" />
-                            </div>
-                            <h3 className="text-lg font-bold text-white mb-2">{t('auth.logout_confirm_title')}</h3>
-                            <div className="flex gap-3 mt-6">
-                                <button
-                                    onClick={() => setShowLogoutModal(false)}
-                                    className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded-xl font-bold transition-colors"
-                                >
-                                    {t('common.cancel')}
-                                </button>
-                                <button
-                                    onClick={confirmLogout}
-                                    className="flex-1 py-3 bg-red-500 hover:bg-red-400 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-500/20"
-                                >
-                                    {t('auth.logout_confirm_btn')}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* 复盘弹窗 */}
-            {
-                showReviewModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-[#1A1D24] w-full max-w-2xl rounded-2xl border border-neutral-800 p-6 shadow-2xl">
-                            <h3 className="text-lg font-bold text-white mb-4">{t('journal.review_title')}</h3>
-                            <p className="text-xs text-gray-400 mb-4">{t('journal.review_desc')}</p>
-                            <textarea
-                                value={reviewNotes}
-                                onChange={e => setReviewNotes(e.target.value)}
-                                className="w-full h-32 bg-neutral-900 border border-neutral-700 rounded-lg p-3 text-white focus:border-amber-500 focus:outline-none mb-6 resize-none"
-                                placeholder={t('journal.review_placeholder')}
-                            />
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowReviewModal(false)}
-                                    disabled={isSaving}
-                                    className="flex-1 py-3 rounded-xl bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {t('risk.cancel')}
-                                </button>
-                                <button
-                                    onClick={saveReview}
-                                    disabled={isSaving}
-                                    className="flex-1 py-3 rounded-xl bg-amber-500 text-black font-bold hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    {isSaving && <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
-                                    {isSaving ? t('common.loading') : t('form.save')}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* Risk Warning Modal */}
-            {
-                showRiskWarningModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-red-900/50 p-6 shadow-2xl">
-                            <div className="flex items-center gap-3 mb-4 text-red-500">
-                                <AlertTriangle className="w-8 h-8" />
-                                <h3 className="text-lg font-bold text-white">{t('risk.modal_title')}</h3>
-                            </div>
-                            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
-                                {t('risk.low_rr_warning').replace('{rr}', pendingTrade?.rrRatio)}
-                            </p>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowRiskWarningModal(false)}
-                                    className="flex-1 py-2 rounded-lg bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold text-sm transition-colors"
-                                >
-                                    {t('risk.cancel')}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        finalizeTrade(pendingTrade);
-                                        setShowRiskWarningModal(false);
-                                    }}
-                                    className="flex-1 py-2 rounded-lg bg-red-600/20 text-red-500 border border-red-600/50 hover:bg-red-600/30 font-bold text-sm transition-colors"
-                                >
-                                    {t('risk.confirm_force')}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-
-
-            {/* Pattern Management Modal */}
-            {
-                showPatternModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-bold text-white">{t('form.manage_patterns')}</h3>
-                                <button onClick={() => setShowPatternModal(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
-                            </div>
-
-                            <div className="flex gap-2 mb-4">
+                {/* 结算弹窗 */}
+                {
+                    showCloseTradeModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
+                                <h3 className="text-lg font-bold text-white mb-6">{t('journal.settle')}</h3>
                                 <input
-                                    type="text"
-                                    value={newPattern}
-                                    onChange={e => setNewPattern(e.target.value)}
-                                    placeholder="输入新形态名称"
-                                    className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:border-amber-500 focus:outline-none"
+                                    type="number"
+                                    placeholder="0"
+                                    value={closePnL}
+                                    onChange={e => setClosePnL(e.target.value)}
+                                    onFocus={e => e.target.value === '0' && setClosePnL('')}
+                                    onBlur={e => e.target.value === '' && setClosePnL('0')}
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono mb-4 text-lg text-center"
+                                    autoFocus
                                 />
-                                <button onClick={addPattern} className="bg-amber-500 text-black px-3 py-2 rounded-lg font-bold text-sm hover:bg-amber-400">
-                                    <Plus className="w-4 h-4" />
-                                </button>
-                            </div>
 
-                            <div className="max-h-60 overflow-y-auto space-y-2">
-                                {patterns.map(p => (
-                                    <div key={p} className="flex justify-between items-center bg-neutral-900 p-3 rounded-lg border border-neutral-800">
-                                        <span className="text-sm text-gray-300">{p}</span>
-                                        <button onClick={() => removePattern(p)} className="text-gray-500 hover:text-red-500">
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
+                                {/* 违反纪律标记 */}
+                                <div className="mb-6 p-3 bg-red-950/20 border border-red-900/30 rounded-lg">
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={violatedDiscipline}
+                                            onChange={(e) => setViolatedDiscipline(e.target.checked)}
+                                            className="w-5 h-5 rounded border-red-600 text-red-500 focus:ring-red-500 focus:ring-offset-0 bg-red-900/20"
+                                        />
+                                        <div>
+                                            <div className="text-red-400 font-bold text-sm flex items-center gap-2">
+                                                <span>⚠️</span>
+                                                <span>{t('risk.violation')}</span>
+                                            </div>
+                                            <div className="text-red-300/60 text-xs mt-1">
+                                                {t('risk.violation_desc')}
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
 
-                            <div className="mt-4 pt-4 border-t border-neutral-800">
-                                <button
-                                    onClick={resetPatterns}
-                                    className="w-full py-2 text-xs text-gray-500 hover:text-amber-500 hover:bg-neutral-900 rounded transition-colors flex items-center justify-center gap-2"
-                                >
-                                    <RotateCcw className="w-3 h-3" />
-                                    {t('form.reset_default')}
-                                </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowCloseTradeModal(false)}
+                                        className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded-xl font-bold transition-colors"
+                                    >
+                                        {t('common.cancel')}
+                                    </button>
+                                    <button
+                                        onClick={confirmSettleTrade}
+                                        className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-colors shadow-lg shadow-amber-500/20"
+                                    >
+                                        {t('common.confirm')}
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )
-            }
+                    )
+                }
 
-            {/* Settings Modal */}
-            {
-                showSettingsModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-bold text-white">{t('settings.title')}</h3>
-                                <button onClick={() => setShowSettingsModal(false)} className="text-gray-500 hover:text-white">
-                                    <X className="w-5 h-5" />
-                                </button>
+                {/* 退出登录确认弹窗 */}
+                {
+                    showLogoutModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl text-center">
+                                <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <LogOut className="w-6 h-6 text-red-500" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-2">{t('auth.logout_confirm_title')}</h3>
+                                <div className="flex gap-3 mt-6">
+                                    <button
+                                        onClick={() => setShowLogoutModal(false)}
+                                        className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded-xl font-bold transition-colors"
+                                    >
+                                        {t('common.cancel')}
+                                    </button>
+                                    <button
+                                        onClick={confirmLogout}
+                                        className="flex-1 py-3 bg-red-500 hover:bg-red-400 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-500/20"
+                                    >
+                                        {t('auth.logout_confirm_btn')}
+                                    </button>
+                                </div>
                             </div>
+                        </div>
+                    )
+                }
 
-                            <div className="mb-6">
-                                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('settings.membership_status')}</label>
-                                <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-700 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${membership.isPremium ? 'bg-amber-500/20 text-amber-500' : 'bg-gray-800 text-gray-500'}`}>
-                                            <Crown className="w-5 h-5" />
+                {/* 复盘弹窗 */}
+                {
+                    showReviewModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-[#1A1D24] w-full max-w-2xl rounded-2xl border border-neutral-800 p-6 shadow-2xl">
+                                <h3 className="text-lg font-bold text-white mb-4">{t('journal.review_title')}</h3>
+                                <p className="text-xs text-gray-400 mb-4">{t('journal.review_desc')}</p>
+                                <textarea
+                                    value={reviewNotes}
+                                    onChange={e => setReviewNotes(e.target.value)}
+                                    className="w-full h-32 bg-neutral-900 border border-neutral-700 rounded-lg p-3 text-white focus:border-amber-500 focus:outline-none mb-6 resize-none"
+                                    placeholder={t('journal.review_placeholder')}
+                                />
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowReviewModal(false)}
+                                        disabled={isSaving}
+                                        className="flex-1 py-3 rounded-xl bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {t('risk.cancel')}
+                                    </button>
+                                    <button
+                                        onClick={saveReview}
+                                        disabled={isSaving}
+                                        className="flex-1 py-3 rounded-xl bg-amber-500 text-black font-bold hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isSaving && <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
+                                        {isSaving ? t('common.loading') : t('form.save')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* Risk Warning Modal */}
+                {
+                    showRiskWarningModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-red-900/50 p-6 shadow-2xl">
+                                <div className="flex items-center gap-3 mb-4 text-red-500">
+                                    <AlertTriangle className="w-8 h-8" />
+                                    <h3 className="text-lg font-bold text-white">{t('risk.modal_title')}</h3>
+                                </div>
+                                <p className="text-sm text-gray-300 mb-6 leading-relaxed">
+                                    {t('risk.low_rr_warning').replace('{rr}', pendingTrade?.rrRatio)}
+                                </p>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowRiskWarningModal(false)}
+                                        className="flex-1 py-2 rounded-lg bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold text-sm transition-colors"
+                                    >
+                                        {t('risk.cancel')}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            finalizeTrade(pendingTrade);
+                                            setShowRiskWarningModal(false);
+                                        }}
+                                        className="flex-1 py-2 rounded-lg bg-red-600/20 text-red-500 border border-red-600/50 hover:bg-red-600/30 font-bold text-sm transition-colors"
+                                    >
+                                        {t('risk.confirm_force')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+
+
+                {/* Pattern Management Modal */}
+                {
+                    showPatternModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-lg font-bold text-white">{t('form.manage_patterns')}</h3>
+                                    <button onClick={() => setShowPatternModal(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+                                </div>
+
+                                <div className="flex gap-2 mb-4">
+                                    <input
+                                        type="text"
+                                        value={newPattern}
+                                        onChange={e => setNewPattern(e.target.value)}
+                                        placeholder="输入新形态名称"
+                                        className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:border-amber-500 focus:outline-none"
+                                    />
+                                    <button onClick={addPattern} className="bg-amber-500 text-black px-3 py-2 rounded-lg font-bold text-sm hover:bg-amber-400">
+                                        <Plus className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div className="max-h-60 overflow-y-auto space-y-2">
+                                    {patterns.map(p => (
+                                        <div key={p} className="flex justify-between items-center bg-neutral-900 p-3 rounded-lg border border-neutral-800">
+                                            <span className="text-sm text-gray-300">{p}</span>
+                                            <button onClick={() => removePattern(p)} className="text-gray-500 hover:text-red-500">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
-                                        <div>
-                                            <div className={`font-bold ${membership.isPremium ? 'text-amber-500' : 'text-gray-400'}`}>
-                                                {membership.isPremium ? 'PRO MEMBER' : t('settings.free')}
+                                    ))}
+                                </div>
+
+                                <div className="mt-4 pt-4 border-t border-neutral-800">
+                                    <button
+                                        onClick={resetPatterns}
+                                        className="w-full py-2 text-xs text-gray-500 hover:text-amber-500 hover:bg-neutral-900 rounded transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <RotateCcw className="w-3 h-3" />
+                                        {t('form.reset_default')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* Settings Modal */}
+                {
+                    showSettingsModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-lg font-bold text-white">{t('settings.title')}</h3>
+                                    <button onClick={() => setShowSettingsModal(false)} className="text-gray-500 hover:text-white">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="mb-6">
+                                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('settings.membership_status')}</label>
+                                    <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-700 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${membership.isPremium ? 'bg-amber-500/20 text-amber-500' : 'bg-gray-800 text-gray-500'}`}>
+                                                <Crown className="w-5 h-5" />
                                             </div>
-                                            {membership.isPremium && (
-                                                <div className="text-xs text-gray-500">
-                                                    {t('settings.expires_on')}: {membership.expiryDate ? new Date(membership.expiryDate).toLocaleDateString() : '-'}
+                                            <div>
+                                                <div className={`font-bold ${membership.isPremium ? 'text-amber-500' : 'text-gray-400'}`}>
+                                                    {membership.isPremium ? 'PRO MEMBER' : t('settings.free')}
                                                 </div>
-                                            )}
+                                                {membership.isPremium && (
+                                                    <div className="text-xs text-gray-500">
+                                                        {t('settings.expires_on')}: {membership.expiryDate ? new Date(membership.expiryDate).toLocaleDateString() : '-'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {!membership.isPremium && (
+                                            <button
+                                                onClick={() => { setShowSettingsModal(false); setShowPaymentModal(true); setPaymentMethod(null); }}
+                                                className="text-xs bg-amber-500 text-black px-3 py-1.5 rounded-lg font-bold hover:bg-amber-400"
+                                            >
+                                                UPGRADE
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Membership Benefits (Visible to all, highlighted for Pro) */}
+                                <div className="mb-6">
+                                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('payment.badge')}</label>
+                                    <div className="space-y-2">
+                                        <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
+                                            <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
+                                            <span>{t('payment.ai_analysis')}</span>
+                                        </div>
+                                        <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
+                                            <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
+                                            <span>{t('payment.unlimited')}</span>
+                                        </div>
+                                        <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
+                                            <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
+                                            <span>{t('payment.support')}</span>
                                         </div>
                                     </div>
-                                    {!membership.isPremium && (
-                                        <button
-                                            onClick={() => { setShowSettingsModal(false); setShowPaymentModal(true); setPaymentMethod(null); }}
-                                            className="text-xs bg-amber-500 text-black px-3 py-1.5 rounded-lg font-bold hover:bg-amber-400"
-                                        >
-                                            UPGRADE
-                                        </button>
-                                    )}
                                 </div>
-                            </div>
 
-                            {/* Membership Benefits (Visible to all, highlighted for Pro) */}
-                            <div className="mb-6">
-                                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('payment.badge')}</label>
-                                <div className="space-y-2">
-                                    <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
-                                        <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
-                                        <span>{t('payment.ai_analysis')}</span>
-                                    </div>
-                                    <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
-                                        <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
-                                        <span>{t('payment.unlimited')}</span>
-                                    </div>
-                                    <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
-                                        <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
-                                        <span>{t('payment.support')}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Fortune Compass Settings (Hidden for now) */}
-                            {/*
+                                {/* Fortune Compass Settings (Hidden for now) */}
+                                {/*
                             <div className="mb-6">
                                 <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('settings.birth_date')}</label>
                                 <input
@@ -2995,238 +2994,238 @@ function GoldCatApp() {
                             </div>
                             */}
 
-                            <button
-                                onClick={() => {
-                                    // Save user settings to localStorage
-                                    const storedUsers = JSON.parse(localStorage.getItem('goldcat_users') || '[]');
-                                    const updatedUsers = storedUsers.map(u => u.email === user.email ? user : u);
-                                    localStorage.setItem('goldcat_users', JSON.stringify(updatedUsers));
-                                    localStorage.setItem('goldcat_user', JSON.stringify(user)); // Update current session user
-
-                                    setShowSettingsModal(false);
-                                    setShowSuccessToast(true);
-                                }}
-                                className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-colors shadow-lg shadow-amber-500/20 mb-4"
-                            >
-                                {t('settings.save')}
-                            </button>
-
-                            <div className="border-t border-neutral-800 pt-4">
                                 <button
                                     onClick={() => {
+                                        // Save user settings to localStorage
+                                        const storedUsers = JSON.parse(localStorage.getItem('goldcat_users') || '[]');
+                                        const updatedUsers = storedUsers.map(u => u.email === user.email ? user : u);
+                                        localStorage.setItem('goldcat_users', JSON.stringify(updatedUsers));
+                                        localStorage.setItem('goldcat_user', JSON.stringify(user)); // Update current session user
+
                                         setShowSettingsModal(false);
-                                        handleLogout();
+                                        setShowSuccessToast(true);
                                     }}
-                                    className="w-full py-3 bg-neutral-800 hover:bg-red-900/20 text-gray-400 hover:text-red-500 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-colors shadow-lg shadow-amber-500/20 mb-4"
                                 >
-                                    <LogOut className="w-4 h-4" /> {t('auth.logout_confirm_btn')}
+                                    {t('settings.save')}
+                                </button>
+
+                                <div className="border-t border-neutral-800 pt-4">
+                                    <button
+                                        onClick={() => {
+                                            setShowSettingsModal(false);
+                                            handleLogout();
+                                        }}
+                                        className="w-full py-3 bg-neutral-800 hover:bg-red-900/20 text-gray-400 hover:text-red-500 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <LogOut className="w-4 h-4" /> {t('auth.logout_confirm_btn')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* 浮动客服按钮 */}
+                <button
+                    onClick={() => {
+                        setFeedbackForm({
+                            ...feedbackForm,
+                            name: user?.user_metadata?.username || '',
+                            email: user?.email || ''
+                        });
+                        setShowFeedbackModal(true);
+                    }}
+                    className="fixed bottom-24 right-6 z-50 bg-amber-500 hover:bg-amber-400 text-black p-4 rounded-full shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-110 transition-all group"
+                >
+                    <MessageSquare className="w-6 h-6" />
+                </button>
+
+                {/* 反馈弹窗 */}
+                {
+                    showFeedbackModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-gradient-to-br from-neutral-900 to-neutral-950 w-full max-w-md rounded-2xl border border-amber-500/20 p-8 shadow-2xl relative animate-in zoom-in duration-300">
+                                <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                                    <MessageSquare className="w-6 h-6 text-amber-500" />
+                                    {t('feedback.title')}
+                                </h3>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-2">{t('feedback.name_label')}</label>
+                                        <input
+                                            type="text"
+                                            placeholder={t('feedback.name_placeholder')}
+                                            value={feedbackForm.name}
+                                            onChange={(e) => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
+                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-2">{t('feedback.email_label')} *</label>
+                                        <input
+                                            type="email"
+                                            placeholder={t('feedback.email_placeholder')}
+                                            value={feedbackForm.email}
+                                            onChange={(e) => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
+                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-2">{t('feedback.type_label')}</label>
+                                        <select
+                                            value={feedbackForm.type}
+                                            onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
+                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                        >
+                                            <option value="suggestion">{t('feedback.types.suggestion')}</option>
+                                            <option value="bug">{t('feedback.types.bug')}</option>
+                                            <option value="account">{t('feedback.types.account')}</option>
+                                            <option value="other">{t('feedback.types.other')}</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-2">{t('feedback.content_label')} *</label>
+                                        <textarea
+                                            placeholder={t('feedback.content_placeholder')}
+                                            value={feedbackForm.content}
+                                            onChange={(e) => setFeedbackForm({ ...feedbackForm, content: e.target.value })}
+                                            rows={5}
+                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none resize-none"
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-3 pt-2">
+                                        <button
+                                            onClick={handleSubmitFeedback}
+                                            className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 hover:scale-105"
+                                        >
+                                            {t('feedback.submit_btn')}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const email = 'support@goldcat.trade';
+                                                navigator.clipboard.writeText(email);
+                                                setToastMessage(t('payment.copied'));
+                                                setShowSuccessToast(true);
+                                            }}
+                                            className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 hover:scale-105"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                            {t('feedback.email_btn')}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button onClick={() => setShowFeedbackModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
+                    )
+                }
+
+                {/* Footer with Privacy and Terms */}
+                <div className="w-full bg-black/90 border-t border-neutral-800 py-3 px-4 z-[9999] mt-auto">
+                    <div className="flex justify-center items-center gap-6">
+                        <button
+                            onClick={() => setCurrentPage('privacy')}
+                            className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
+                        >
+                            {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
+                        </button>
+                        <span className="text-gray-600">|</span>
+                        <button
+                            onClick={() => setCurrentPage('terms')}
+                            className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
+                        >
+                            {language === 'zh' ? '服务条款' : 'Terms of Service'}
+                        </button>
+                        <span className="text-gray-600">|</span>
+                        <button
+                            onClick={() => setShowDisclaimer(!showDisclaimer)}
+                            className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline flex items-center gap-1"
+                        >
+                            <AlertTriangle className="w-3 h-3" />
+                            {language === 'zh' ? '风险提示' : 'Risk Disclaimer'}
+                        </button>
                     </div>
-                )
-            }
+                    {showDisclaimer && (
+                        <div className="max-w-3xl mx-auto mt-2 px-4 py-2 bg-amber-900/10 border border-amber-500/20 rounded text-xs text-gray-300">
+                            {language === 'zh' ? (
+                                <span><strong className="text-amber-400">风险提示：</strong>GoldCat 仅提供交易记录工具，不构成任何投资建议。交易有风险，投资需谨慎。</span>
+                            ) : (
+                                <span><strong className="text-amber-400">Risk Disclaimer:</strong> GoldCat is a trading journal tool only and does not constitute investment advice. Trading involves risk. Please invest responsibly.</span>
+                            )}
+                        </div>
+                    )}
+                </div>
 
-            {/* 浮动客服按钮 */}
-            <button
-                onClick={() => {
-                    setFeedbackForm({
-                        ...feedbackForm,
-                        name: user?.user_metadata?.username || '',
-                        email: user?.email || ''
-                    });
-                    setShowFeedbackModal(true);
-                }}
-                className="fixed bottom-24 right-6 z-50 bg-amber-500 hover:bg-amber-400 text-black p-4 rounded-full shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-110 transition-all group"
-            >
-                <MessageSquare className="w-6 h-6" />
-            </button>
-
-            {/* 反馈弹窗 */}
-            {
-                showFeedbackModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-gradient-to-br from-neutral-900 to-neutral-950 w-full max-w-md rounded-2xl border border-amber-500/20 p-8 shadow-2xl relative animate-in zoom-in duration-300">
-                            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                                <MessageSquare className="w-6 h-6 text-amber-500" />
-                                {t('feedback.title')}
-                            </h3>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-2">{t('feedback.name_label')}</label>
-                                    <input
-                                        type="text"
-                                        placeholder={t('feedback.name_placeholder')}
-                                        value={feedbackForm.name}
-                                        onChange={(e) => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    />
+                {/* Delete Confirmation Modal */}
+                {
+                    showDeleteModal && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl scale-in-95 animate-in zoom-in-95 duration-200">
+                                <div className="text-center mb-6">
+                                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Trash2 className="w-8 h-8 text-red-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">
+                                        {language === 'zh' ? '确认删除交易？' : 'Delete Trade?'}
+                                    </h3>
+                                    <p className="text-gray-400 text-sm">
+                                        {language === 'zh'
+                                            ? '此操作将永久删除该交易记录，无法恢复。'
+                                            : 'This action will permanently delete this trade record. It cannot be undone.'}
+                                    </p>
                                 </div>
-
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-2">{t('feedback.email_label')} *</label>
-                                    <input
-                                        type="email"
-                                        placeholder={t('feedback.email_placeholder')}
-                                        value={feedbackForm.email}
-                                        onChange={(e) => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-2">{t('feedback.type_label')}</label>
-                                    <select
-                                        value={feedbackForm.type}
-                                        onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    >
-                                        <option value="suggestion">{t('feedback.types.suggestion')}</option>
-                                        <option value="bug">{t('feedback.types.bug')}</option>
-                                        <option value="account">{t('feedback.types.account')}</option>
-                                        <option value="other">{t('feedback.types.other')}</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-2">{t('feedback.content_label')} *</label>
-                                    <textarea
-                                        placeholder={t('feedback.content_placeholder')}
-                                        value={feedbackForm.content}
-                                        onChange={(e) => setFeedbackForm({ ...feedbackForm, content: e.target.value })}
-                                        rows={5}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none resize-none"
-                                    />
-                                </div>
-
-                                <div className="flex gap-3 pt-2">
+                                <div className="flex gap-3">
                                     <button
-                                        onClick={handleSubmitFeedback}
-                                        className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 hover:scale-105"
+                                        onClick={() => {
+                                            setShowDeleteModal(false);
+                                            setTradeToDelete(null);
+                                        }}
+                                        className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-bold transition-colors"
                                     >
-                                        {t('feedback.submit_btn')}
+                                        {language === 'zh' ? '取消' : 'Cancel'}
                                     </button>
                                     <button
                                         onClick={() => {
-                                            const email = 'support@goldcat.trade';
-                                            navigator.clipboard.writeText(email);
-                                            setToastMessage(t('payment.copied'));
-                                            setShowSuccessToast(true);
+                                            if (tradeToDelete) {
+                                                removeTrade(tradeToDelete.id);
+                                                setShowDeleteModal(false);
+                                                setTradeToDelete(null);
+                                            }
                                         }}
-                                        className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 hover:scale-105"
+                                        className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-900/20"
                                     >
-                                        <Copy className="w-4 h-4" />
-                                        {t('feedback.email_btn')}
+                                        {language === 'zh' ? '确认删除' : 'Delete'}
                                     </button>
                                 </div>
                             </div>
-
-                            <button onClick={() => setShowFeedbackModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
                         </div>
-                    </div>
-                )
-            }
+                    )
+                }
 
-            {/* Footer with Privacy and Terms */}
-            <div className="w-full bg-black/90 border-t border-neutral-800 py-3 px-4 z-[9999] mt-auto">
-                <div className="flex justify-center items-center gap-6">
-                    <button
-                        onClick={() => setCurrentPage('privacy')}
-                        className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
-                    >
-                        {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
-                    </button>
-                    <span className="text-gray-600">|</span>
-                    <button
-                        onClick={() => setCurrentPage('terms')}
-                        className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
-                    >
-                        {language === 'zh' ? '服务条款' : 'Terms of Service'}
-                    </button>
-                    <span className="text-gray-600">|</span>
-                    <button
-                        onClick={() => setShowDisclaimer(!showDisclaimer)}
-                        className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline flex items-center gap-1"
-                    >
-                        <AlertTriangle className="w-3 h-3" />
-                        {language === 'zh' ? '风险提示' : 'Risk Disclaimer'}
-                    </button>
-                </div>
-                {showDisclaimer && (
-                    <div className="max-w-3xl mx-auto mt-2 px-4 py-2 bg-amber-900/10 border border-amber-500/20 rounded text-xs text-gray-300">
-                        {language === 'zh' ? (
-                            <span><strong className="text-amber-400">风险提示：</strong>GoldCat 仅提供交易记录工具，不构成任何投资建议。交易有风险，投资需谨慎。</span>
-                        ) : (
-                            <span><strong className="text-amber-400">Risk Disclaimer:</strong> GoldCat is a trading journal tool only and does not constitute investment advice. Trading involves risk. Please invest responsibly.</span>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Delete Confirmation Modal */}
-            {
-                showDeleteModal && (
-                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl scale-in-95 animate-in zoom-in-95 duration-200">
-                            <div className="text-center mb-6">
-                                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Trash2 className="w-8 h-8 text-red-500" />
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-2">
-                                    {language === 'zh' ? '确认删除交易？' : 'Delete Trade?'}
-                                </h3>
-                                <p className="text-gray-400 text-sm">
-                                    {language === 'zh'
-                                        ? '此操作将永久删除该交易记录，无法恢复。'
-                                        : 'This action will permanently delete this trade record. It cannot be undone.'}
-                                </p>
-                            </div>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => {
-                                        setShowDeleteModal(false);
-                                        setTradeToDelete(null);
-                                    }}
-                                    className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-bold transition-colors"
-                                >
-                                    {language === 'zh' ? '取消' : 'Cancel'}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        if (tradeToDelete) {
-                                            removeTrade(tradeToDelete.id);
-                                            setShowDeleteModal(false);
-                                            setTradeToDelete(null);
-                                        }
-                                    }}
-                                    className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-900/20"
-                                >
-                                    {language === 'zh' ? '确认删除' : 'Delete'}
-                                </button>
-                            </div>
+                {/* Page Routing: Privacy Policy and Terms of Service Pages */}
+                {
+                    currentPage === 'privacy' && (
+                        <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
+                            <PrivacyPolicyPage language={language} onBack={() => setCurrentPage('main')} />
                         </div>
-                    </div>
-                )
-            }
-
-            {/* Page Routing: Privacy Policy and Terms of Service Pages */}
-            {
-                currentPage === 'privacy' && (
-                    <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
-                        <PrivacyPolicyPage language={language} onBack={() => setCurrentPage('main')} />
-                    </div>
-                )
-            }
-            {
-                currentPage === 'terms' && (
-                    <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
-                        <TermsOfServicePage language={language} onBack={() => setCurrentPage('main')} />
-                    </div>
-                )
-            }
+                    )
+                }
+                {
+                    currentPage === 'terms' && (
+                        <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
+                            <TermsOfServicePage language={language} onBack={() => setCurrentPage('main')} />
+                        </div>
+                    )
+                }
         </div >
     );
 }
