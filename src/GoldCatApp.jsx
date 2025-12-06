@@ -1510,532 +1510,531 @@ function GoldCatApp() {
 
                         {/* --- 1. 录入交易 (核心) --- */}
                         {activeTab === 'new_trade' && (
-                            <div className="max-w-4xl mx-auto">
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
-                                    {/* 左侧：录入表单 */}
-                                    <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-                                        <div className="flex justify-between items-center mb-6 border-b border-neutral-800 pb-4">
-                                            <h2 className="text-xl font-black text-white flex items-center gap-2">
-                                                <Target className="w-5 h-5 text-amber-500" />
-                                                {t('form.title')}
-                                            </h2>
-                                            <span className="text-xs bg-neutral-800 text-gray-400 px-2 py-1 rounded">
-                                                {t('form.today_trade_count', { count: trades.filter(t => t.date === new Date().toLocaleDateString()).length + 1 })}
-                                            </span>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            {/* 第一行：基础信息 */}
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                <div className="col-span-2 md:col-span-1">
-                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.direction')}</label>
-                                                    <div className="flex bg-neutral-800 rounded-lg p-1">
-                                                        <button
-                                                            onClick={() => handleInputChange('tradeType', 'buy')}
-                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'buy' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                        >{t('form.long')}</button>
-                                                        <button
-                                                            onClick={() => handleInputChange('tradeType', 'sell')}
-                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'sell' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                        >{t('form.short')}</button>
-                                                    </div>
-                                                </div>
-                                                <div className="col-span-2 md:col-span-1">
-                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
-                                                    <input
-                                                        type="text" placeholder="BTC/USDT" value={formData.symbol}
-                                                        onChange={e => handleInputChange('symbol', e.target.value.toUpperCase())}
-                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
-                                                    />
-                                                </div>
-                                                <div className="col-span-1">
-                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>
-                                                    <select
-                                                        value={formData.timeframe}
-                                                        onChange={e => handleInputChange('timeframe', e.target.value)}
-                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                    >
-                                                        {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
-                                                    </select>
-                                                </div>
-                                                <div className="col-span-1">
-                                                    <div className="flex justify-between items-center mb-1.5">
-                                                        <label className="block text-xs text-gray-500">{t('form.pattern')}</label>
-                                                        <button onClick={() => setShowPatternModal(true)} className="text-[10px] text-amber-500 hover:underline flex items-center gap-1">
-                                                            <Settings className="w-3 h-3" /> {t('form.manage')}
-                                                        </button>
-                                                    </div>
-                                                    <select
-                                                        value={formData.pattern}
-                                                        onChange={e => handleInputChange('pattern', e.target.value)}
-                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                    >
-                                                        {patterns.map(p => (
-                                                            <option key={p} value={p}>{p}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            {/* Trading Pair Risk Warnings */}
-                                            {tradingPairRisk?.showDailyWarning && (
-                                                <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                    <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                                                    <div className="text-xs text-red-400 leading-relaxed">
-                                                        <span className="font-bold">{t('risk.daily_loss_warning')}</span>
-                                                        <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {tradingPairRisk?.showHistoricalWarning && (
-                                                <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                    <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                                                    <div className="text-xs text-orange-400 leading-relaxed">
-                                                        <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
-                                                        <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* 第二行：资金管理 */}
-                                            <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
-                                                        <input
-                                                            type="number" placeholder="1000" value={formData.margin}
-                                                            onChange={e => handleInputChange('margin', e.target.value)}
-                                                            step="any"
-                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs text-gray-500 mb-1.5">{t('form.leverage')}</label>
-                                                        <input
-                                                            type="number" placeholder="10" value={formData.leverage}
-                                                            onChange={e => handleInputChange('leverage', e.target.value)}
-                                                            step="any"
-                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* 第三行：点位执行 */}
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
-                                                    <input
-                                                        type="number" placeholder="0.00" value={formData.entryPrice}
-                                                        onChange={e => handleInputChange('entryPrice', e.target.value)}
-                                                        step="any"
-                                                        className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono font-bold notranslate"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5 text-red-400">{t('form.stop_loss')}</label>
-                                                    <input
-                                                        type="number" placeholder="0.00" value={formData.stopLoss}
-                                                        onChange={e => handleInputChange('stopLoss', e.target.value)}
-                                                        step="any"
-                                                        className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
-                                                    />
-                                                    {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
-                                                    {formData.entryPrice && formData.stopLoss && formData.margin && (
-                                                        <div className="text-[10px] text-gray-500 mt-1">
-                                                            预计亏损: <span className="text-red-500">
-                                                                ${Math.abs(((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
-                                                    <input
-                                                        type="number" placeholder="0.00" value={formData.takeProfit}
-                                                        onChange={e => handleInputChange('takeProfit', e.target.value)}
-                                                        step="any"
-                                                        className={`w-full bg-neutral-800 border ${validationErrors.takeProfit ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-green-500 focus:outline-none font-mono notranslate`}
-                                                    />
-                                                    {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
-                                                    {formData.entryPrice && formData.takeProfit && formData.margin && (
-                                                        <div className="text-[10px] text-gray-500 mt-1">
-                                                            预计盈利: <span className="text-green-500">
-                                                                ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* 提交按钮区域 */}
-                                            <div className="pt-4">
-                                                {!membership.isPremium && trades.length >= membership.maxTrades ? (
-                                                    <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
-                                                        <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
-                                                        <span className="text-xs font-normal">{t('form.quota_desc')}</span>
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => {
-                                                            if (!riskAnalysis.valid) {
-                                                                setIsShaking(true);
-                                                                setTimeout(() => setIsShaking(false), 500);
-                                                                return;
-                                                            }
-                                                            handleSubmitTrade();
-                                                        }}
-                                                        className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
-                                                    >
-                                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
-                                                    </button>)}
-                                                <p className="text-center text-xs text-gray-600 mt-3">
-                                                    {t('form.honest_note')}
-                                                </p>
-                                            </div>
-                                        </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+                                {/* 左侧：录入表单 */}
+                                <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+                                    <div className="flex justify-between items-center mb-6 border-b border-neutral-800 pb-4">
+                                        <h2 className="text-xl font-black text-white flex items-center gap-2">
+                                            <Target className="w-5 h-5 text-amber-500" />
+                                            {t('form.title')}
+                                        </h2>
+                                        <span className="text-xs bg-neutral-800 text-gray-400 px-2 py-1 rounded">
+                                            {t('form.today_trade_count', { count: trades.filter(t => t.date === new Date().toLocaleDateString()).length + 1 })}
+                                        </span>
                                     </div>
 
-                                    {/* 右侧：实时风控面板 */}
                                     <div className="space-y-6">
-                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
-                                            <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
-                                                <Shield className="w-4 h-4 text-amber-500" />
-                                                {t('risk.title')}
-                                            </h3>
-
-                                            {/* Total Capital Management */}
-                                            <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
-                                                    {!isEditingCapital && (
-                                                        <button onClick={() => setIsEditingCapital(true)} className="text-amber-500 hover:text-amber-400">
-                                                            <Edit3 className="w-3 h-3" />
-                                                        </button>
-                                                    )}
+                                        {/* 第一行：基础信息 */}
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="col-span-2 md:col-span-1">
+                                                <label className="block text-xs text-gray-500 mb-1.5">{t('form.direction')}</label>
+                                                <div className="flex bg-neutral-800 rounded-lg p-1">
+                                                    <button
+                                                        onClick={() => handleInputChange('tradeType', 'buy')}
+                                                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'buy' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                                    >{t('form.long')}</button>
+                                                    <button
+                                                        onClick={() => handleInputChange('tradeType', 'sell')}
+                                                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'sell' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                                    >{t('form.short')}</button>
                                                 </div>
-                                                {isEditingCapital ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="number"
-                                                            value={totalCapital}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value;
-                                                                if (val === '' || val === '-') {
-                                                                    setTotalCapital('');
-                                                                } else {
-                                                                    const parsed = parseFloat(val);
-                                                                    setTotalCapital(isNaN(parsed) ? 0 : parsed);
-                                                                }
-                                                            }}
-                                                            className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
-                                                            autoFocus
-                                                        />
-                                                        <button onClick={() => setIsEditingCapital(false)} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-xl font-black font-mono text-white tracking-wider">
-                                                        ${(totalCapital || 0).toLocaleString()}
-                                                    </div>
-                                                )}
                                             </div>
-
-                                            <div className="space-y-4">
-                                                <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
-                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
-                                                    <div className="text-3xl font-black font-mono flex items-end gap-2">
-                                                        {riskAnalysis.rrRatio || '0.00'}
-                                                        <span className="text-sm font-normal text-gray-400 mb-1">
-                                                            {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
-                                                        </span>
-                                                    </div>
+                                            <div className="col-span-2 md:col-span-1">
+                                                <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
+                                                <input
+                                                    type="text" placeholder="BTC/USDT" value={formData.symbol}
+                                                    onChange={e => handleInputChange('symbol', e.target.value.toUpperCase())}
+                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
+                                                />
+                                            </div>
+                                            <div className="col-span-1">
+                                                <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>
+                                                <select
+                                                    value={formData.timeframe}
+                                                    onChange={e => handleInputChange('timeframe', e.target.value)}
+                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
+                                                >
+                                                    {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="col-span-1">
+                                                <div className="flex justify-between items-center mb-1.5">
+                                                    <label className="block text-xs text-gray-500">{t('form.pattern')}</label>
+                                                    <button onClick={() => setShowPatternModal(true)} className="text-[10px] text-amber-500 hover:underline flex items-center gap-1">
+                                                        <Settings className="w-3 h-3" /> {t('form.manage')}
+                                                    </button>
                                                 </div>
+                                                <select
+                                                    value={formData.pattern}
+                                                    onChange={e => handleInputChange('pattern', e.target.value)}
+                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
+                                                >
+                                                    {patterns.map(p => (
+                                                        <option key={p} value={p}>{p}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
 
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="p-3 bg-neutral-800 rounded-lg">
-                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
-                                                        <div className="text-lg font-bold font-mono text-white notranslate">
-                                                            {riskAnalysis.positionSize.toLocaleString()} USDT
-                                                        </div>
-                                                    </div>
-                                                    <div className="p-3 bg-neutral-800 rounded-lg">
-                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
-                                                        <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
-                                                            {riskAnalysis.riskPercent}%
-                                                        </div>
-                                                    </div>
+                                        {/* Trading Pair Risk Warnings */}
+                                        {tradingPairRisk?.showDailyWarning && (
+                                            <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                                <div className="text-xs text-red-400 leading-relaxed">
+                                                    <span className="font-bold">{t('risk.daily_loss_warning')}</span>
+                                                    <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
                                                 </div>
+                                            </div>
+                                        )}
 
-                                                {riskAnalysis.riskPercent > 10 && (
-                                                    <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
-                                                        <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                                        <p className="text-xs text-red-400 leading-relaxed">
-                                                            <span className="font-bold">{t('risk.warning_title')}</span>
-                                                            {t('risk.warning_msg')}
-                                                        </p>
-                                                    </div>
-                                                )}
+                                        {tradingPairRisk?.showHistoricalWarning && (
+                                            <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                                                <div className="text-xs text-orange-400 leading-relaxed">
+                                                    <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
+                                                    <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                                {riskAnalysis.accountRiskPercent > 10 && (
-                                                    <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > 15 ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
-                                                        <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-500' : 'text-yellow-500'}`} />
-                                                        <div className="text-xs leading-relaxed">
-                                                            <p className={`font-bold ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-400' : 'text-yellow-400'}`}>
-                                                                {riskAnalysis.accountRiskPercent > 15 ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
-                                                            </p>
-                                                            <p className="text-gray-400">
-                                                                当前账户风险为 {riskAnalysis.accountRiskPercent}%，
-                                                                {riskAnalysis.accountRiskPercent > 15 ? '严重超出安全范围 (>15%)！建议大幅降低仓位。' : '已超出建议值 (10%)，请谨慎操作。'}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                <div className="mt-4 pt-4 border-t border-neutral-800">
-                                                    <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
-                                                    <div className="space-y-2">
-                                                        {[
-                                                            { id: 'trend', label: t('risk.check_trend') },
-                                                            { id: 'close', label: t('risk.check_close') },
-                                                            { id: 'structure', label: t('risk.check_structure') }
-                                                        ].map(item => (
-                                                            <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
-                                                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
-                                                                    {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
-                                                                </div>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="hidden"
-                                                                    checked={checklist[item.id]}
-                                                                    onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                                                                />
-                                                                <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
-                                                            </label>
-                                                        ))}
-                                                    </div>
+                                        {/* 第二行：资金管理 */}
+                                        <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
+                                                    <input
+                                                        type="number" placeholder="1000" value={formData.margin}
+                                                        onChange={e => handleInputChange('margin', e.target.value)}
+                                                        step="any"
+                                                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.leverage')}</label>
+                                                    <input
+                                                        type="number" placeholder="10" value={formData.leverage}
+                                                        onChange={e => handleInputChange('leverage', e.target.value)}
+                                                        step="any"
+                                                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Market Sentiment (Moved from AI Analysis) */}
-                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-                                            <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
-                                                <Activity className="w-4 h-4 text-blue-400" />
-                                                <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
+                                        {/* 第三行：点位执行 */}
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
+                                                <input
+                                                    type="number" placeholder="0.00" value={formData.entryPrice}
+                                                    onChange={e => handleInputChange('entryPrice', e.target.value)}
+                                                    step="any"
+                                                    className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono font-bold notranslate"
+                                                />
                                             </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1.5 text-red-400">{t('form.stop_loss')}</label>
+                                                <input
+                                                    type="number" placeholder="0.00" value={formData.stopLoss}
+                                                    onChange={e => handleInputChange('stopLoss', e.target.value)}
+                                                    step="any"
+                                                    className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
+                                                />
+                                                {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
+                                                {formData.entryPrice && formData.stopLoss && formData.margin && (
+                                                    <div className="text-[10px] text-gray-500 mt-1">
+                                                        预计亏损: <span className="text-red-500">
+                                                            ${Math.abs(((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
+                                                <input
+                                                    type="number" placeholder="0.00" value={formData.takeProfit}
+                                                    onChange={e => handleInputChange('takeProfit', e.target.value)}
+                                                    step="any"
+                                                    className={`w-full bg-neutral-800 border ${validationErrors.takeProfit ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-green-500 focus:outline-none font-mono notranslate`}
+                                                />
+                                                {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
+                                                {formData.entryPrice && formData.takeProfit && formData.margin && (
+                                                    <div className="text-[10px] text-gray-500 mt-1">
+                                                        预计盈利: <span className="text-green-500">
+                                                            ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
 
-                                            {/* BTC Price */}
-                                            <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
-                                                        <span className="text-[#F7931A] font-bold text-xs">₿</span>
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-[10px] text-gray-400">BTC/USDT</div>
-                                                        <div className="text-sm font-bold text-white">
-                                                            ${(btcMarket.price || 0).toLocaleString()}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                        {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Fear & Greed */}
-                                            <div className="flex flex-col items-center justify-center py-2">
-                                                {(() => {
-                                                    const fearIndex = 30 + (new Date().getDate() % 20);
-                                                    return (
-                                                        <>
-                                                            <div className="flex items-baseline gap-2 mb-2">
-                                                                <span className="text-2xl font-black text-white">{fearIndex}</span>
-                                                                <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
-                                                            </div>
-                                                            <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
-                                                                <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
-                                                            </div>
-                                                        </>
-                                                    );
-                                                })()}
-                                            </div>
-                                            <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
-                                                {t('ai.sentiment_tip')}
+                                        {/* 提交按钮区域 */}
+                                        <div className="pt-4">
+                                            {!membership.isPremium && trades.length >= membership.maxTrades ? (
+                                                <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
+                                                    <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
+                                                    <span className="text-xs font-normal">{t('form.quota_desc')}</span>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => {
+                                                        if (!riskAnalysis.valid) {
+                                                            setIsShaking(true);
+                                                            setTimeout(() => setIsShaking(false), 500);
+                                                            return;
+                                                        }
+                                                        handleSubmitTrade();
+                                                    }}
+                                                    className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
+                                                >
+                                                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
+                                                </button>)}
+                                            <p className="text-center text-xs text-gray-600 mt-3">
+                                                {t('form.honest_note')}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* 右侧：实时风控面板 */}
+                                <div className="space-y-6">
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
+                                        <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
+                                            <Shield className="w-4 h-4 text-amber-500" />
+                                            {t('risk.title')}
+                                        </h3>
+
+                                        {/* Total Capital Management */}
+                                        <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
+                                                {!isEditingCapital && (
+                                                    <button onClick={() => setIsEditingCapital(true)} className="text-amber-500 hover:text-amber-400">
+                                                        <Edit3 className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {isEditingCapital ? (
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        value={totalCapital}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (val === '' || val === '-') {
+                                                                setTotalCapital('');
+                                                            } else {
+                                                                const parsed = parseFloat(val);
+                                                                setTotalCapital(isNaN(parsed) ? 0 : parsed);
+                                                            }
+                                                        }}
+                                                        className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
+                                                        autoFocus
+                                                    />
+                                                    <button onClick={() => setIsEditingCapital(false)} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
+                                                </div>
+                                            ) : (
+                                                <div className="text-xl font-black font-mono text-white tracking-wider">
+                                                    ${(totalCapital || 0).toLocaleString()}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
+                                                <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
+                                                <div className="text-3xl font-black font-mono flex items-end gap-2">
+                                                    {riskAnalysis.rrRatio || '0.00'}
+                                                    <span className="text-sm font-normal text-gray-400 mb-1">
+                                                        {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="p-3 bg-neutral-800 rounded-lg">
+                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
+                                                    <div className="text-lg font-bold font-mono text-white notranslate">
+                                                        {riskAnalysis.positionSize.toLocaleString()} USDT
+                                                    </div>
+                                                </div>
+                                                <div className="p-3 bg-neutral-800 rounded-lg">
+                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
+                                                    <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
+                                                        {riskAnalysis.riskPercent}%
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {riskAnalysis.riskPercent > 10 && (
+                                                <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
+                                                    <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                                                    <p className="text-xs text-red-400 leading-relaxed">
+                                                        <span className="font-bold">{t('risk.warning_title')}</span>
+                                                        {t('risk.warning_msg')}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {riskAnalysis.accountRiskPercent > 10 && (
+                                                <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > 15 ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
+                                                    <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-500' : 'text-yellow-500'}`} />
+                                                    <div className="text-xs leading-relaxed">
+                                                        <p className={`font-bold ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-400' : 'text-yellow-400'}`}>
+                                                            {riskAnalysis.accountRiskPercent > 15 ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
+                                                        </p>
+                                                        <p className="text-gray-400">
+                                                            当前账户风险为 {riskAnalysis.accountRiskPercent}%，
+                                                            {riskAnalysis.accountRiskPercent > 15 ? '严重超出安全范围 (>15%)！建议大幅降低仓位。' : '已超出建议值 (10%)，请谨慎操作。'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="mt-4 pt-4 border-t border-neutral-800">
+                                                <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { id: 'trend', label: t('risk.check_trend') },
+                                                        { id: 'close', label: t('risk.check_close') },
+                                                        { id: 'structure', label: t('risk.check_structure') }
+                                                    ].map(item => (
+                                                        <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
+                                                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
+                                                                {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
+                                                            </div>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="hidden"
+                                                                checked={checklist[item.id]}
+                                                                onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                                            />
+                                                            <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Market Sentiment (Moved from AI Analysis) */}
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+                                        <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
+                                            <Activity className="w-4 h-4 text-blue-400" />
+                                            <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
+                                        </div>
+
+                                        {/* BTC Price */}
+                                        <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
+                                                    <span className="text-[#F7931A] font-bold text-xs">₿</span>
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] text-gray-400">BTC/USDT</div>
+                                                    <div className="text-sm font-bold text-white">
+                                                        ${(btcMarket.price || 0).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                    {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Fear & Greed */}
+                                        <div className="flex flex-col items-center justify-center py-2">
+                                            {(() => {
+                                                const fearIndex = 30 + (new Date().getDate() % 20);
+                                                return (
+                                                    <>
+                                                        <div className="flex items-baseline gap-2 mb-2">
+                                                            <span className="text-2xl font-black text-white">{fearIndex}</span>
+                                                            <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
+                                                        </div>
+                                                        <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                                                            <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                        <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
+                                            {t('ai.sentiment_tip')}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
+
                         )}
 
                         {/* --- 2. 交易日记列表 --- */}
                         {activeTab === 'journal' && (
-                            <div className="max-w-4xl mx-auto">
-                                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-                                    <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
-                                        <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
-                                        <div className="text-sm text-gray-400 flex items-center gap-4">
-                                            <div className="flex items-center gap-2">
-                                                <span>{t('journal.total_trades')}: <span className="text-white font-bold">{trades.length}</span></span>
-                                                <span className="text-gray-600">|</span>
-                                                <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
-                                                <span className="text-gray-600">|</span>
-                                                <span>{t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span></span>
-                                            </div>
-                                            <button
-                                                onClick={handleExportTrades}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors"
-                                            >
-                                                <FileText className="w-3.5 h-3.5" />
-                                                {t('journal.export_csv')}
-                                            </button>
+                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+                                <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
+                                    <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
+                                    <div className="text-sm text-gray-400 flex items-center gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <span>{t('journal.total_trades')}: <span className="text-white font-bold">{trades.length}</span></span>
+                                            <span className="text-gray-600">|</span>
+                                            <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
+                                            <span className="text-gray-600">|</span>
+                                            <span>{t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span></span>
                                         </div>
+                                        <button
+                                            onClick={handleExportTrades}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors"
+                                        >
+                                            <FileText className="w-3.5 h-3.5" />
+                                            {t('journal.export_csv')}
+                                        </button>
                                     </div>
-                                    {trades.length === 0 ? (
-                                        <div className="p-20 text-center text-gray-600">
-                                            <Package className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                            <p>{t('journal.empty_state')}</p>
-                                        </div>
-                                    ) : (
-                                        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                                            <table className="w-full text-sm text-left">
-                                                <thead className="text-xs text-gray-500 uppercase bg-neutral-800 sticky top-0 z-10">
-                                                    <tr>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.date')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.symbol_dir')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.basis')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.rr')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.status')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.review')}</th>
-                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center">{t('journal.columns.action')}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-neutral-800">
-                                                    {trades.map(trade => (
-                                                        <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
-                                                            <td className="px-6 py-4 font-mono text-gray-400">{trade.date}</td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="font-bold text-white">{trade.symbol}</div>
-                                                                <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
-                                                                    {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700">
-                                                                    {trade.timeframe}
-                                                                </span>
-                                                                <span className="ml-2 text-gray-400">{trade.pattern || '-'}</span>
-                                                            </td>
-                                                            <td className="px-6 py-4 font-mono group relative">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <span>{trade.rrRatio}</span>
-                                                                    <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
-                                                                </div>
-                                                                {/* Tooltip with price details */}
-                                                                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
-                                                                    <div className="space-y-1.5">
-                                                                        <div className="flex justify-between gap-3">
-                                                                            <span className="text-gray-400">{t('journal.entry_price')}</span>
-                                                                            <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
-                                                                        </div>
-                                                                        {trade.stopLoss && (
-                                                                            <div className="flex justify-between gap-3">
-                                                                                <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
-                                                                                <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
-                                                                            </div>
-                                                                        )}
-                                                                        {trade.takeProfit && (
-                                                                            <div className="flex justify-between gap-3">
-                                                                                <span className="text-gray-400">{t('journal.take_profit_price')}</span>
-                                                                                <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-2">
-                                                                    {trade.status === 'open' ? (
-                                                                        <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
-                                                                    ) : (
-                                                                        <>
-                                                                            <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
-                                                                            </span>
-                                                                            {trade.violatedDiscipline && (
-                                                                                <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
-                                                                            )}
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                {trade.review ? (
-                                                                    <div className="text-xs text-gray-400 w-48 line-clamp-2 break-words" title={trade.review}>
-                                                                        {trade.review}
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-neutral-700">-</span>
-                                                                )}
-                                                            </td>
-                                                            <td className="px-6 py-4 flex gap-2">
-                                                                {trade.status === 'open' ? (
-                                                                    <div className="w-24 text-center">
-                                                                        <button
-                                                                            onClick={() => handleSettleTrade(trade.id)}
-                                                                            className="text-amber-500 hover:text-amber-400 font-bold transition-colors text-xs border border-amber-500/30 px-2 py-1 rounded w-full"
-                                                                        >
-                                                                            {t('journal.settle')}
-                                                                        </button>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="w-24 text-center">
-                                                                        <span className="text-gray-600 cursor-not-allowed text-xs px-2 py-1">{t('journal.status.closed')}</span>
-                                                                    </div>
-                                                                )}
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleReviewTrade(trade);
-                                                                    }}
-                                                                    className={`text-xs transition-colors flex items-center justify-center gap-1 w-[80px] ${trade.review ? 'text-amber-500 font-bold' : 'text-gray-500 hover:text-white'}`}
-                                                                >
-                                                                    {trade.review ? (
-                                                                        <>
-                                                                            <CheckCircle2 className="w-3 h-3" /> {t('journal.reviewed')}
-                                                                        </>
-                                                                    ) : (
-                                                                        t('journal.review')
-                                                                    )}
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setTradeToDelete(trade);
-                                                                        setShowDeleteModal(true);
-                                                                    }}
-                                                                    className="text-gray-600 hover:text-red-500 transition-colors p-1"
-                                                                    title={language === 'zh' ? '删除交易' : 'Delete Trade'}
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
                                 </div>
+                                {trades.length === 0 ? (
+                                    <div className="p-20 text-center text-gray-600">
+                                        <Package className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                                        <p>{t('journal.empty_state')}</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="text-xs text-gray-500 uppercase bg-neutral-800 sticky top-0 z-10">
+                                                <tr>
+                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.date')}</th>
+                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.symbol_dir')}</th>
+                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.basis')}</th>
+                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.rr')}</th>
+                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.status')}</th>
+                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20">{t('journal.columns.review')}</th>
+                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center">{t('journal.columns.action')}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-neutral-800">
+                                                {trades.map(trade => (
+                                                    <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
+                                                        <td className="px-6 py-4 font-mono text-gray-400">{trade.date}</td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="font-bold text-white">{trade.symbol}</div>
+                                                            <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
+                                                                {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700">
+                                                                {trade.timeframe}
+                                                            </span>
+                                                            <span className="ml-2 text-gray-400">{trade.pattern || '-'}</span>
+                                                        </td>
+                                                        <td className="px-6 py-4 font-mono group relative">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span>{trade.rrRatio}</span>
+                                                                <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
+                                                            </div>
+                                                            {/* Tooltip with price details */}
+                                                            <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
+                                                                <div className="space-y-1.5">
+                                                                    <div className="flex justify-between gap-3">
+                                                                        <span className="text-gray-400">{t('journal.entry_price')}</span>
+                                                                        <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
+                                                                    </div>
+                                                                    {trade.stopLoss && (
+                                                                        <div className="flex justify-between gap-3">
+                                                                            <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
+                                                                            <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {trade.takeProfit && (
+                                                                        <div className="flex justify-between gap-3">
+                                                                            <span className="text-gray-400">{t('journal.take_profit_price')}</span>
+                                                                            <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-2">
+                                                                {trade.status === 'open' ? (
+                                                                    <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                            {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
+                                                                        </span>
+                                                                        {trade.violatedDiscipline && (
+                                                                            <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            {trade.review ? (
+                                                                <div className="text-xs text-gray-400 w-48 line-clamp-2 break-words" title={trade.review}>
+                                                                    {trade.review}
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-neutral-700">-</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 flex gap-2">
+                                                            {trade.status === 'open' ? (
+                                                                <div className="w-24 text-center">
+                                                                    <button
+                                                                        onClick={() => handleSettleTrade(trade.id)}
+                                                                        className="text-amber-500 hover:text-amber-400 font-bold transition-colors text-xs border border-amber-500/30 px-2 py-1 rounded w-full"
+                                                                    >
+                                                                        {t('journal.settle')}
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-24 text-center">
+                                                                    <span className="text-gray-600 cursor-not-allowed text-xs px-2 py-1">{t('journal.status.closed')}</span>
+                                                                </div>
+                                                            )}
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleReviewTrade(trade);
+                                                                }}
+                                                                className={`text-xs transition-colors flex items-center justify-center gap-1 w-[80px] ${trade.review ? 'text-amber-500 font-bold' : 'text-gray-500 hover:text-white'}`}
+                                                            >
+                                                                {trade.review ? (
+                                                                    <>
+                                                                        <CheckCircle2 className="w-3 h-3" /> {t('journal.reviewed')}
+                                                                    </>
+                                                                ) : (
+                                                                    t('journal.review')
+                                                                )}
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setTradeToDelete(trade);
+                                                                    setShowDeleteModal(true);
+                                                                }}
+                                                                className="text-gray-600 hover:text-red-500 transition-colors p-1"
+                                                                title={language === 'zh' ? '删除交易' : 'Delete Trade'}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
-                        )}
+
+                        )
+                        }
 
                         {/* --- 3. AI 行为诊断 (核心卖点) --- */}
-                        {activeTab === 'ai_analysis' && (
-                            <div className="max-w-4xl mx-auto">
+                        {
+                            activeTab === 'ai_analysis' && (
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
                                     {/* 会员锁定遮罩 */}
                                     {!membership.isPremium && (
@@ -2317,250 +2316,252 @@ function GoldCatApp() {
                                         </>
                                     )}
                                 </div>
-                            </div>
-                        )}
+
+                            )
+                        }
                     </>
                 )}
-            </main>
+            </main >
 
             {/* Payment Modal */}
-            {showPaymentModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-                    <div className="bg-neutral-900 w-full max-w-2xl rounded-2xl border border-neutral-800 p-8 shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Crown className="w-32 h-32 text-amber-500" />
-                        </div>
-                        <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">{t('payment.title')}</h3>
-                        <p className="text-gray-400 mb-8">{t('payment.subtitle')}</p>
-
-                        {!isPaymentSuccess && (
-                            <button onClick={() => { setShowPaymentModal(false); setPaymentMethod(null); }} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
-                                <X className="w-5 h-5" />
-                            </button>
-                        )}
-
-                        {isPaymentSuccess ? (
-                            <div className="text-center py-12 animate-in fade-in zoom-in duration-300">
-                                <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
-                                    <CheckCircle2 className="w-12 h-12 text-green-500" />
-                                </div>
-                                <h3 className="text-2xl font-black text-white mb-2">{t('payment.success_title')}</h3>
-                                <p className="text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
-                                    {t('payment.success_desc')}
-                                </p>
-                                <button
-                                    onClick={() => {
-                                        setIsPaymentSuccess(false);
-                                        setShowPaymentModal(false);
-                                        setPaymentMethod(null);
-                                    }}
-                                    className="px-10 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all transform hover:scale-105"
-                                >
-                                    {t('common.done')}
-                                </button>
+            {
+                showPaymentModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+                        <div className="bg-neutral-900 w-full max-w-2xl rounded-2xl border border-neutral-800 p-8 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <Crown className="w-32 h-32 text-amber-500" />
                             </div>
-                        ) : !paymentMethod ? (
-                            <>
-                                {/* Price and Features Display */}
-                                <div className="mb-6">
-                                    <div className="text-center mb-8 p-6 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl border-2 border-amber-500/30">
-                                        <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
-                                        <div className="text-5xl font-black text-white mb-2">$15.00</div>
-                                        <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block">
-                                            {t('payment.lifetime_access')}
-                                        </div>
+                            <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">{t('payment.title')}</h3>
+                            <p className="text-gray-400 mb-8">{t('payment.subtitle')}</p>
+
+                            {!isPaymentSuccess && (
+                                <button onClick={() => { setShowPaymentModal(false); setPaymentMethod(null); }} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            )}
+
+                            {isPaymentSuccess ? (
+                                <div className="text-center py-12 animate-in fade-in zoom-in duration-300">
+                                    <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
+                                        <CheckCircle2 className="w-12 h-12 text-green-500" />
                                     </div>
-
-                                    {/* Feature List */}
-                                    <ul className="space-y-3 mb-6">
-                                        {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
-                                            <li key={i} className="flex items-center gap-3 text-white">
-                                                <div className="bg-amber-500/20 rounded-full p-0.5">
-                                                    <Check className="w-4 h-4 text-amber-500 shrink-0" />
-                                                </div>
-                                                <span className="text-sm font-medium">{feature}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-
-                                    {/* Payment Button */}
+                                    <h3 className="text-2xl font-black text-white mb-2">{t('payment.success_title')}</h3>
+                                    <p className="text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
+                                        {t('payment.success_desc')}
+                                    </p>
                                     <button
-                                        onClick={handleUpgrade}
-                                        disabled={isUpgrading}
-                                        className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => {
+                                            setIsPaymentSuccess(false);
+                                            setShowPaymentModal(false);
+                                            setPaymentMethod(null);
+                                        }}
+                                        className="px-10 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all transform hover:scale-105"
                                     >
-                                        {isUpgrading ? (
-                                            <div className="flex items-center justify-center gap-2">
-                                                <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin"></div>
-                                                <span>Creating Session...</span>
+                                        {t('common.done')}
+                                    </button>
+                                </div>
+                            ) : !paymentMethod ? (
+                                <>
+                                    {/* Price and Features Display */}
+                                    <div className="mb-6">
+                                        <div className="text-center mb-8 p-6 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl border-2 border-amber-500/30">
+                                            <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
+                                            <div className="text-5xl font-black text-white mb-2">$15.00</div>
+                                            <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block">
+                                                {t('payment.lifetime_access')}
                                             </div>
-                                        ) : (
-                                            t('pricing.get_pro')
-                                        )}
-                                    </button>
-                                </div>
-
-                                <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                                    <Shield className="w-4 h-4" />
-                                    <span>SSL 安全加密支付</span>
-                                </div>
-                            </>
-                        ) : paymentMethod === 'usdt' ? (
-                            <>
-                                {/* USDT 手动支付界面 */}
-                                <div className="flex items-center justify-between mb-4">
-                                    <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                        <ArrowRight className="w-4 h-4 rotate-180" /> 返回选择支付方式
-                                    </button>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="text-xs text-gray-400">{t('payment.order_number')}</div>
-                                            <button
-                                                onClick={() => {
-                                                    const orderNum = orderNumber || 'ORDER-' + Date.now();
-                                                    navigator.clipboard.writeText(orderNum);
-                                                    setToastMessage(t('payment.copied'));
-                                                    setShowSuccessToast(true);
-                                                }}
-                                                className="flex items-center gap-1 text-amber-500 hover:text-amber-400 text-xs"
-                                            >
-                                                <Copy className="w-3 h-3" />
-                                                {t('payment.copy')}
-                                            </button>
                                         </div>
-                                        <div className="text-lg font-mono text-amber-500">{orderNumber || 'ORDER-' + Date.now()}</div>
-                                    </div>
 
-                                    <div className="p-4 bg-neutral-800 rounded-xl">
-                                        <div className="text-xs text-gray-400 mb-2">{t('payment.receiving_address')}</div>
-                                        <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg">
-                                            <code className="text-xs font-mono text-white break-all">TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R</code>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText('TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R');
-                                                    setToastMessage(t('payment.copied'));
-                                                    setShowSuccessToast(true);
-                                                }}
-                                                className="ml-2 text-gray-400 hover:text-white"
-                                            >
-                                                <Copy className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 bg-neutral-800 rounded-xl">
-                                        <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                        <div className="text-3xl font-black text-amber-500">15.00 USDT</div>
-                                    </div>
-
-                                    <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                                        <div className="text-sm text-blue-400 mb-2 flex items-center gap-2">
-                                            <AlertCircle className="w-4 h-4" />
-                                            {t('payment.instructions')}
-                                        </div>
-                                        <ul className="text-xs text-gray-400 space-y-1">
-                                            <li>• {t('payment.instruction_1')}</li>
-                                            <li>• {t('payment.instruction_2')}</li>
-                                            <li className="text-amber-400 font-semibold">• {t('payment.instruction_3')}</li>
-                                            <li>• {t('payment.instruction_4')}</li>
+                                        {/* Feature List */}
+                                        <ul className="space-y-3 mb-6">
+                                            {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-white">
+                                                    <div className="bg-amber-500/20 rounded-full p-0.5">
+                                                        <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                                                    </div>
+                                                    <span className="text-sm font-medium">{feature}</span>
+                                                </li>
+                                            ))}
                                         </ul>
+
+                                        {/* Payment Button */}
+                                        <button
+                                            onClick={handleUpgrade}
+                                            disabled={isUpgrading}
+                                            className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isUpgrading ? (
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin"></div>
+                                                    <span>Creating Session...</span>
+                                                </div>
+                                            ) : (
+                                                t('pricing.get_pro')
+                                            )}
+                                        </button>
                                     </div>
 
-                                    <div>
-                                        <label className="text-xs text-gray-400 mb-2 block">{t('payment.txid_label')}</label>
-                                        <input
-                                            type="text"
-                                            value={paymentTxId}
-                                            onChange={(e) => setPaymentTxId(e.target.value)}
-                                            placeholder={t('payment.txid_placeholder')}
-                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono text-sm"
-                                        />
+                                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                                        <Shield className="w-4 h-4" />
+                                        <span>SSL 安全加密支付</span>
+                                    </div>
+                                </>
+                            ) : paymentMethod === 'usdt' ? (
+                                <>
+                                    {/* USDT 手动支付界面 */}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
+                                            <ArrowRight className="w-4 h-4 rotate-180" /> 返回选择支付方式
+                                        </button>
                                     </div>
 
-                                    <button
-                                        onClick={async () => {
-                                            if (!paymentTxId) {
-                                                setErrorMessage(t('payment.txid_placeholder'));
-                                                setShowErrorToast(true);
-                                                return;
-                                            }
+                                    <div className="space-y-4">
+                                        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="text-xs text-gray-400">{t('payment.order_number')}</div>
+                                                <button
+                                                    onClick={() => {
+                                                        const orderNum = orderNumber || 'ORDER-' + Date.now();
+                                                        navigator.clipboard.writeText(orderNum);
+                                                        setToastMessage(t('payment.copied'));
+                                                        setShowSuccessToast(true);
+                                                    }}
+                                                    className="flex items-center gap-1 text-amber-500 hover:text-amber-400 text-xs"
+                                                >
+                                                    <Copy className="w-3 h-3" />
+                                                    {t('payment.copy')}
+                                                </button>
+                                            </div>
+                                            <div className="text-lg font-mono text-amber-500">{orderNumber || 'ORDER-' + Date.now()}</div>
+                                        </div>
 
-                                            try {
-                                                // Create or update order in Supabase
-                                                const orderNum = orderNumber || `ORDER-${Date.now()}`;
+                                        <div className="p-4 bg-neutral-800 rounded-xl">
+                                            <div className="text-xs text-gray-400 mb-2">{t('payment.receiving_address')}</div>
+                                            <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg">
+                                                <code className="text-xs font-mono text-white break-all">TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R</code>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText('TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R');
+                                                        setToastMessage(t('payment.copied'));
+                                                        setShowSuccessToast(true);
+                                                    }}
+                                                    className="ml-2 text-gray-400 hover:text-white"
+                                                >
+                                                    <Copy className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
 
-                                                const { error } = await supabase
-                                                    .from('orders')
-                                                    .insert({
-                                                        order_number: orderNum,
-                                                        user_id: user.id,
-                                                        user_email: user.email,
-                                                        amount: 15,
-                                                        currency: 'USDT',
-                                                        payment_method: 'usdt',
-                                                        txid: paymentTxId,
-                                                        status: 'paid'
-                                                    });
+                                        <div className="p-4 bg-neutral-800 rounded-xl">
+                                            <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
+                                            <div className="text-3xl font-black text-amber-500">15.00 USDT</div>
+                                        </div>
 
-                                                if (error) {
-                                                    console.error('Order creation error:', error);
-                                                    setErrorMessage(t('common.error') + ': ' + error.message);
+                                        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                                            <div className="text-sm text-blue-400 mb-2 flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4" />
+                                                {t('payment.instructions')}
+                                            </div>
+                                            <ul className="text-xs text-gray-400 space-y-1">
+                                                <li>• {t('payment.instruction_1')}</li>
+                                                <li>• {t('payment.instruction_2')}</li>
+                                                <li className="text-amber-400 font-semibold">• {t('payment.instruction_3')}</li>
+                                                <li>• {t('payment.instruction_4')}</li>
+                                            </ul>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-gray-400 mb-2 block">{t('payment.txid_label')}</label>
+                                            <input
+                                                type="text"
+                                                value={paymentTxId}
+                                                onChange={(e) => setPaymentTxId(e.target.value)}
+                                                placeholder={t('payment.txid_placeholder')}
+                                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono text-sm"
+                                            />
+                                        </div>
+
+                                        <button
+                                            onClick={async () => {
+                                                if (!paymentTxId) {
+                                                    setErrorMessage(t('payment.txid_placeholder'));
                                                     setShowErrorToast(true);
                                                     return;
                                                 }
 
-                                                setIsPaymentSuccess(true);
-                                                setPaymentTxId('');
-                                                setOrderNumber('');
-                                            } catch (err) {
-                                                console.error('Unexpected error:', err);
-                                                setErrorMessage(t('common.error'));
-                                                setShowErrorToast(true);
-                                            }
-                                        }}
-                                        className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
-                                    >
-                                        {t('payment.submit_review')}
-                                    </button>
-                                </div>
-                            </>
+                                                try {
+                                                    // Create or update order in Supabase
+                                                    const orderNum = orderNumber || `ORDER-${Date.now()}`;
 
-                        ) : paymentMethod === 'cny' ? (
-                            <>
-                                {/* RMB Payment - Xorpay (to be integrated) */}
-                                <div className="flex items-center justify-between mb-4">
-                                    <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                        <ArrowRight className="w-4 h-4 rotate-180" /> {t('payment.back')}
-                                    </button>
-                                </div>
-                                <div className="text-center py-8">
-                                    <Coins className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                                    <h4 className="text-xl font-bold text-white mb-2">{t('payment.cny')}</h4>
-                                    <p className="text-gray-400 mb-6">{t('payment.channel_connecting')}</p>
-                                    <button
-                                        disabled
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 text-gray-500 font-black text-lg rounded-xl cursor-not-allowed"
-                                    >
-                                        <Wallet className="w-5 h-5" />
-                                        {t('payment.coming_soon')}
-                                    </button>
-                                </div>
-                            </>
-                        ) : null}
+                                                    const { error } = await supabase
+                                                        .from('orders')
+                                                        .insert({
+                                                            order_number: orderNum,
+                                                            user_id: user.id,
+                                                            user_email: user.email,
+                                                            amount: 15,
+                                                            currency: 'USDT',
+                                                            payment_method: 'usdt',
+                                                            txid: paymentTxId,
+                                                            status: 'paid'
+                                                        });
+
+                                                    if (error) {
+                                                        console.error('Order creation error:', error);
+                                                        setErrorMessage(t('common.error') + ': ' + error.message);
+                                                        setShowErrorToast(true);
+                                                        return;
+                                                    }
+
+                                                    setIsPaymentSuccess(true);
+                                                    setPaymentTxId('');
+                                                    setOrderNumber('');
+                                                } catch (err) {
+                                                    console.error('Unexpected error:', err);
+                                                    setErrorMessage(t('common.error'));
+                                                    setShowErrorToast(true);
+                                                }
+                                            }}
+                                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
+                                        >
+                                            {t('payment.submit_review')}
+                                        </button>
+                                    </div>
+                                </>
+
+                            ) : paymentMethod === 'cny' ? (
+                                <>
+                                    {/* RMB Payment - Xorpay (to be integrated) */}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
+                                            <ArrowRight className="w-4 h-4 rotate-180" /> {t('payment.back')}
+                                        </button>
+                                    </div>
+                                    <div className="text-center py-8">
+                                        <Coins className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                                        <h4 className="text-xl font-bold text-white mb-2">{t('payment.cny')}</h4>
+                                        <p className="text-gray-400 mb-6">{t('payment.channel_connecting')}</p>
+                                        <button
+                                            disabled
+                                            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 text-gray-500 font-black text-lg rounded-xl cursor-not-allowed"
+                                        >
+                                            <Wallet className="w-5 h-5" />
+                                            {t('payment.coming_soon')}
+                                        </button>
+                                    </div>
+                                </>
+                            ) : null}
 
 
 
-                        <p className="text-center text-[10px] text-gray-600 mt-4 flex items-center justify-center gap-1">
-                            <Shield className="w-3 h-3" /> {t('payment.security')}
-                        </p>
+                            <p className="text-center text-[10px] text-gray-600 mt-4 flex items-center justify-center gap-1">
+                                <Shield className="w-3 h-3" /> {t('payment.security')}
+                            </p>
 
 
+                        </div>
                     </div>
-                </div>
-            )
+                )
             }
 
             {/* 成功提示 Toast */}
@@ -3136,61 +3137,67 @@ function GoldCatApp() {
             </div>
 
             {/* Delete Confirmation Modal */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl scale-in-95 animate-in zoom-in-95 duration-200">
-                        <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Trash2 className="w-8 h-8 text-red-500" />
+            {
+                showDeleteModal && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl scale-in-95 animate-in zoom-in-95 duration-200">
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Trash2 className="w-8 h-8 text-red-500" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">
+                                    {language === 'zh' ? '确认删除交易？' : 'Delete Trade?'}
+                                </h3>
+                                <p className="text-gray-400 text-sm">
+                                    {language === 'zh'
+                                        ? '此操作将永久删除该交易记录，无法恢复。'
+                                        : 'This action will permanently delete this trade record. It cannot be undone.'}
+                                </p>
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">
-                                {language === 'zh' ? '确认删除交易？' : 'Delete Trade?'}
-                            </h3>
-                            <p className="text-gray-400 text-sm">
-                                {language === 'zh'
-                                    ? '此操作将永久删除该交易记录，无法恢复。'
-                                    : 'This action will permanently delete this trade record. It cannot be undone.'}
-                            </p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowDeleteModal(false);
-                                    setTradeToDelete(null);
-                                }}
-                                className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-bold transition-colors"
-                            >
-                                {language === 'zh' ? '取消' : 'Cancel'}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (tradeToDelete) {
-                                        removeTrade(tradeToDelete.id);
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
                                         setShowDeleteModal(false);
                                         setTradeToDelete(null);
-                                    }
-                                }}
-                                className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-900/20"
-                            >
-                                {language === 'zh' ? '确认删除' : 'Delete'}
-                            </button>
+                                    }}
+                                    className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-bold transition-colors"
+                                >
+                                    {language === 'zh' ? '取消' : 'Cancel'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (tradeToDelete) {
+                                            removeTrade(tradeToDelete.id);
+                                            setShowDeleteModal(false);
+                                            setTradeToDelete(null);
+                                        }
+                                    }}
+                                    className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-900/20"
+                                >
+                                    {language === 'zh' ? '确认删除' : 'Delete'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Page Routing: Privacy Policy and Terms of Service Pages */}
-            {currentPage === 'privacy' && (
-                <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
-                    <PrivacyPolicyPage language={language} onBack={() => setCurrentPage('main')} />
-                </div>
-            )}
-            {currentPage === 'terms' && (
-                <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
-                    <TermsOfServicePage language={language} onBack={() => setCurrentPage('main')} />
-                </div>
-            )}
-        </div>
+            {
+                currentPage === 'privacy' && (
+                    <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
+                        <PrivacyPolicyPage language={language} onBack={() => setCurrentPage('main')} />
+                    </div>
+                )
+            }
+            {
+                currentPage === 'terms' && (
+                    <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
+                        <TermsOfServicePage language={language} onBack={() => setCurrentPage('main')} />
+                    </div>
+                )
+            }
+        </div >
     );
 }
 
