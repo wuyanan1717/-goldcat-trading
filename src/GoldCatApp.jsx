@@ -1457,12 +1457,16 @@ function GoldCatApp() {
                                             <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
                                         </div>
                                         <div className="border-t border-white/10 my-8 w-full"></div>
-                                        <div className="flex items-center gap-3 p-4 bg-neutral-800/50 rounded-xl border border-amber-500/20 mb-8">
-                                            <Crown className="w-5 h-5 text-amber-500 shrink-0" />
-                                            <div className="text-sm text-gray-300 font-medium">
-                                                {Array.isArray(t('pricing.pro_features')) && t('pricing.pro_features').join(' · ')}
-                                            </div>
-                                        </div>
+                                        <ul className="space-y-4 mb-8 flex-1 w-full">
+                                            {Array.isArray(t('pricing.pro_features')) && t('pricing.pro_features').map((feature, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-white">
+                                                    <div className="bg-amber-500/20 rounded-full p-0.5">
+                                                        <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                                                    </div>
+                                                    <span className="text-sm font-medium">{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
                                         <button
                                             onClick={() => {
                                                 setIsRegisterMode(true);
