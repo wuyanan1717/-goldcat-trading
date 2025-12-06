@@ -1911,7 +1911,7 @@ function GoldCatApp() {
 
                         {/* --- 2. 交易日记列表 --- */}
                         {activeTab === 'journal' && (
-                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4" style={{ maxWidth: '100%', width: '100%' }}>
                                 <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
                                     <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
                                     <div className="text-sm text-gray-400 flex items-center gap-4">
