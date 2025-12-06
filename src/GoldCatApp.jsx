@@ -1958,8 +1958,8 @@ function GoldCatApp() {
                                                         <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[180px]">{t('journal.columns.basis')}</th>
                                                         <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[80px]">{t('journal.columns.rr')}</th>
                                                         <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.status')}</th>
-                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">复盘内容</th>
-                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[180px]">操作</th>
+                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">{t('journal.columns.review_content')}</th>
+                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[180px]">{t('journal.columns.action')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-neutral-800">
@@ -2029,7 +2029,7 @@ function GoldCatApp() {
                                                                         {trade.review}
                                                                     </div>
                                                                 ) : (
-                                                                    <span className="text-xs text-gray-600 italic">未复盘</span>
+                                                                    <span className="text-xs text-gray-600 italic">{t('journal.not_reviewed')}</span>
                                                                 )}
                                                             </td>
                                                             <td className="px-4 py-4">
@@ -2059,7 +2059,7 @@ function GoldCatApp() {
                                                                             handleReviewTrade(trade);
                                                                         }}
                                                                         className={`
-                                                                            px-3 py-1.5 rounded text-xs font-medium transition-all min-w-[70px] flex items-center justify-center gap-1
+                                                                            px-3 py-1.5 rounded text-xs font-medium transition-all w-[100px] flex items-center justify-center gap-1
                                                                             ${trade.review
                                                                                 ? 'bg-green-900/30 text-green-400 border border-green-500/30 hover:bg-green-900/50'
                                                                                 : 'bg-neutral-800 text-gray-400 border border-neutral-700 hover:bg-neutral-700 hover:text-white'}
@@ -2068,10 +2068,10 @@ function GoldCatApp() {
                                                                         {trade.review ? (
                                                                             <>
                                                                                 <CheckCircle2 className="w-3 h-3" />
-                                                                                <span>已复盘</span>
+                                                                                <span>{t('journal.reviewed')}</span>
                                                                             </>
                                                                         ) : (
-                                                                            <span>复盘</span>
+                                                                            <span>{t('journal.review')}</span>
                                                                         )}
                                                                     </button>
 

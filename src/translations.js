@@ -169,6 +169,7 @@ export const translations = {
                 rr: "盈亏比",
                 status: "状态",
                 review: "复盘笔记",
+                review_content: "复盘内容",
                 action: "操作"
             },
             status: {
@@ -181,6 +182,7 @@ export const translations = {
             settle: "结算",
             details: "详情",
             reviewed: "已复盘",
+            not_reviewed: "未复盘",
             review: "复盘",
             review_title: "交易复盘",
             review_desc: "记录这笔交易的心得、教训或改进点。",
@@ -466,6 +468,7 @@ export const translations = {
                 rr: "R:R",
                 status: "Status",
                 review: "Review Note",
+                review_content: "Review Content",
                 action: "Action"
             },
             status: {
@@ -477,6 +480,7 @@ export const translations = {
             settle: "Settle",
             details: "Details",
             reviewed: "Reviewed",
+            not_reviewed: "Not Reviewed",
             review: "Review",
             review_title: "Trade Review",
             review_desc: "Record your insights, lessons, or improvements.",
