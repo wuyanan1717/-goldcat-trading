@@ -2355,75 +2355,48 @@ function GoldCatApp() {
                             </div>
                         ) : !paymentMethod ? (
                             <>
-                                {/* 选择支付方式 */}
+                                {/* Price and Features Display */}
                                 <div className="mb-6">
-                                    <h4 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
-                                        <CreditCard className="w-4 h-4" />
-                                        {t('payment.method')}
-                                    </h4>
-                                    <div className="grid grid-cols-3 gap-4">
-                                        {/* USDT */}
-                                        {/* USDT - Hidden for Creem Review */}
-                                        {false && (
-                                            <button
-                                                onClick={() => setPaymentMethod('usdt')}
-                                                className="group relative p-6 rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all"
-                                            >
-                                                <div className="absolute top-2 right-2">
-                                                    <div className="bg-amber-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">{t('payment.recommended')}</div>
-                                                </div>
-                                                <Wallet className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-                                                <div className="text-xl font-black text-white mb-1">{t('payment.usdt')}</div>
-                                                <div className="text-2xl font-black text-amber-500 mb-2">15.00</div>
-                                                <div className="text-xs text-gray-500">{t('payment.crypto_payment')}</div>
-                                            </button>
-                                        )}
-
-                                        {/* 美元 */}
-                                        <button
-                                            onClick={handleUpgrade}
-                                            disabled={isUpgrading}
-                                            className="group relative p-6 rounded-2xl border-2 border-neutral-700 bg-neutral-800/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {isUpgrading ? (
-                                                <div className="flex flex-col items-center justify-center h-full">
-                                                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-                                                    <div className="text-sm text-blue-400 font-bold">Creating Session...</div>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <DollarSign className="w-12 h-12 text-blue-400 mx-auto mb-3" />
-                                                    <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
-                                                    <div className="text-2xl font-black text-blue-400 mb-2">$15.00</div>
-                                                    <div className="text-xs text-gray-500">{t('payment.card_paypal')}</div>
-                                                    <div className="mt-3 text-[10px] text-green-400 font-bold bg-green-500/10 px-2 py-1 rounded-full inline-block">
-                                                        One-time payment for lifetime access
-                                                    </div>
-                                                </>
-                                            )}
-                                        </button>
-
-                                        {/* 人民币 */}
-                                        {/* 人民币 - Hidden for Creem Review */}
-                                        {false && (
-                                            <button
-                                                onClick={() => setPaymentMethod('cny')}
-                                                className="group relative p-6 rounded-2xl border-2 border-neutral-700 bg-neutral-800/50 hover:border-green-500 hover:shadow-lg hover:shadow-green-500/20 transition-all"
-                                            >
-                                                <Coins className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                                                <div className="text-xl font-black text-white mb-1">{t('payment.cny')}</div>
-                                                <div className="text-2xl font-black text-green-400 mb-2">¥99.00</div>
-                                                <div className="text-xs text-gray-500">{t('payment.alipay_wechat')}</div>
-                                            </button>
-                                        )}
+                                    <div className="text-center mb-8 p-6 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl border-2 border-amber-500/30">
+                                        <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
+                                        <div className="text-5xl font-black text-white mb-2">$15.00</div>
+                                        <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block">
+                                            One-time payment for lifetime access
+                                        </div>
                                     </div>
+
+                                    {/* Feature List */}
+                                    <ul className="space-y-3 mb-6">
+                                        {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
+                                            <li key={i} className="flex items-center gap-3 text-white">
+                                                <div className="bg-amber-500/20 rounded-full p-0.5">
+                                                    <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                                                </div>
+                                                <span className="text-sm font-medium">{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    {/* Payment Button */}
+                                    <button
+                                        onClick={handleUpgrade}
+                                        disabled={isUpgrading}
+                                        className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isUpgrading ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin"></div>
+                                                <span>Creating Session...</span>
+                                            </div>
+                                        ) : (
+                                            t('pricing.get_pro')
+                                        )}
+                                    </button>
                                 </div>
 
-                                <div className="flex items-center gap-3 p-4 bg-neutral-800/50 rounded-xl border border-neutral-800">
-                                    <Crown className="w-5 h-5 text-amber-500" />
-                                    <div className="text-sm text-gray-400">
-                                        {t('payment.unlimited')} · {t('payment.ai_analysis')} · {t('payment.badge')}
-                                    </div>
+                                <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                                    <Shield className="w-4 h-4" />
+                                    <span>SSL 安全加密支付</span>
                                 </div>
                             </>
                         ) : paymentMethod === 'usdt' ? (
