@@ -2342,9 +2342,6 @@ function GoldCatApp() {
                                 </div>
                             )
                         }
-
-                        )
-                        }
                     </>
                 )}
             </main >
