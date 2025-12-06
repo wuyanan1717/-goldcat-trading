@@ -1496,7 +1496,7 @@ function GoldCatApp() {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`
-                                flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all
+                                flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all
                                 ${activeTab === tab.id
                                             ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
                                             : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-700'}
