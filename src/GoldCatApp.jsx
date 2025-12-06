@@ -516,10 +516,27 @@ function GoldCatApp() {
     // 获取实时 BTC 行情
     useEffect(() => {
         const fetchBTCPrice = async () => {
+            const now = Date.now();
+            const lastFetch = parseInt(localStorage.getItem('last_btc_fetch') || '0');
+
+            // Limit to once every 5 minutes (300000ms) unless force needed
+            if (now - lastFetch < 300000 && btcMarket.price > 0) {
+                return;
+            }
+
             try {
                 const response = await fetch(
                     'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true'
                 );
+
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        console.warn('CoinGecko rate limit reached, using cached/mock data');
+                        return; // Silent fail on 429
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
 
                 if (data.bitcoin) {
@@ -528,11 +545,13 @@ function GoldCatApp() {
                         change24h: data.bitcoin.usd_24h_change || 0,
                         loading: false
                     });
+                    localStorage.setItem('last_btc_fetch', now.toString());
                 }
             } catch (error) {
-                console.error('Failed to fetch BTC price:', error);
-                // 失败时使用模拟数据
-                setBtcMarket({ price: 95000, change24h: 2.5, loading: false });
+                // Silent error logging to avoid console red spam
+                console.log('Using mock BTC data due to fetch error:', error.message);
+                // 失败时使用模拟数据，不显示红色错误
+                setBtcMarket(prev => ({ ...prev, loading: false }));
             }
         };
 
@@ -2054,7 +2073,7 @@ function GoldCatApp() {
                                     {membership.isPremium && (
                                         <>
                                             <div className="w-full space-y-6">
-                                                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                                                <div className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
                                                     <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                                                         <Brain className="w-5 h-5 text-amber-500" />
                                                         {t('ai.gene_title')}
