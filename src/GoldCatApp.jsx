@@ -2361,7 +2361,7 @@ function GoldCatApp() {
                                         <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
                                         <div className="text-5xl font-black text-white mb-2">$15.00</div>
                                         <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block">
-                                            One-time payment for lifetime access
+                                            {t('payment.lifetime_access')}
                                         </div>
                                     </div>
 
