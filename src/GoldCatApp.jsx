@@ -2066,7 +2066,7 @@ function GoldCatApp() {
                         {/* --- 3. AI 行为诊断 (核心卖点) --- */}
                         {
                             activeTab === 'ai_analysis' && (
-                                <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
+                                <div className="w-full animate-in fade-in">
                                     {/* 会员锁定遮罩 */}
                                     {!membership.isPremium && (
                                         <div className="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30 relative overflow-hidden text-center">
