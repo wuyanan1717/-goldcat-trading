@@ -2066,7 +2066,7 @@ function GoldCatApp() {
                                 <div className="w-full animate-in fade-in space-y-6">
                                     {/* 会员锁定遮罩 */}
                                     {!membership.isPremium && (
-                                        <div className="w-full bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-8 text-center border border-amber-500/30 relative overflow-hidden flex flex-col items-center justify-center py-20">
+                                        <div className="w-full bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-16 text-center border border-amber-500/30 relative overflow-hidden">
                                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
                                             <Lock className="w-16 h-16 text-amber-500 mb-6 relative z-10" />
                                             <h2 className="text-3xl font-black text-white mb-4 relative z-10">{t('ai.locked_title')}</h2>
