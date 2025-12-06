@@ -993,7 +993,16 @@ function GoldCatApp() {
             setShowSuccessToast(true);
         } catch (err) {
             console.error('Unexpected error saving review:', err);
-            setErrorMessage('保存复盘失败: ' + err.message);
+
+            // Check if it's an auth error
+            if (err.message === 'Auth session expired' || err.message.includes('Auth')) {
+                setErrorMessage(t('auth.session_expired') || '会话已过期，请重新登录');
+                setShowLoginModal(true); // Open login modal automatically
+                // Don't close review modal so user doesn't lose text
+            } else {
+                setErrorMessage(t('journal.save_failed') + ': ' + err.message);
+            }
+
             setShowErrorToast(true);
             setTimeout(() => setShowErrorToast(false), 3000);
         } finally {
@@ -2762,7 +2771,7 @@ function GoldCatApp() {
             {
                 showReviewModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-[#1A1D24] w-full max-w-lg rounded-2xl border border-neutral-800 p-6 shadow-2xl">
+                        <div className="bg-[#1A1D24] w-full max-w-2xl rounded-2xl border border-neutral-800 p-6 shadow-2xl">
                             <h3 className="text-lg font-bold text-white mb-4">{t('journal.review_title')}</h3>
                             <p className="text-xs text-gray-400 mb-4">{t('journal.review_desc')}</p>
                             <textarea
