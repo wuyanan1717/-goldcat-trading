@@ -1255,7 +1255,7 @@ function GoldCatApp() {
 
             {/* 顶部导航 */}
             <nav className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-50 shadow-xl">
-                <div className="max-w-[1920px] mx-auto px-4 h-16 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 flex items-center justify-center">
                             <img src="/goldcat_logo_transparent.png?v=2" alt="GoldCat Logo" className="w-full h-full object-contain" />
@@ -1309,7 +1309,7 @@ function GoldCatApp() {
             {/*
             {
                 user && activeTab === 'new_trade' && (
-                    <div className="max-w-[1920px] mx-auto px-4 mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="max-w-7xl mx-auto px-4 mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
                         <FortuneCompass
                             language={language}
                             t={t}
@@ -1323,7 +1323,7 @@ function GoldCatApp() {
             }
             */}
 
-            <main className="max-w-[1920px] mx-auto px-4 py-6">
+            <main className="max-w-7xl mx-auto px-4 py-6">
 
                 {/* 登录引导 */}
                 {/* 登录引导 (Landing Page Redesign) */}
