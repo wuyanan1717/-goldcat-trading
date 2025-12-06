@@ -1911,155 +1911,157 @@ function GoldCatApp() {
 
                         {/* --- 2. 交易日记列表 --- */}
                         {activeTab === 'journal' && (
-                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4" style={{ maxWidth: '100%', width: '100%' }}>
-                                <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
-                                    <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
-                                    <div className="text-sm text-gray-400 flex items-center gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <span>{t('journal.total_trades')}: <span className="text-white font-bold">{trades.length}</span></span>
-                                            <span className="text-gray-600">|</span>
-                                            <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
-                                            <span className="text-gray-600">|</span>
-                                            <span>{t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span></span>
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+                                <div className="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+                                    <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
+                                        <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
+                                        <div className="text-sm text-gray-400 flex items-center gap-4">
+                                            <div className="flex items-center gap-2">
+                                                <span>{t('journal.total_trades')}: <span className="text-white font-bold">{trades.length}</span></span>
+                                                <span className="text-gray-600">|</span>
+                                                <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
+                                                <span className="text-gray-600">|</span>
+                                                <span>{t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span></span>
+                                            </div>
+                                            <button
+                                                onClick={handleExportTrades}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors"
+                                            >
+                                                <FileText className="w-3.5 h-3.5" />
+                                                {t('journal.export_csv')}
+                                            </button>
                                         </div>
-                                        <button
-                                            onClick={handleExportTrades}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors"
-                                        >
-                                            <FileText className="w-3.5 h-3.5" />
-                                            {t('journal.export_csv')}
-                                        </button>
                                     </div>
-                                </div>
-                                {trades.length === 0 ? (
-                                    <div className="p-20 text-center text-gray-600">
-                                        <Package className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                        <p>{t('journal.empty_state')}</p>
-                                    </div>
-                                ) : (
-                                    <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                                        <table className="w-full text-left text-sm whitespace-nowrap">
-                                            <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
-                                                <tr>
-                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.date')}</th>
-                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.symbol_dir')}</th>
-                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.basis')}</th>
-                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.rr')}</th>
-                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.status')}</th>
-                                                    <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[160px]">{t('journal.columns.action')}</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-neutral-800">
-                                                {trades.map(trade => (
-                                                    <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
-                                                        <td className="px-6 py-4 font-mono text-gray-400">{trade.date}</td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="font-bold text-white">{trade.symbol}</div>
-                                                            <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
-                                                                {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700">
-                                                                {trade.timeframe}
-                                                            </span>
-                                                            <span className="ml-2 text-gray-400">{trade.pattern || '-'}</span>
-                                                        </td>
-                                                        <td className="px-6 py-4 font-mono group relative">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span>{trade.rrRatio}</span>
-                                                                <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
-                                                            </div>
-                                                            {/* Tooltip with price details */}
-                                                            <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
-                                                                <div className="space-y-1.5">
-                                                                    <div className="flex justify-between gap-3">
-                                                                        <span className="text-gray-400">{t('journal.entry_price')}</span>
-                                                                        <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
+                                    {trades.length === 0 ? (
+                                        <div className="p-20 text-center text-gray-600">
+                                            <Package className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                                            <p>{t('journal.empty_state')}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                                            <table className="w-full text-left text-sm whitespace-nowrap">
+                                                <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
+                                                    <tr>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.date')}</th>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.symbol_dir')}</th>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.basis')}</th>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.rr')}</th>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">{t('journal.columns.status')}</th>
+                                                        <th className="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[160px]">{t('journal.columns.action')}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-neutral-800">
+                                                    {trades.map(trade => (
+                                                        <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
+                                                            <td className="px-6 py-4 font-mono text-gray-400">{trade.date}</td>
+                                                            <td className="px-6 py-4">
+                                                                <div className="font-bold text-white">{trade.symbol}</div>
+                                                                <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
+                                                                    {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700">
+                                                                    {trade.timeframe}
+                                                                </span>
+                                                                <span className="ml-2 text-gray-400">{trade.pattern || '-'}</span>
+                                                            </td>
+                                                            <td className="px-6 py-4 font-mono group relative">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span>{trade.rrRatio}</span>
+                                                                    <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
+                                                                </div>
+                                                                {/* Tooltip with price details */}
+                                                                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
+                                                                    <div className="space-y-1.5">
+                                                                        <div className="flex justify-between gap-3">
+                                                                            <span className="text-gray-400">{t('journal.entry_price')}</span>
+                                                                            <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
+                                                                        </div>
+                                                                        {trade.stopLoss && (
+                                                                            <div className="flex justify-between gap-3">
+                                                                                <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
+                                                                                <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
+                                                                            </div>
+                                                                        )}
+                                                                        {trade.takeProfit && (
+                                                                            <div className="flex justify-between gap-3">
+                                                                                <span className="text-gray-400">{t('journal.take_profit_price')}</span>
+                                                                                <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
+                                                                            </div>
+                                                                        )}
                                                                     </div>
-                                                                    {trade.stopLoss && (
-                                                                        <div className="flex justify-between gap-3">
-                                                                            <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
-                                                                            <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
-                                                                        </div>
-                                                                    )}
-                                                                    {trade.takeProfit && (
-                                                                        <div className="flex justify-between gap-3">
-                                                                            <span className="text-gray-400">{t('journal.take_profit_price')}</span>
-                                                                            <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
-                                                                        </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    {trade.status === 'open' ? (
+                                                                        <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
+                                                                    ) : (
+                                                                        <>
+                                                                            <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
+                                                                            </span>
+                                                                            {trade.violatedDiscipline && (
+                                                                                <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
+                                                                            )}
+                                                                        </>
                                                                     )}
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-2">
-                                                                {trade.status === 'open' ? (
-                                                                    <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
-                                                                ) : (
-                                                                    <>
-                                                                        <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                                            {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
-                                                                        </span>
-                                                                        {trade.violatedDiscipline && (
-                                                                            <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
-                                                                        )}
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        if (trade.status === 'open') {
-                                                                            handleSettleTrade(trade.id);
-                                                                        }
-                                                                    }}
-                                                                    disabled={trade.status !== 'open'}
-                                                                    className={`
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            if (trade.status === 'open') {
+                                                                                handleSettleTrade(trade.id);
+                                                                            }
+                                                                        }}
+                                                                        disabled={trade.status !== 'open'}
+                                                                        className={`
                                                                     px-3 py-1 rounded border text-xs font-bold transition-all
                                                                     ${trade.status === 'open'
-                                                                            ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
-                                                                            : 'border-transparent text-gray-600 cursor-not-allowed opacity-50'}
+                                                                                ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
+                                                                                : 'border-transparent text-gray-600 cursor-not-allowed opacity-50'}
                                                                 `}
-                                                                >
-                                                                    {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleReviewTrade(trade);
-                                                                    }}
-                                                                    className="text-gray-500 hover:text-white transition-colors text-xs"
-                                                                >
-                                                                    {trade.review ? (
-                                                                        <>
-                                                                            <CheckCircle2 className="w-3 h-3" /> {t('journal.reviewed')}
-                                                                        </>
-                                                                    ) : (
-                                                                        t('journal.review')
-                                                                    )}
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setTradeToDelete(trade);
-                                                                        setShowDeleteModal(true);
-                                                                    }}
-                                                                    className="text-gray-600 hover:text-red-500 transition-colors p-1"
-                                                                    title={language === 'zh' ? '删除交易' : 'Delete Trade'}
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
+                                                                    >
+                                                                        {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleReviewTrade(trade);
+                                                                        }}
+                                                                        className="text-gray-500 hover:text-white transition-colors text-xs"
+                                                                    >
+                                                                        {trade.review ? (
+                                                                            <>
+                                                                                <CheckCircle2 className="w-3 h-3" /> {t('journal.reviewed')}
+                                                                            </>
+                                                                        ) : (
+                                                                            t('journal.review')
+                                                                        )}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setTradeToDelete(trade);
+                                                                            setShowDeleteModal(true);
+                                                                        }}
+                                                                        className="text-gray-600 hover:text-red-500 transition-colors p-1"
+                                                                        title={language === 'zh' ? '删除交易' : 'Delete Trade'}
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 
