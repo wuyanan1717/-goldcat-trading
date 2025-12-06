@@ -45,12 +45,9 @@ export const translations = {
             pro_type: "一次性付费，终身使用",
             pro_desc: "专业交易者的不二之选",
             pro_features: [
-                "无限交易记录",
-                "无限 AI 深度复盘",
-                "高级风控策略推荐",
-                "专属客服支持 (support@goldcat.trade)",
-                "优先体验新功能",
-                "无广告纯净体验"
+                "无限记录",
+                "AI智能分析",
+                "专属标识"
             ],
             start_free: "免费开始",
             get_pro: "升级到终身版"
@@ -367,12 +364,9 @@ export const translations = {
             pro_type: "One-time payment, lifetime access",
             pro_desc: "The choice for professional traders",
             pro_features: [
-                "Unlimited Trade Logging",
-                "Unlimited AI Deep Review",
-                "Advanced Risk Strategy Recommendations",
-                "Dedicated Support (support@goldcat.trade)",
-                "Priority Access to New Features",
-                "Ad-free Experience"
+                "Unlimited Records",
+                "AI Smart Analysis",
+                "Exclusive Badge"
             ],
             start_free: "Start for Free",
             get_pro: "Get Lifetime Access"
