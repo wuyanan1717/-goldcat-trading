@@ -1413,18 +1413,18 @@ function GoldCatApp() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative group-hover:gap-12 transition-all duration-500">
                                     {/* Free Plan */}
-                                    <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col">
-                                        <div className="mb-8">
+                                    <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start">
+                                        <div className="mb-8 w-full">
                                             <h3 className="text-xl font-bold text-white mb-2">{t('pricing.free_title')}</h3>
                                             <div className="flex items-baseline gap-1 mb-4">
                                                 <span className="text-4xl font-black text-white">{t('pricing.free_price')}</span>
                                             </div>
                                             <p className="text-gray-400 text-sm">{t('pricing.free_desc')}</p>
                                         </div>
-                                        <div className="border-t border-white/10 my-8"></div>
-                                        <ul className="space-y-4 mb-8 flex-1">
-                                            {t('pricing.free_features', { returnObjects: true }).map((feature, i) => (
-                                                <li key={i} className="flex items-start gap-3 text-gray-300">
+                                        <div className="border-t border-white/10 my-8 w-full"></div>
+                                        <ul className="space-y-4 mb-8 flex-1 w-full">
+                                            {Array.isArray(t('pricing.free_features')) && t('pricing.free_features').map((feature, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-gray-300">
                                                     <Check className="w-5 h-5 text-gray-500 shrink-0" />
                                                     <span className="text-sm">{feature}</span>
                                                 </li>
@@ -1442,24 +1442,24 @@ function GoldCatApp() {
                                     </div>
 
                                     {/* Lifetime Plan */}
-                                    <div className="relative bg-black/80 backdrop-blur-md border border-amber-500/30 rounded-3xl p-8 hover:border-amber-500 transition-all hover:-translate-y-2 duration-300 shadow-[0_0_50px_rgba(245,158,11,0.1)] flex flex-col scale-105 z-10">
+                                    <div className="relative bg-black/80 backdrop-blur-md border border-amber-500/30 rounded-3xl p-8 hover:border-amber-500 transition-all hover:-translate-y-2 duration-300 shadow-[0_0_50px_rgba(245,158,11,0.1)] flex flex-col scale-105 z-10 text-left items-start">
                                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg">
                                             <Crown className="w-3 h-3" /> {t('pricing.pro_badge')}
                                         </div>
-                                        <div className="mb-8">
+                                        <div className="mb-8 w-full">
                                             <h3 className="text-xl font-bold text-amber-500 mb-2 flex items-center gap-2">
                                                 {t('pricing.pro_title')}
                                             </h3>
                                             <div className="flex items-baseline gap-1 mb-1">
                                                 <span className="text-5xl font-black text-white">{t('pricing.pro_price')}</span>
                                             </div>
-                                            <p className="text-amber-500/80 text-xs font-bold uppercase tracking-wide mb-3">{t('pricing.pro_type')}</p>
+                                            <p className="text-amber-500/80 text-xs font-bold uppercase tracking-wide mb-3 text-left">{t('pricing.pro_type')}</p>
                                             <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
                                         </div>
-                                        <div className="border-t border-white/10 my-8"></div>
-                                        <ul className="space-y-4 mb-8 flex-1">
-                                            {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
-                                                <li key={i} className="flex items-start gap-3 text-white">
+                                        <div className="border-t border-white/10 my-8 w-full"></div>
+                                        <ul className="space-y-4 mb-8 flex-1 w-full">
+                                            {Array.isArray(t('pricing.pro_features')) && t('pricing.pro_features').map((feature, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-white">
                                                     <div className="bg-amber-500/20 rounded-full p-0.5">
                                                         <Check className="w-4 h-4 text-amber-500 shrink-0" />
                                                     </div>

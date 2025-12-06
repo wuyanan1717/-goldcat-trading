@@ -34,13 +34,13 @@ export const translations = {
             free_desc: "非常适合入门",
             free_badge: "基础版",
             free_features: [
-                "基础交易记录 (50条/月)",
+                "基础交易记录 (20条/月)",
                 "有限的 AI 分析点数",
                 "基础社区支持",
                 "标准风控计算"
             ],
             pro_title: "终身会员",
-            pro_price: "$199",
+            pro_price: "$15.00",
             pro_badge: "最受欢迎",
             pro_type: "一次性付费，终身使用",
             pro_desc: "专业交易者的不二之选",
@@ -356,13 +356,13 @@ export const translations = {
             free_desc: "Perfect for getting started",
             free_badge: "Basic",
             free_features: [
-                "Basic Trade Logging (50/month)",
+                "Basic Trade Logging (20/month)",
                 "Limited AI Analysis Credits",
                 "Basic Community Support",
                 "Standard Risk Calculation"
             ],
             pro_title: "Lifetime",
-            pro_price: "$199",
+            pro_price: "$15.00",
             pro_badge: "Most Popular",
             pro_type: "One-time payment, lifetime access",
             pro_desc: "The choice for professional traders",
