@@ -11,7 +11,7 @@ export const CREEM_CONFIG = {
     // 生产环境（正式上线后使用）
     PRODUCTION: {
         PRODUCT_ID: 'prod_2eQVR7OEf1I3N4Ji34KPlJ', // 正式环境 Product ID
-        CHECKOUT_URL: 'https://buy.stripe.com/bJedR93Y5aLi4cH6pSbAs01', // Stripe $1 测试链接 (上线前请改回)
+        CHECKOUT_URL: 'https://buy.stripe.com/5kQ00jbqxdXu38D01ubAs00', // Stripe 正式环境 Checkout URL ($39)
     },
 
     // 当前使用的环境（切换这里即可）

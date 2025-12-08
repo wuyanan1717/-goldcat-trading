@@ -2915,11 +2915,13 @@ function GoldCatApp() {
                                             <div className={`font-bold ${membership.isPremium ? 'text-amber-500' : 'text-gray-400'}`}>
                                                 {membership.isPremium ? 'PRO MEMBER' : t('settings.free')}
                                             </div>
+                                            {/* 终身会员，不显示到期时间
                                             {membership.isPremium && (
                                                 <div className="text-xs text-gray-500">
                                                     {t('settings.expires_on')}: {membership.expiryDate ? new Date(membership.expiryDate).toLocaleDateString() : '-'}
                                                 </div>
                                             )}
+                                            */}
                                         </div>
                                     </div>
                                     {!membership.isPremium && (
