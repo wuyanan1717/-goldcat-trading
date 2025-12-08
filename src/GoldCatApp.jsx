@@ -2225,8 +2225,15 @@ function GoldCatApp() {
                                                         // Skip 'Unrecorded' if possible, unless it's the only one
                                                         if (pattern === t('ai.unrecorded') && Object.keys(patternStats).length > 1) return;
 
+                                                        // At least 3 trades needed for statistical significance
+                                                        if (stats.total < 3) return;
+
                                                         const rate = stats.wins / stats.total;
-                                                        if (rate >= bestWinRate && stats.total >= 1) {
+
+                                                        // Strict comparison: only replace if win rate is higher
+                                                        // If same win rate, prefer pattern with more trades (more reliable)
+                                                        const currentBestTotal = patternStats[bestPattern]?.total || 0;
+                                                        if (rate > bestWinRate || (rate === bestWinRate && stats.total > currentBestTotal)) {
                                                             bestWinRate = rate;
                                                             bestPattern = pattern;
                                                         }
