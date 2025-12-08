@@ -579,6 +579,21 @@ function GoldCatApp() {
 
     // --- 3. 核心业务逻辑 ---
 
+    // Reset payment button state when user returns from Stripe
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && isUpgrading) {
+                console.log('Page became visible, resetting payment state');
+                setIsUpgrading(false);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [isUpgrading]);
+
     // 实时风控计算器
     useEffect(() => {
         const entry = parseFloat(formData.entryPrice);
