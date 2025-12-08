@@ -2361,11 +2361,12 @@ function GoldCatApp() {
                                                                         t('ai.diagnosis_short')
                                                                     ) : (
                                                                         <>
-                                                                            {t('ai.diagnosis_pattern', { pattern: bestPattern })}
-                                                                            {t('ai.diagnosis_timeframe', { timeframe: worstTimeframe })}
-                                                                            {score < 60 && t('ai.diagnosis_discipline')}
-                                                                            {reviewRate < 0.5 && <span className="block text-amber-500 mt-1">⚠️ {t('ai.review_warning', { rate: (reviewRate * 100).toFixed(0) })}</span>}
-                                                                            <span className={`block mt-2 font-bold ${totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                            <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5 text-green-500 shrink-0" />{t('ai.diagnosis_pattern', { pattern: bestPattern })}</span>
+                                                                            <span className="flex items-center gap-1.5 mt-1"><AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />{t('ai.diagnosis_timeframe', { timeframe: worstTimeframe })}</span>
+                                                                            {score < 60 && <span className="flex items-center gap-1.5 mt-1"><Shield className="w-3.5 h-3.5 text-amber-500 shrink-0" />{t('ai.diagnosis_discipline')}</span>}
+                                                                            {reviewRate < 0.5 && <span className="flex items-center gap-1.5 text-amber-500 mt-1"><FileText className="w-3.5 h-3.5 shrink-0" />{t('ai.review_warning', { rate: (reviewRate * 100).toFixed(0) })}</span>}
+                                                                            <span className={`flex items-center gap-1.5 mt-2 font-bold ${totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                {totalPnL >= 0 ? <TrendingUp className="w-4 h-4 shrink-0" /> : <TrendingDown className="w-4 h-4 shrink-0" />}
                                                                                 {t('ai.pnl_status', {
                                                                                     pnl: (totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2) + ' USDT',
                                                                                     comment: totalPnL < 0 ? t('ai.pnl_comment_bad') : t('ai.pnl_comment_good')
