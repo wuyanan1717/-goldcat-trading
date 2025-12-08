@@ -279,11 +279,11 @@ function GoldCatApp() {
 
             const userKey = user.email;
 
-            // 1. Load Capital from Local (Immediate)
-            const savedCapitalStr = localStorage.getItem(`goldcat_total_capital_${userKey}`);
-            const savedCapital = parseFloat(savedCapitalStr) || 0;
-            console.log('[Debug] Loading capital immediately:', { key: `goldcat_total_capital_${userKey}`, val: savedCapitalStr, parsed: savedCapital });
-            setTotalCapital(savedCapital);
+            // 1. Total Capital now loaded from database (see section 4 below)
+            // const savedCapitalStr = localStorage.getItem(`goldcat_total_capital_${userKey}`);
+            // const savedCapital = parseFloat(savedCapitalStr) || 0;
+            // console.log('[Debug] Loading capital immediately:', { key: `goldcat_total_capital_${userKey}`, val: savedCapitalStr, parsed: savedCapital });
+            // setTotalCapital(savedCapital);
 
             // 2. Load Patterns from Database
             try {
@@ -444,7 +444,7 @@ function GoldCatApp() {
                 // Keep trades empty or show error state component.
             }
 
-            // 4. Load Membership from Supabase DB
+            // 4. Load Membership and Total Capital from Supabase DB
             try {
                 const { data, error } = await supabase
                     .from('profiles')
@@ -458,13 +458,33 @@ function GoldCatApp() {
                         expiryDate: data.membership_expiry,
                         maxTrades: data.max_trades || 20
                     });
+
+                    // Load Total Capital from database
+                    if (data.total_capital !== null && data.total_capital !== undefined) {
+                        setTotalCapital(data.total_capital);
+                    } else {
+                        // Fallback to localStorage and migrate to database
+                        const localCapital = parseFloat(localStorage.getItem(`goldcat_total_capital_${userKey}`)) || 10000;
+                        setTotalCapital(localCapital);
+
+                        // Migrate to database
+                        await supabase
+                            .from('profiles')
+                            .update({ total_capital: localCapital })
+                            .eq('id', user.id);
+                    }
                 } else {
                     setMembership({ isPremium: false, expiryDate: null, maxTrades: 20 });
+                    setTotalCapital(10000);
                 }
             } catch (err) {
                 console.error('Error loading profile:', err);
                 const savedMembership = JSON.parse(localStorage.getItem(`goldcat_membership_${userKey}`)) || { isPremium: false, expiryDate: null, maxTrades: 20 };
                 setMembership(savedMembership);
+
+                // Fallback for total capital
+                const localCapital = parseFloat(localStorage.getItem(`goldcat_total_capital_${userKey}`)) || 10000;
+                setTotalCapital(localCapital);
             }
         };
 
@@ -522,7 +542,25 @@ function GoldCatApp() {
 
     useEffect(() => {
         if (user && user.email && isDataLoaded) {
-            localStorage.setItem(`goldcat_total_capital_${user.email}`, totalCapital);
+            // Save to both database and localStorage
+            const saveCapital = async () => {
+                try {
+                    // 1. Save to Supabase (primary storage)
+                    await supabase
+                        .from('profiles')
+                        .update({ total_capital: totalCapital })
+                        .eq('id', user.id);
+
+                    // 2. Save to localStorage (cache for faster loading)
+                    localStorage.setItem(`goldcat_total_capital_${user.email}`, totalCapital);
+                } catch (err) {
+                    console.error('Error saving total capital:', err);
+                    // Still save to localStorage even if database fails
+                    localStorage.setItem(`goldcat_total_capital_${user.email}`, totalCapital);
+                }
+            };
+
+            saveCapital();
         }
     }, [totalCapital, user, isDataLoaded]);
 
