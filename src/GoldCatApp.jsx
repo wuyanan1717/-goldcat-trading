@@ -2250,8 +2250,18 @@ function GoldCatApp() {
                                                     let worstTimeframe = t('ai.not_enough_data');
                                                     let worstLossRate = -1;
                                                     Object.entries(tfStats).forEach(([tf, stats]) => {
+                                                        // Skip 'Unrecorded' if possible
+                                                        if (tf === t('ai.unrecorded') && Object.keys(tfStats).length > 1) return;
+
+                                                        // At least 3 trades needed for statistical significance
+                                                        if (stats.total < 3) return;
+
                                                         const rate = stats.losses / stats.total;
-                                                        if (rate > worstLossRate && stats.total >= 1) {
+
+                                                        // Strict comparison: only replace if loss rate is higher
+                                                        // If same loss rate, prefer timeframe with more trades (more reliable)
+                                                        const currentWorstTotal = tfStats[worstTimeframe]?.total || 0;
+                                                        if (rate > worstLossRate || (rate === worstLossRate && stats.total > currentWorstTotal)) {
                                                             worstLossRate = rate;
                                                             worstTimeframe = tf;
                                                         }
