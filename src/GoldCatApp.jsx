@@ -2437,9 +2437,38 @@ function GoldCatApp() {
                                     <div className="mb-6">
                                         <div className="text-center mb-8 p-6 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl border-2 border-amber-500/30">
                                             <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
-                                            <div className="text-5xl font-black text-white mb-2">$15.00</div>
-                                            <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block">
-                                                {t('payment.lifetime_access')}
+
+                                            {/* Original Price (Strikethrough) */}
+                                            <div className="text-2xl font-bold text-gray-500 line-through mb-1">$39.00</div>
+
+                                            {/* Discounted Price */}
+                                            <div className="text-5xl font-black text-white mb-2">$27.30</div>
+
+                                            {/* Discount Badge */}
+                                            <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block mb-3">
+                                                30% OFF · {t('payment.lifetime_access')}
+                                            </div>
+
+                                            {/* Promo Code */}
+                                            <div className="mt-4 p-3 bg-amber-500/5 border border-amber-500/30 rounded-lg">
+                                                <div className="text-xs text-gray-400 mb-1">
+                                                    {language === 'zh' ? '促销码（自动应用）' : 'Promo Code (Auto-applied)'}
+                                                </div>
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <code className="text-sm font-mono font-bold text-amber-500 tracking-wider">LAUNCH30</code>
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText('LAUNCH30');
+                                                            setToastMessage(language === 'zh' ? '促销码已复制！' : 'Promo code copied!');
+                                                            setShowSuccessToast(true);
+                                                            setTimeout(() => setShowSuccessToast(false), 2000);
+                                                        }}
+                                                        className="p-1.5 hover:bg-amber-500/10 rounded transition-colors"
+                                                        title={language === 'zh' ? '复制促销码' : 'Copy promo code'}
+                                                    >
+                                                        <Copy className="w-3.5 h-3.5 text-amber-500" />
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
