@@ -1551,10 +1551,20 @@ function GoldCatApp() {
                                             <h3 className="text-xl font-bold text-amber-500 mb-2 flex items-center gap-2">
                                                 {t('pricing.pro_title')}
                                             </h3>
-                                            <div className="flex items-baseline gap-1 mb-1">
-                                                <span className="text-5xl font-black text-white">{t('pricing.pro_price')}</span>
+                                            <div className="mb-2">
+                                                {/* Original Price (Strikethrough) */}
+                                                <div className="text-xl font-bold text-gray-500 line-through">$39.00</div>
+
+                                                {/* Discounted Price */}
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-5xl font-black text-white">$27.30</span>
+                                                </div>
+
+                                                {/* Discount Badge */}
+                                                <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block mt-2">
+                                                    30% OFF · {t('pricing.pro_type')}
+                                                </div>
                                             </div>
-                                            <p className="text-amber-500/80 text-xs font-bold uppercase tracking-wide mb-3 text-left">{t('pricing.pro_type')}</p>
                                             <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
                                         </div>
                                         <div className="border-t border-white/10 my-8 w-full"></div>
