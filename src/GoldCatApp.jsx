@@ -2445,8 +2445,15 @@ function GoldCatApp() {
                                                                         t('ai.diagnosis_short')
                                                                     ) : (
                                                                         <>
-                                                                            <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5 text-green-500 shrink-0" />{t('ai.diagnosis_pattern', { pattern: bestPattern })}</span>
-                                                                            <span className="flex items-center gap-1.5 mt-1"><AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />{t('ai.diagnosis_timeframe', { timeframe: worstTimeframe })}</span>
+                                                                            {bestPattern !== t('ai.not_enough_data') ? (
+                                                                                <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5 text-green-500 shrink-0" />{t('ai.diagnosis_pattern', { pattern: bestPattern })}</span>
+                                                                            ) : (
+                                                                                <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5 text-gray-500 shrink-0" />{language === 'zh' ? '数据由于样本不足，暂无最佳形态推荐' : 'Insufficient data for pattern recommendation'}</span>
+                                                                            )}
+
+                                                                            {worstTimeframe !== t('ai.not_enough_data') && (
+                                                                                <span className="flex items-center gap-1.5 mt-1"><AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />{t('ai.diagnosis_timeframe', { timeframe: worstTimeframe })}</span>
+                                                                            )}
                                                                             {score < 60 && <span className="flex items-center gap-1.5 mt-1"><Shield className="w-3.5 h-3.5 text-amber-500 shrink-0" />{t('ai.diagnosis_discipline')}</span>}
                                                                             {reviewRate < 0.5 && <span className="flex items-center gap-1.5 text-amber-500 mt-1"><FileText className="w-3.5 h-3.5 shrink-0" />{t('ai.review_warning', { rate: (reviewRate * 100).toFixed(0) })}</span>}
                                                                             <span className={`flex items-center gap-1.5 mt-2 font-bold ${totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
