@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Tab Width Test - GoldCat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .width-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(245, 158, 11, 0.9);
+            color: #000;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body class="p-8">
+    <div class="width-indicator">
+        容器宽度: <span id="container-width">-</span>px
+    </div>
+
+    <h1 class="text-3xl font-bold mb-4 text-amber-500">Journal Tab 宽度测试</h1>
+    <p class="text-gray-400 mb-8">这个页面完全复制了 Journal Tab 的结构，用于诊断宽度问题。</p>
+
+    <!-- 模拟主容器 max-w-7xl -->
+    <main class="max-w-7xl mx-auto px-4 py-6 bg-neutral-950 rounded-lg">
+        <div class="mb-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+            <div class="text-sm">
+                <div>父容器 (main) 宽度: <span id="main-width" class="font-bold text-blue-400">-</span>px (max-w-7xl ≈
+                    1280px)</div>
+                <div class="mt-1">Journal 容器宽度: <span id="journal-width" class="font-bold text-amber-400">-</span>px
+                </div>
+                <div class="mt-1 text-xs text-gray-500">目标宽度: ~1246px (与 New Trade / AI Analysis 一致)</div>
+            </div>
+        </div>
+
+        <!-- Journal Tab 结构 -->
+        <div id="journal-container"
+            class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+            <div class="p-6 border-b border-neutral-800 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-white">交易流水</h2>
+                <div class="text-sm text-gray-400 flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span>交易数量: <span class="text-white font-bold">1</span></span>
+                        <span class="text-gray-600">|</span>
+                        <span>胜率: <span class="text-amber-500 font-bold">0%</span></span>
+                        <span class="text-gray-600">|</span>
+                        <span>净盈亏: <span class="text-green-500">$0.00</span></span>
+                    </div>
+                    <button
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors">
+                        📄 导出 CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
+                        <tr>
+                            <th class="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">日期</th>
+                            <th class="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">标的/方向</th>
+                            <th class="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">基础</th>
+                            <th class="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">R:R</th>
+                            <th class="px-6 py-4 bg-neutral-800 sticky top-0 z-20 font-medium">状态</th>
+                            <th class="px-6 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[160px]">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-neutral-800">
+                        <tr class="hover:bg-neutral-800/50 transition-colors">
+                            <td class="px-6 py-4 font-mono text-gray-400">2025/12/1</td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-white">BTC</div>
+                                <div class="text-xs text-green-500">多头 x10</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span
+                                    class="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700">4h</span>
+                                <span class="ml-2 text-gray-400">-</span>
+                            </td>
+                            <td class="px-6 py-4 font-mono">
+                                <div class="flex items-center gap-1.5">
+                                    <span>0.75</span>
+                                    <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M12 16v-4m0-4h.01"></path>
+                                    </svg>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">进行中</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button
+                                        class="px-3 py-1 rounded border text-xs font-bold transition-all border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black">
+                                        结算
+                                    </button>
+                                    <button class="text-gray-500 hover:text-white transition-colors text-xs">
+                                        复盘
+                                    </button>
+                                    <button class="text-gray-600 hover:text-red-500 transition-colors p-1" title="删除交易">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-neutral-800/50 transition-colors">
+                            <td class="px-6 py-4 font-mono text-gray-400">2025/12/2</td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-white">ETH</div>
+                                <div class="text-xs text-red-500">空头 x10</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span
+                                    class="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700">1d</span>
+                                <span class="ml-2 text-gray-400">突破</span>
+                            </td>
+                            <td class="px-6 py-4 font-mono">
+                                <div class="flex items-center gap-1.5">
+                                    <span>1.00</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-green-500">+$10.00</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button
+                                        class="px-3 py-1 rounded border text-xs font-bold transition-all border-transparent text-gray-600 cursor-not-allowed opacity-50"
+                                        disabled>
+                                        已平仓
+                                    </button>
+                                    <button class="text-gray-500 hover:text-white transition-colors text-xs">
+                                        ✓ 已复盘
+                                    </button>
+                                    <button class="text-gray-600 hover:text-red-500 transition-colors p-1" title="删除交易">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 对比测试：简单的 full-width div -->
+        <div class="mt-8 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+            <h3 class="text-lg font-bold mb-2">对比测试：简单 div</h3>
+            <div id="simple-div" class="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                <p>这是一个简单的 w-full div (无 grid 结构)</p>
+                <p class="text-sm text-gray-400 mt-2">宽度: <span id="simple-width"
+                        class="text-green-400 font-bold">-</span>px</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function updateWidths() {
+            const mainContainer = document.querySelector('main');
+            const journalContainer = document.getElementById('journal-container');
+            const simpleDiv = document.getElementById('simple-div');
+
+            const mainWidth = mainContainer.offsetWidth;
+            const journalWidth = journalContainer.offsetWidth;
+            const simpleWidth = simpleDiv.offsetWidth;
+
+            document.getElementById('container-width').textContent = journalWidth;
+            document.getElementById('main-width').textContent = mainWidth;
+            document.getElementById('journal-width').textContent = journalWidth;
+            document.getElementById('simple-width').textContent = simpleWidth;
+
+            // 高亮显示如果宽度不符合预期
+            const journalWidthEl = document.getElementById('journal-width');
+            if (journalWidth < 1200) {
+                journalWidthEl.classList.add('text-red-500');
+                journalWidthEl.classList.remove('text-amber-400');
+            } else {
+                journalWidthEl.classList.add('text-amber-400');
+                journalWidthEl.classList.remove('text-red-500');
+            }
+        }
+
+        // 初始化
+        updateWidths();
+
+        // 监听窗口大小变化
+        window.addEventListener('resize', updateWidths);
+
+        // 每秒更新一次（以防内容动态加载）
+        setInterval(updateWidths, 1000);
+    </script>
+</body>
+
+</html>

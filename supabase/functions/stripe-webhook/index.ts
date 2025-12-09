@@ -51,19 +51,10 @@ serve(async (req) => {
                 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
                 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-                // Calculate "Lifetime" expiry (100 years from now)
-                const expiryDate = new Date()
-                expiryDate.setFullYear(expiryDate.getFullYear() + 100)
-
-                // Update user profile
+                // 最小化更新，只设置会员状态，避免数据库字段缺失导致的报错
                 const { error } = await supabase
                     .from('profiles')
-                    .update({
-                        is_premium: true,
-                        membership_expiry: expiryDate.toISOString(),
-                        stripe_customer_id: session.customer,
-                        updated_at: new Date().toISOString()
-                    })
+                    .update({ is_premium: true })
                     .eq('email', userEmail)
 
                 if (error) {

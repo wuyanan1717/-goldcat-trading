@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Breakpoint Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-black text-white p-8">
+    <h1 class="text-3xl mb-4">Tailwind Breakpoint Test</h1>
+    <div class="mb-4">
+        <div>Window Width: <span id="width" class="text-amber-500 font-bold"></span>px</div>
+        <div>Active Breakpoint: <span id="breakpoint" class="text-amber-500 font-bold"></span></div>
+    </div>
+
+    <div class="p-4 bg-neutral-900 rounded">
+        <div class="hidden sm:block md:hidden">SM (640px+)</div>
+        <div class="hidden md:block lg:hidden">MD (768px+)</div>
+        <div class="hidden lg:block xl:hidden">LG (1024px+) ✓</div>
+        <div class="hidden xl:block 2xl:hidden">XL (1280px+)</div>
+        <div class="hidden 2xl:block">2XL (1536px+)</div>
+        <div class="block sm:hidden">Default (\u003c640px)</div>
+    </div>
+
+    <div class="mt-8 p-4 bg-neutral-900 rounded">
+        <h2 class="text-xl mb-4">Grid Test (same as Journal)</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div id="test-grid-child" class="lg:col-span-3 bg-amber-900/20 border border-amber-500 rounded p-4">
+                <div>This should span all 3 columns at lg+ breakpoint</div>
+                <div class="mt-2">Width: <span id="test-width" class="font-bold"></span>px</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function update() {
+            const w = window.innerWidth;
+            document.getElementById('width').textContent = w;
+            document.getElementById('test-width').textContent = document.getElementById('test-grid-child').offsetWidth;
+
+            let bp = 'default';
+            if (w >= 1536) bp = '2XL (1536px+)';
+            else if (w >= 1280) bp = 'XL (1280px+)';
+            else if (w >= 1024) bp = 'LG (1024px+) ✓ SHOULD WORK';
+            else if (w >= 768) bp = 'MD (768px+) - TOO SMALL';
+            else if (w >= 640) bp = 'SM (640px+) - TOO SMALL';
+
+            document.getElementById('breakpoint').textContent = bp;
+        }
+
+        update();
+        window.addEventListener('resize', update);
+        setInterval(update, 1000);
+    </script>
+</body>
+
+</html>

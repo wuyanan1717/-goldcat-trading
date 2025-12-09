@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Width Debug - Side by Side</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+        }
+
+        .debug-box {
+            position: relative;
+            border: 2px solid;
+            margin-bottom: 2rem;
+        }
+
+        .debug-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #000;
+            padding: 0 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .width-display {
+            background: rgba(245, 158, 11, 0.9);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+
+<body class="p-8">
+    <h1 class="text-3xl font-bold mb-6 text-amber-500">Tab 宽度对比调试</h1>
+
+    <div class="max-w-7xl mx-auto px-4 py-6 bg-neutral-950 rounded-lg">
+        <div class="mb-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+            <div>父容器 (max-w-7xl) 宽度: <span id="parent-width" class="font-mono text-amber-400">-</span>px</div>
+        </div>
+
+        <!-- Tab 1: New Trade 结构 -->
+        <div class="debug-box border-green-500 mb-8">
+            <span class="debug-label text-green-500">Tab 1: New Trade (grid 3列，内容占2+1列)</span>
+            <div id="tab1" class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 p-6">
+                <div class="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                    <h3 class="text-white font-bold mb-2">左侧表单区 (占2列)</h3>
+                    <p class="text-sm text-gray-400">宽度: <span id="tab1-left" class="width-display">-</span>px</p>
+                </div>
+                <div class="lg:col-span-1 bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                    <h3 class="text-white font-bold mb-2">右侧栏 (占1列)</h3>
+                    <p class="text-sm text-gray-400">宽度: <span id="tab1-right" class="width-display">-</span>px</p>
+                </div>
+            </div>
+            <div class="p-2 bg-neutral-900 text-xs text-gray-500">
+                Tab1 总宽度: <span id="tab1-total" class="text-green-400">-</span>px
+            </div>
+        </div>
+
+        <!-- Tab 2: Journal 结构（当前）-->
+        <div class="debug-box border-amber-500 mb-8">
+            <span class="debug-label text-amber-500">Tab 2: Journal (grid 3列，内容占满3列)</span>
+            <div id="tab2" class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 p-6">
+                <div class="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                    <h3 class="text-white font-bold mb-2">Journal 表格区 (占满3列)</h3>
+                    <p class="text-sm text-gray-400">宽度: <span id="tab2-content" class="width-display">-</span>px</p>
+                    <div class="mt-4 overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-neutral-800">
+                                    <th class="px-6 py-2">日期</th>
+                                    <th class="px-6 py-2">标的</th>
+                                    <th class="px-6 py-2">基础</th>
+                                    <th class="px-6 py-2">R:R</th>
+                                    <th class="px-6 py-2">状态</th>
+                                    <th class="px-6 py-2 min-w-[160px]">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-6 py-2">2025/12/1</td>
+                                    <td class="px-6 py-2">BTC</td>
+                                    <td class="px-6 py-2">4h -</td>
+                                    <td class="px-6 py-2">0.75</td>
+                                    <td class="px-6 py-2">Open</td>
+                                    <td class="px-6 py-2">
+                                        <div class="flex gap-2 justify-center">
+                                            <button
+                                                class="px-2 py-1 bg-amber-500 text-black text-xs rounded">结算</button>
+                                            <button class="text-xs text-gray-400">复盘</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="p-2 bg-neutral-900 text-xs text-gray-500">
+                Tab2 总宽度: <span id="tab2-total" class="text-amber-400">-</span>px
+            </div>
+        </div>
+
+        <!-- Tab 3: AI Analysis 结构 -->
+        <div class="debug-box border-blue-500">
+            <span class="debug-label text-blue-500">Tab 3: AI Analysis (带 w-full 的 grid)</span>
+            <div id="tab3" class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in p-6">
+                <div
+                    class="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30 text-center">
+                    <h3 class="text-white font-bold text-2xl mb-2">AI Analysis 区域</h3>
+                    <p class="text-sm text-gray-400">宽度: <span id="tab3-content" class="width-display">-</span>px</p>
+                </div>
+            </div>
+            <div class="p-2 bg-neutral-900 text-xs text-gray-500">
+                Tab3 总宽度: <span id="tab3-total" class="text-blue-400">-</span>px
+            </div>
+        </div>
+
+        <!-- 结论 -->
+        <div class="mt-8 p-6 bg-red-900/20 border border-red-500/30 rounded-lg">
+            <h3 class="text-xl font-bold text-red-400 mb-4">📊 诊断结果</h3>
+            <div id="diagnosis" class="space-y-2 text-sm">
+                <div>加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateWidths() {
+            const parent = document.querySelector('.max-w-7xl');
+            const tab1 = document.getElementById('tab1');
+            const tab1Left = tab1.querySelector('.lg\\:col-span-2');
+            const tab1Right = tab1.querySelector('.lg\\:col-span-1');
+            const tab2 = document.getElementById('tab2');
+            const tab2Content = tab2.querySelector('.lg\\:col-span-3');
+            const tab3 = document.getElementById('tab3');
+            const tab3Content = tab3.querySelector('.lg\\:col-span-3');
+
+            const parentWidth = parent.offsetWidth;
+            const tab1Width = tab1.offsetWidth;
+            const tab1LeftWidth = tab1Left.offsetWidth;
+            const tab1RightWidth = tab1Right.offsetWidth;
+            const tab2Width = tab2.offsetWidth;
+            const tab2ContentWidth = tab2Content.offsetWidth;
+            const tab3Width = tab3.offsetWidth;
+            const tab3ContentWidth = tab3Content.offsetWidth;
+
+            document.getElementById('parent-width').textContent = parentWidth;
+            document.getElementById('tab1-total').textContent = tab1Width;
+            document.getElementById('tab1-left').textContent = tab1LeftWidth;
+            document.getElementById('tab1-right').textContent = tab1RightWidth;
+            document.getElementById('tab2-total').textContent = tab2Width;
+            document.getElementById('tab2-content').textContent = tab2ContentWidth;
+            document.getElementById('tab3-total').textContent = tab3Width;
+            document.getElementById('tab3-content').textContent = tab3ContentWidth;
+
+            // 诊断
+            const diagnosis = document.getElementById('diagnosis');
+            let html = '';
+
+            if (Math.abs(tab1Width - tab2Width) < 10) {
+                html += '<div class="text-green-400">✓ Tab1 和 Tab2 宽度一致 (' + tab1Width + 'px)</div>';
+            } else {
+                html += '<div class="text-red-400">✗ Tab1 (' + tab1Width + 'px) 和 Tab2 (' + tab2Width + 'px) 宽度不同！差异: ' + Math.abs(tab1Width - tab2Width) + 'px</div>';
+            }
+
+            if (Math.abs(tab2Width - tab3Width) < 10) {
+                html += '<div class="text-green-400">✓ Tab2 和 Tab3 宽度一致 (' + tab2Width + 'px)</div>';
+            } else {
+                html += '<div class="text-red-400">✗ Tab2 (' + tab2Width + 'px) 和 Tab3 (' + tab3Width + 'px) 宽度不同！差异: ' + Math.abs(tab2Width - tab3Width) + 'px</div>';
+            }
+
+            html += '<div class="mt-4 text-gray-400">预期宽度: ~' + (parentWidth - 32) + 'px (父容器宽度减去padding)</div>';
+
+            if (tab2Width < parentWidth * 0.9) {
+                html += '<div class="mt-2 text-yellow-400">⚠ Tab2 宽度明显小于预期！可能有CSS约束。</div>';
+            }
+
+            diagnosis.innerHTML = html;
+        }
+
+        updateWidths();
+        window.addEventListener('resize', updateWidths);
+        setInterval(updateWidths, 1000);
+    </script>
+</body>
+
+</html>

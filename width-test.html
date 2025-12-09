@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Width Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-black text-white p-8">
+    <h1 class="text-2xl mb-4">Grid Width Test</h1>
+
+    <!-- Simulate main container -->
+    <div class="max-w-7xl mx-auto px-4 py-6 bg-neutral-900">
+        <h2 class="mb-4">Main Container (max-w-7xl)</h2>
+        <div class="text-sm mb-4">Width: <span id="main-width"></span>px</div>
+
+        <!-- Test 1: Current Journal structure -->
+        <div class="mb-8">
+            <h3 class="text-xl mb-2">Test 1: Journal Tab Structure (w-full + grid)</h3>
+            <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 bg-red-900/20">
+                <div id="journal-test" class="lg:col-span-3 bg-neutral-800 border border-neutral-700 rounded-2xl p-6">
+                    <div class="text-sm">Width: <span id="journal-width"></span>px</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="px-6 py-4 bg-neutral-700">Date</th>
+                                    <th class="px-6 py-4 bg-neutral-700">Symbol</th>
+                                    <th class="px-6 py-4 bg-neutral-700">Basis</th>
+                                    <th class="px-6 py-4 bg-neutral-700">R:R</th>
+                                    <th class="px-6 py-4 bg-neutral-700">Status</th>
+                                    <th class="px-6 py-4 bg-neutral-700 min-w-[160px]">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-6 py-4">2025/12/1</td>
+                                    <td class="px-6 py-4">BTC</td>
+                                    <td class="px-6 py-4">4h</td>
+                                    <td class="px-6 py-4">0.75</td>
+                                    <td class="px-6 py-4">Open</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <button
+                                                class="px-3 py-1 border border-amber-500 text-amber-500 rounded text-xs">Settle</button>
+                                            <button class="text-gray-500 text-xs">Review</button>
+                                            <button class="text-gray-600">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 2: AI Analysis structure -->
+        <div class="mb-8">
+            <h3 class="text-xl mb-2">Test 2: AI Analysis Structure (w-full + grid)</h3>
+            <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 bg-blue-900/20">
+                <div id="ai-test"
+                    class="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30">
+                    <div class="text-sm mb-4">Width: <span id="ai-width"></span>px</div>
+                    <div class="text-center">
+                        <h3 class="text-2xl font-bold mb-4">AI Analysis Content</h3>
+                        <p>This should be the same width as the journal table above</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 3: Simple full width div -->
+        <div class="mb-8">
+            <h3 class="text-xl mb-2">Test 3: Simple w-full div</h3>
+            <div id="simple-test" class="w-full bg-green-900/20 rounded-2xl p-6">
+                <div class="text-sm">Width: <span id="simple-width"></span>px</div>
+                <p>This is a simple w-full div without grid</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateWidths() {
+            const mainContainer = document.querySelector('.max-w-7xl');
+            const journalTest = document.getElementById('journal-test');
+            const aiTest = document.getElementById('ai-test');
+            const simpleTest = document.getElementById('simple-test');
+
+            document.getElementById('main-width').textContent = mainContainer.offsetWidth;
+            document.getElementById('journal-width').textContent = journalTest.offsetWidth;
+            document.getElementById('ai-width').textContent = aiTest.offsetWidth;
+            document.getElementById('simple-width').textContent = simpleTest.offsetWidth;
+        }
+
+        updateWidths();
+        window.addEventListener('resize', updateWidths);
+    </script>
+</body>
+
+</html>

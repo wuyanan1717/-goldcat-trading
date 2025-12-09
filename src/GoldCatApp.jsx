@@ -10,7 +10,7 @@ import {
     Infinity, Activity, Zap, FileText, Brain, Sparkles, CheckCircle2, AlertTriangle,
     Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, Lock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
-    PlusCircle, Check, RotateCcw, Info, Loader2
+    PlusCircle, Check, RotateCcw, Info, Loader2, Trophy
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -2167,6 +2167,90 @@ function GoldCatApp() {
                                             </table>
                                         </div>
                                     )}
+
+                                    {/* 100笔交易修炼进度 */}
+                                    <div className="p-6 border-t border-neutral-800">
+                                        <div className="w-full">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                                        {language === 'zh' ? '交易纪律重塑之路' : 'The Path to Discipline'}
+                                                        {trades.length >= 100 && (
+                                                            <span className="text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded-full animate-pulse">
+                                                                {language === 'zh' ? '已出师！' : 'Mastered!'}
+                                                            </span>
+                                                        )}
+                                                    </h3>
+                                                    <p className="text-xs text-gray-500">
+                                                        {language === 'zh'
+                                                            ? '完成100笔手动记录，把交易变成一种本能。'
+                                                            : 'Log 100 trades manually to master your psychology.'}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-2xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+                                                        {trades.length}/100
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        {language === 'zh' ? '已完成交易' : 'Trades Completed'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Progress Bar */}
+                                            <div className="relative h-3 bg-neutral-800 rounded-full overflow-hidden select-none pointer-events-none">
+                                                <div
+                                                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-500 ease-out"
+                                                    style={{ width: `${Math.min((trades.length / 100) * 100, 100)}%` }}
+                                                >
+                                                    {/* AI Tech Flow Animation */}
+                                                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] animate-[shimmer_2s_infinite] border-r border-white/30"></div>
+
+                                                    {trades.length >= 100 && (
+                                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-pulse"></div>
+                                                    )}
+                                                </div>
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <span className="text-[10px] font-bold text-white drop-shadow-lg">
+                                                        {Math.min((trades.length / 100) * 100, 100).toFixed(0)}%
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Milestone Messages */}
+                                            <div className="mt-4 text-center">
+                                                {trades.length >= 100 ? (
+                                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-lg">
+                                                        <span className="text-sm font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+                                                            {language === 'zh'
+                                                                ? '🏆 试炼通关！ 恭喜！你已完成百场洗礼，正式晋升为纪律交易者。'
+                                                                : '🏆 Trial Cleared! 100 trades survived. You have evolved into a Disciplined Trader.'}
+                                                        </span>
+                                                    </div>
+                                                ) : trades.length >= 75 ? (
+                                                    <p className="text-xs text-amber-500">
+                                                        {language === 'zh' ? (
+                                                            <>决胜时刻： 距离解锁 <span className="font-bold text-amber-400">【百炼成金】</span> 成就，仅差 <span className="font-bold">{100 - trades.length}</span> 场战斗！</>
+                                                        ) : (
+                                                            <>Final Stretch: Just <span className="font-bold">{100 - trades.length}</span> battles away from unlocking the "Forged in Gold" achievement!</>
+                                                        )}
+                                                    </p>
+                                                ) : trades.length >= 50 ? (
+                                                    <p className="text-xs text-gray-500">
+                                                        {language === 'zh'
+                                                            ? '半程里程碑： 进度条过半！你的纪律属性正在战胜情绪恶魔。'
+                                                            : 'Halfway Point: Progress 50%! Your Discipline Stat is crushing your Emotion Demon.'}
+                                                    </p>
+                                                ) : trades.length >= 25 ? (
+                                                    <p className="text-xs text-gray-500">
+                                                        {language === 'zh'
+                                                            ? '交易者觉醒： 这是一个伟大的开端，你正在建立自己的交易圣经。'
+                                                            : 'Trader Awakening: A legendary start. You are writing your own trading bible.'}
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
