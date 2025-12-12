@@ -1574,7 +1574,7 @@ function GoldCatApp() {
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
 
                             {/* Particle Logo Effect */}
-                            <div className="absolute inset-0 z-[5] opacity-60" style={{ transform: 'translateY(-800px)' }}>
+                            <div className="absolute inset-0 z-[5] opacity-60" style={{ transform: 'translateY(-1480px)' }}>
                                 <ParticleLogo />
                             </div>
                         </div>
