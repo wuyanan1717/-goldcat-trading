@@ -23,8 +23,21 @@ export const translations = {
             feature_discipline_title: "纪律养成",
             feature_discipline_desc: "强制性的风控检查流程，帮您管住手，从根源上杜绝情绪化交易。",
             feature_ai_title: "AI 智能进化",
-            feature_ai_desc: "您的私人交易教练。AI 深度分析您的每一笔交易数据，精准识别情绪波动与策略漏洞，助您构建稳定盈利系统。"
-
+            feature_ai_desc: "您的私人交易教练。AI 深度分析您的每一笔交易数据，精准识别情绪波动与策略漏洞，助您构建稳定盈利系统。",
+            ai_risk_title: "AI 风险阻断",
+            ai_risk_subtitle: "立即停手。",
+            ai_risk_desc: "当你的多巴胺接管大脑时，Goldcat 接管你的账户。它比你更了解你的亏损模式，在你犯错前直接“骂醒你”。",
+            ai_risk_warning: "警告：立即停手",
+            ai_risk_backtesting: "检测到你在连续亏损 2 单后的\"报复性加仓\"行为。大数据回测显示，你在这种状态下的操作导致历史上 92% 的本金回撤。",
+            ai_risk_button: "强制冷静 1小时",
+            ai_risk_example: "刚刚止损两单，这把直接梭哈！赢回来！",
+            emotion_roi_title: "情绪 ROI 可视化",
+            emotion_roi_subtitle: "数据不会说谎。Goldcat 帮你分离\"情绪单\"与\"逻辑单\"，看一眼图表就知道：",
+            emotion_roi_desc: "所有的亏损都是来自心存侥幸，所有的盈利来自严格执行。",
+            fomo_entry: "FOMO ENTRY",
+            fomo_trades: "追涨杀跌",
+            planned_entry: "PLANNED ENTRY",
+            planned_trades: "交易计划执行"
         },
         pricing: {
             title: "选择您的套餐",
@@ -53,7 +66,39 @@ export const translations = {
                 "无广告纯净体验"
             ],
             start_free: "免费开始",
-            get_pro: "升级到终身版"
+            get_pro: "升级到终身版",
+            go_dashboard: "进入控制台",
+            current_plan: "当前套餐"
+        },
+        faq: {
+            title: "Goldcat Terminal 常见问题",
+            subtitle: "问题请通过 support@goldcat.trade 联系我们",
+            items: [
+                {
+                    q: "什么是 Goldcat Terminal，它能帮我赚钱吗？",
+                    a: "Goldcat 不仅仅是一个记账工具，它是你的 AI 战术指挥官。它通过深度分析你的历史交易数据，识别出你最赚钱的形态（Setup）和亏钱的坏习惯。我们无法直接给你“带单”，但我们能帮你发现你的交易优势 (Edge)，从而提高胜率和盈亏比。"
+                },
+                {
+                    q: "Goldcat 的 AI 是如何工作的？是黑盒吗？",
+                    a: "不是黑盒。我们的 AI 基于透明的统计学和风控模型。它会计算你每一笔交易的 R 值 (R-Multiple)，并生成 “形态 x 周期”策略矩阵。AI 会告诉你：“你在 4h 级别做趋势跟随胜率 70%，但在 15m 级别做反转亏损严重”，并据此给出建议。"
+                },
+                {
+                    q: "为什么不支持 API 自动导入？我不想手动记账怎么办？",
+                    a: "Goldcat 刻意不支持自动导入。 我们坚信：“没有经过审视的记录毫无意义”。自动导入只会让你在交易所随意开单，产生大量垃圾数据。 手动录入是交易纪律的第一步。我们希望你在录入每一笔入场、止损、止盈时，都能重新经历一次决策过程。这种**“仪式感”**能有效抑制随意交易（Over-trading），从源头训练你的职业交易行为。如果你觉得记录很麻烦，也许那笔交易一开始就不该做。"
+                },
+                {
+                    q: "你们支持哪些交易所的记录？",
+                    a: "由于采用通用标准录入，理论上支持所有交易所和所有币种。只要符合开平仓逻辑，你都可以将其录入 Goldcat 系统。我们将重点放在“策略分析”上，而不是单纯的数据搬运。"
+                },
+                {
+                    q: "我是一个新手，Goldcat Terminal适合我吗？",
+                    a: "非常适合。新手最大的问题是“不知道自己怎么亏的”。Goldcat Terminal的 AI 教练会在你交易初期就帮你养成“记录-复盘-优化”的职业习惯，这比盲目开单更有价值。"
+                },
+                {
+                    q: "如何联系支持团队或反馈 Bug？",
+                    a: "我们也是交易员，我们懂你的痛点。你可以通过页面右下角的 AI 助手 直接反馈给CEO，或者加入我们的 Discord 社区，与产品经理和顶级交易员直接对话。"
+                }
+            ]
         },
         auth: {
             login_title: "登录金猫系统",
@@ -75,26 +120,19 @@ export const translations = {
             email_registered: "该邮箱已被注册"
         },
         feedback: {
-            title: "联系客服",
-            name_label: "姓名",
-            name_placeholder: "请输入您的姓名（可选）",
-            email_label: "邮箱",
-            email_placeholder: "请输入您的邮箱",
-            type_label: "反馈类型",
-            content_label: "反馈内容",
-            content_placeholder: "请详细描述您的问题或建议...",
-            submit_btn: "提交反馈",
-            email_btn: "复制邮箱",
-            success_msg: "感谢您的反馈！我们会尽快处理。",
-            error_msg: "提交失败，请稍后再试",
-            email_required: "请填写邮箱地址",
-            content_required: "请填写反馈内容",
-            types: {
-                suggestion: "功能建议",
-                bug: "问题反馈",
-                account: "账户问题",
-                other: "其他"
-            }
+            // Founder Chat Style
+            title: "Wuffett (Founder)",
+            status: "Online & Trading",
+            greeting: "Hey! 👋 我是 GoldCat Terminal 的创始人。这里没有机器人，只有我。\n\n无论是遇到 Bug，还是想聊聊产品功能，你的消息会直接推送到我的邮件上。",
+            message_label: "YOUR MESSAGE",
+            message_placeholder: "Yo Wuffett, 我觉得这功能有点...",
+            contact_label: "YOUR CONTACT (Optional)",
+            contact_placeholder: "@username or email",
+            submit_btn: "Send to my Email",
+            success_msg: "Sent! I'll reply soon.",
+            error_msg: "Failed to send.",
+            email_required: "Please enter contact info",
+            content_required: "Please say something"
         },
         common: {
             success: "操作成功",
@@ -320,7 +358,10 @@ export const translations = {
             cancel: "取消",
             confirm: "确认",
             loading: "加载中...",
-            done: "完成"
+            done: "完成",
+            auto_save_success: "已自动为您保存刚才的交易！",
+            migration_success: "云端同步完成",
+            migration_error: "同步失败，请检查网络"
         }
     },
     en: {
@@ -348,8 +389,21 @@ export const translations = {
             feature_discipline_title: "Discipline Building",
             feature_discipline_desc: "Mandatory risk control checks help you stay disciplined and eliminate emotional trading at the source.",
             feature_ai_title: "AI Evolution",
-            feature_ai_desc: "Your private trading coach. AI deeply analyzes every trade, identifying emotional fluctuations and strategy flaws to help you build a profitable system."
-
+            feature_ai_desc: "Your private trading coach. AI deeply analyzes every trade, identifying emotional fluctuations and strategy flaws to help you build a profitable system.",
+            ai_risk_title: "AI Risk Prevention",
+            ai_risk_subtitle: "Stop Now.",
+            ai_risk_desc: "When dopamine takes over your brain, GoldCat takes over your account. It knows your losing patterns better than you do, and 'scolds you awake' before you make a mistake.",
+            ai_risk_warning: "WARNING: STOP IMMEDIATELY",
+            ai_risk_backtesting: "Detected 'revenge trading' behavior after 2 consecutive losses. Backtesting shows this operation in this state results in 92% historical capital drawdown.",
+            ai_risk_button: "Forced Cool Down 1h",
+            ai_risk_example: "Just stopped out twice, going all in now! Win it back!",
+            emotion_roi_title: "Emotion ROI Visualization",
+            emotion_roi_subtitle: "Data doesn't lie. GoldCat helps you distinguish 'Emotion Rate' vs 'Logic Rate', glancing at the chart tells you:",
+            emotion_roi_desc: "All losses come from wishful thinking, all profits come from strict execution.",
+            fomo_entry: "FOMO ENTRY",
+            fomo_trades: "Chasing/Revenge",
+            planned_entry: "PLANNED ENTRY",
+            planned_trades: "Plan Execution"
         },
         pricing: {
             title: "Choose Your Plan",
@@ -378,7 +432,39 @@ export const translations = {
                 "Ad-free Experience"
             ],
             start_free: "Start for Free",
-            get_pro: "Get Lifetime Access"
+            get_pro: "Get Lifetime Access",
+            go_dashboard: "Go to Dashboard",
+            current_plan: "Current Plan"
+        },
+        faq: {
+            title: "Goldcat Terminal FAQ",
+            subtitle: "For questions, contact us at support@goldcat.trade",
+            items: [
+                {
+                    q: "What is Goldcat Terminal, and can it make me money?",
+                    a: "Goldcat is not just a journaling tool; it is your AI tactical commander. By deeply analyzing your historical trade data, it identifies your most profitable setups and costly bad habits. We cannot give you 'signals', but we can help you discover your trading Edge, thereby improving your win rate and risk-reward ratio."
+                },
+                {
+                    q: "How does Goldcat's AI work? Is it a black box?",
+                    a: "It is not a black box. Our AI is based on transparent statistical and risk management models. It calculates the R-Multiple of every trade and generates a 'Pattern x Timeframe' strategy matrix. The AI might tell you: 'You have a 70% win rate following trends on the 4h timeframe, but you lose heavily on reversals on the 15m timeframe', and offer advice accordingly."
+                },
+                {
+                    q: "Why no API auto-import? What if I don't want to journal manually?",
+                    a: "Goldcat deliberately does not support auto-import. We firmly believe: 'Unreviewed records are meaningless'. Auto-import only encourages reckless trading on exchanges, creating massive amounts of junk data. Manual entry is the first step of trading discipline. We want you to relive the decision process when entering every entry, stop loss, and take profit. This **'ritual'** effectively suppresses over-trading and trains your professional trading behavior from the source. If you find recording troublesome, perhaps that trade shouldn't have been taken in the first place."
+                },
+                {
+                    q: "Which exchanges do you support?",
+                    a: "Since we use standard manual entry, we theoretically support all exchanges and all coins. As long as it follows opening/closing logic, you can record it in Goldcat. We focus on 'strategic analysis', not just simple data porting."
+                },
+                {
+                    q: "I am a beginner, is Goldcat Terminal suitable for me?",
+                    a: "Very suitable. The biggest problem for beginners is 'not knowing how they lost'. Goldcat Terminal's AI coach helps you build the professional habit of 'Record-Review-Optimize' early in your trading journey, which is more valuable than blind trading."
+                },
+                {
+                    q: "How do I contact support or report bugs?",
+                    a: "We are traders too, we understand your pain points. You can report directly to the CEO via the AI Assistant in the bottom right corner, or join our Discord community to talk directly with product managers and top traders."
+                }
+            ]
         },
         auth: {
             login_title: "Login to GoldCat",
@@ -613,33 +699,29 @@ export const translations = {
             success_desc: "Your payment proof has been submitted. We will review it shortly. Membership benefits will be activated automatically upon approval."
         },
         feedback: {
-            title: "Contact Support",
-            name_label: "Name",
-            name_placeholder: "Enter your name (optional)",
-            email_label: "Email",
-            email_placeholder: "Enter your email",
-            type_label: "Feedback Type",
-            content_label: "Feedback",
-            content_placeholder: "Please describe your issue or suggestion...",
-            submit_btn: "Submit Feedback",
-            email_btn: "Copy Email",
-            success_msg: "Thank you for your feedback! We'll get back to you soon.",
-            error_msg: "Submission failed, please try again",
-            email_required: "Please enter your email",
-            content_required: "Please enter your feedback",
-            types: {
-                suggestion: "Feature Suggestion",
-                bug: "Bug Report",
-                account: "Account Issue",
-                other: "Other"
-            }
+            // Founder Chat Style
+            title: "Wuffett (Founder)",
+            status: "Online & Trading",
+            greeting: "Hey! 👋 I'm the founder of GoldCat Terminal. No bots here, just me.\n\nWhether it's a bug or you want to chat about product features, your message goes straight to my personal email.",
+            message_label: "YOUR MESSAGE",
+            message_placeholder: "Yo Wuffett, I think this feature...",
+            contact_label: "YOUR CONTACT (Optional)",
+            contact_placeholder: "@username or email",
+            submit_btn: "Send to my Email",
+            success_msg: "Sent! I'll reply soon.",
+            error_msg: "Failed to send.",
+            email_required: "Please enter contact info",
+            content_required: "Please say something"
         },
         common: {
             success: "Success!",
             cancel: "Cancel",
             confirm: "Confirm",
             loading: "Loading...",
-            done: "Done"
+            done: "Done",
+            auto_save_success: "Your trade has been automatically saved!",
+            migration_success: "Cloud sync complete",
+            migration_error: "Sync failed. Check connection"
         }
     }
 };

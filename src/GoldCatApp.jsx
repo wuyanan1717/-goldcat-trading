@@ -8,15 +8,17 @@ import {
     TrendingUp, TrendingDown, DollarSign, Package, AlertCircle, BarChart3, Target,
     Award, Plus, X, Crown, Calendar, CreditCard, Wallet, User, LogOut, Trash2,
     Infinity, Activity, Zap, FileText, Brain, Sparkles, CheckCircle2, AlertTriangle,
-    Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, Lock, Settings,
+    Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, ChevronDown, Lock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
-    PlusCircle, Check, RotateCcw, Info, Loader2, Trophy
+    PlusCircle, Check, RotateCcw, Info, Loader2, Trophy, Clock, Snowflake, BarChart2,
+    Send
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     AreaChart, Area, ReferenceLine, Bar, Cell, Pie
 } from 'recharts';
 import { translations } from './translations';
+import AIAnalysisDashboard from './components/AIAnalysisDashboard';
 
 
 // Data Sync Status Indicator Component
@@ -125,14 +127,18 @@ function GoldCatApp() {
     // 用户系统
     const [user, setUser] = useState(null);
     const [membership, setMembership] = useState({ isPremium: false, expiryDate: null, maxTrades: 20 });
+    const [riskMode, setRiskMode] = useState('balanced'); // Risk mode: defensive, balanced, aggressive, degen
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [showGuestDashboard, setShowGuestDashboard] = useState(false);
+    const [explicitLandingView, setExplicitLandingView] = useState(false); // Valid for logged-in users wanting to see homepage
     const [paymentMethod, setPaymentMethod] = useState(null);
     const [isUpgrading, setIsUpgrading] = useState(false);
     const [loginForm, setLoginForm] = useState({ email: '', password: '' });
     const [isRegisterMode, setIsRegisterMode] = useState(false);
     const [registerForm, setRegisterForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
+    const [pendingGuestTrade, setPendingGuestTrade] = useState(false); // Guest data persistence flag
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [showErrorToast, setShowErrorToast] = useState(false);
@@ -140,6 +146,7 @@ function GoldCatApp() {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [editedUsername, setEditedUsername] = useState('');
     const [feedbackForm, setFeedbackForm] = useState({
         name: '',
         email: '',
@@ -157,9 +164,36 @@ function GoldCatApp() {
         const saved = localStorage.getItem('goldcat_language');
         if (saved) return saved;
 
-        // 2. 默认英语（不再根据浏览器语言自动判断）
+        // 2. 默认英语（将通过IP检测自动调整）
         return 'en';
     });
+
+    // IP-based language detection on mount
+    useEffect(() => {
+        const detectLanguageByIP = async () => {
+            // Skip if user has manually set language
+            const saved = localStorage.getItem('goldcat_language');
+            if (saved) return;
+
+            try {
+                // Use ipapi.co free API to detect country
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+
+                // If user is from China, set to Chinese
+                if (data.country_code === 'CN') {
+                    setLanguage('zh');
+                    localStorage.setItem('goldcat_language', 'zh');
+                }
+                // Otherwise keep English (already default)
+            } catch (error) {
+                console.log('IP detection failed, using default:', error);
+                // Keep English as default if detection fails
+            }
+        };
+
+        detectLanguageByIP();
+    }, []);
 
     // 监听语言变化并保存
     useEffect(() => {
@@ -350,6 +384,7 @@ function GoldCatApp() {
                             pattern: t.pattern || '',
                             status: t.status,
                             profitLoss: t.profit_loss || 0,
+                            realizedRR: t.realized_rr || null,
                             violatedDiscipline: t.violated_discipline || false,
                             notes: t.notes || '',
                             review: t.review || '',
@@ -422,12 +457,12 @@ function GoldCatApp() {
                                     // Let's just set the local trades to state for immediate feedback and set syncStatus.
                                     setTrades(localTrades);
                                     setSyncStatus('synced');
-                                    setToastMessage("Legacy data migrated to Cloud successfully");
+                                    setToastMessage(t('common.migration_success'));
                                     setShowSuccessToast(true);
                                 }
                             } else {
                                 setSyncStatus('error');
-                                setErrorMessage("Partial migration failure. Please check connection.");
+                                setErrorMessage(t('common.migration_error'));
                             }
                         }
                     } else {
@@ -458,6 +493,11 @@ function GoldCatApp() {
                         expiryDate: data.membership_expiry,
                         maxTrades: data.max_trades || 20
                     });
+
+                    // Load Risk Mode from database
+                    if (data.risk_mode) {
+                        setRiskMode(data.risk_mode);
+                    }
 
                     // Load Total Capital from database
                     if (data.total_capital !== null && data.total_capital !== undefined) {
@@ -507,6 +547,13 @@ function GoldCatApp() {
 
         return () => subscription.unsubscribe();
     }, []);
+
+    // Logout cleanup
+    useEffect(() => {
+        if (!user) {
+            setExplicitLandingView(false);
+        }
+    }, [user]);
 
 
 
@@ -613,7 +660,25 @@ function GoldCatApp() {
         const interval = setInterval(fetchBTCPrice, 30000);
 
         return () => clearInterval(interval);
+        return () => clearInterval(interval);
     }, []);
+
+    // --- Guest Data Persistence: Auto-save after login ---
+    useEffect(() => {
+        if (user && pendingGuestTrade) {
+            console.log('User logged in with pending guest trade, resuming save...');
+
+            // Short delay to ensure state stability
+            const timer = setTimeout(() => {
+                handleSubmitTrade();
+                setPendingGuestTrade(false);
+                setToastMessage(t('common.auto_save_success') || 'Resuming trade save...'); // Fallback strings
+                setShowSuccessToast(true);
+            }, 500);
+
+            return () => clearTimeout(timer);
+        }
+    }, [user, pendingGuestTrade]);
 
     // --- 3. 核心业务逻辑 ---
 
@@ -640,7 +705,7 @@ function GoldCatApp() {
         const margin = parseFloat(formData.margin);
         const leverage = parseFloat(formData.leverage);
 
-        console.log('Risk Calc Input:', { entry, stop, take, margin, leverage });
+
 
         let rrRatio = 0;
         let positionSize = 0;
@@ -806,6 +871,14 @@ function GoldCatApp() {
         }
     };
     const handleSubmitTrade = async () => {
+        // Intercept for Guest Mode
+        if (!user) {
+            setPendingGuestTrade(true); // Flag to save after login
+            setIsRegisterMode(true);
+            setShowLoginModal(true);
+            return;
+        }
+
         if (isSubmitting) return;
         setIsSubmitting(true);
         console.log('handleSubmitTrade called');
@@ -863,6 +936,27 @@ function GoldCatApp() {
             console.error('Payment redirect failed:', err);
             setIsUpgrading(false);
             alert(t('common.error_occurred'));
+        }
+    };
+
+    // Handle Risk Mode Change
+    const handleRiskModeChange = async (newMode) => {
+        if (!user) return;
+
+        setRiskMode(newMode);
+
+        // Save to Supabase
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ risk_mode: newMode })
+                .eq('id', user.id);
+
+            if (error) {
+                console.error('Failed to save risk mode:', error);
+            }
+        } catch (err) {
+            console.error('Error saving risk mode:', err);
         }
     };
 
@@ -970,12 +1064,30 @@ function GoldCatApp() {
             const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
             if (authError || !currentUser) throw new Error('Auth session expired');
 
+            // Calculate realized R-multiple
+            // Get the trade to access its planned rrRatio
+            const trade = trades.find(t => t.id === selectedTradeId);
+            let realizedRR = 0;
+
+            if (trade && trade.rrRatio) {
+                const plannedRR = Math.abs(parseFloat(trade.rrRatio));
+                if (pnlValue > 0) {
+                    // Win: use positive RR
+                    realizedRR = plannedRR;
+                } else if (pnlValue < 0) {
+                    // Loss: use negative RR
+                    realizedRR = -plannedRR;
+                }
+                // If pnlValue === 0, realizedRR stays 0
+            }
+
             // 1. 更新数据库
             const { error } = await supabase
                 .from('trades')
                 .update({
                     status: 'closed',
                     profit_loss: pnlValue,
+                    realized_rr: realizedRR,
                     violated_discipline: violatedDiscipline
                 })
                 .eq('id', selectedTradeId)
@@ -991,7 +1103,7 @@ function GoldCatApp() {
             // 2. 更新本地状态
             setTrades(trades.map(t =>
                 t.id === selectedTradeId
-                    ? { ...t, status: 'closed', profitLoss: pnlValue, violatedDiscipline }
+                    ? { ...t, status: 'closed', profitLoss: pnlValue, realizedRR: realizedRR, violatedDiscipline }
                     : t
             ));
 
@@ -1165,15 +1277,30 @@ function GoldCatApp() {
         }
     };
 
-    // 反馈提交
-    const handleSubmitFeedback = async () => {
+    // 录入交易
+    const handleAddTrade = async () => {
         // 验证必填项
-        if (!feedbackForm.email) {
-            setErrorMessage(t('feedback.email_required'));
+        if (!feedbackForm.content) {
+            setErrorMessage(t('feedback.content_required'));
             setShowErrorToast(true);
             setTimeout(() => setShowErrorToast(false), 3000);
             return;
         }
+
+        try {
+            // ... (rest of handleAddTrade logic)
+        } catch (err) {
+            console.error('Unexpected error adding trade:', err);
+            setErrorMessage('添加交易失败: ' + err.message);
+            setShowErrorToast(true);
+            setSyncStatus('error');
+            setTimeout(() => setShowErrorToast(false), 3000);
+        }
+    };
+
+    // 反馈提交
+    const handleSubmitFeedback = async () => {
+        // 验证必填项
         if (!feedbackForm.content) {
             setErrorMessage(t('feedback.content_required'));
             setShowErrorToast(true);
@@ -1313,16 +1440,25 @@ function GoldCatApp() {
     return (
         <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate overflow-auto flex flex-col min-h-screen" translate="no">
 
-            {/* 顶部导航 */}
-            <nav className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-50 shadow-xl">
+            {/* 顶部导航栏 (Header) */}
+            <header className="border-b border-neutral-800 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => {
+                            if (!user) {
+                                setShowGuestDashboard(false);
+                            } else {
+                                setExplicitLandingView(true);
+                            }
+                        }}
+                    >
                         <div className="w-10 h-10 flex items-center justify-center">
                             <img src="/goldcat_logo_transparent.png?v=2" alt="GoldCat Logo" className="w-full h-full object-contain" />
                         </div>
                         <div>
                             <h1 className="text-lg font-black text-white tracking-tighter leading-none">
-                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v4</span>
+                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v2</span>
                             </h1>
 
                         </div>
@@ -1363,7 +1499,7 @@ function GoldCatApp() {
                         </button>
                     </div>
                 </div>
-            </nav>
+            </header>
 
 
             {/* Fortune Compass Widget - Moved below per user request */}
@@ -1388,7 +1524,7 @@ function GoldCatApp() {
 
                 {/* 登录引导 */}
                 {/* 登录引导 (Landing Page Redesign) */}
-                {!user && (
+                {((!user && !showGuestDashboard) || (user && explicitLandingView)) && (
                     <div className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 overflow-hidden bg-black">
 
 
@@ -1438,14 +1574,14 @@ function GoldCatApp() {
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
 
                             {/* Particle Logo Effect */}
-                            <div className="absolute inset-0 z-[5] opacity-60">
+                            <div className="absolute inset-0 z-[5] opacity-60" style={{ transform: 'translateY(-800px)' }}>
                                 <ParticleLogo />
                             </div>
                         </div>
 
                         <div className="relative z-10 max-w-5xl mx-auto animate-in fade-in zoom-in duration-1000 slide-in-from-bottom-8 py-20">
                             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-400 text-xs font-bold mb-8 tracking-wider uppercase backdrop-blur-md shadow-lg">
-                                <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v4.0
+                                <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v2
                             </div>
 
                             <h1 className="text-5xl md:text-8xl font-black text-white mb-8 tracking-tight leading-tight drop-shadow-2xl">
@@ -1459,8 +1595,11 @@ function GoldCatApp() {
                             <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-20">
                                 <button
                                     onClick={() => {
-                                        setIsRegisterMode(true);
-                                        setShowLoginModal(true);
+                                        if (user) {
+                                            setExplicitLandingView(false);
+                                        } else {
+                                            setShowGuestDashboard(true);
+                                        }
                                     }}
                                     className="group relative w-full md:w-auto bg-amber-500 hover:bg-amber-400 text-black font-black text-xl px-10 py-5 rounded-2xl shadow-[0_0_40px_rgba(245,158,11,0.4)] hover:shadow-[0_0_60px_rgba(245,158,11,0.6)] hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden"
                                 >
@@ -1503,6 +1642,80 @@ function GoldCatApp() {
                                 </div>
                             </div>
 
+                            {/* --- New Feature Showcase Cards (Added per user request) --- */}
+                            <div className="mt-32 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
+                                {/* Card 1: AI Risk Prevention */}
+                                <div className="bg-[#0f0a0a] border border-red-900/30 rounded-3xl p-8 relative overflow-hidden group hover:border-red-500/30 transition-all duration-500">
+                                    <div className="absolute top-0 right-0 p-4 opacity-50">
+                                        <AlertTriangle className="w-24 h-24 text-red-900/20" />
+                                    </div>
+
+                                    {/* Dialogue Bubble */}
+                                    <div className="flex justify-end mb-8 relative z-10">
+                                        <div className="bg-[#1c1917] text-gray-400 text-xs py-2 px-4 rounded-full rounded-tr-none border border-white/5 shadow-lg">
+                                            {t('home.ai_risk_example')}
+                                        </div>
+                                    </div>
+
+                                    {/* Alert Box */}
+                                    <div className="bg-[#1f1212] border border-red-500/20 rounded-2xl p-6 mb-8 relative z-10 animate-pulse">
+                                        <div className="flex items-center gap-2 mb-3 text-red-400 font-bold text-sm">
+                                            <Lock className="w-4 h-4" /> {t('home.ai_risk_warning')}
+                                        </div>
+                                        <div className="text-red-200 text-sm leading-relaxed mb-4">
+                                            {t('home.ai_risk_backtesting')}
+                                        </div>
+                                        <button className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                                            <Snowflake className="w-3 h-3" /> {t('home.ai_risk_button')}
+                                        </button>
+                                    </div>
+
+                                    <h3 className="text-2xl font-black text-white mb-3 flex items-center gap-2">
+                                        <span className="text-red-500">#</span> {t('home.ai_risk_title')}
+                                    </h3>
+                                    <p className="text-gray-400 text-sm leading-relaxed">
+                                        {t('home.ai_risk_desc')}
+                                    </p>
+                                </div>
+
+                                {/* Card 2: Emotion ROI Visualization */}
+                                <div className="bg-[#0a0f0a] border border-emerald-900/30 rounded-3xl p-8 relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-500">
+
+                                    {/* Chart Visualization */}
+                                    <div className="flex items-end justify-between gap-4 h-32 mb-8 relative z-10 px-4 mt-10">
+                                        {/* FOMO Bar */}
+                                        <div className="flex flex-col items-center gap-2 w-1/3 group/bar1">
+                                            <div className="w-full h-16 bg-gradient-to-t from-red-900/50 to-red-500/20 rounded-t-lg border-t border-red-500/30 relative">
+                                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-red-500 font-mono opacity-0 group-hover/bar1:opacity-100 transition-opacity whitespace-nowrap">-92% ROI</div>
+                                            </div>
+                                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">{t('home.fomo_entry')}</div>
+                                            <div className="text-[10px] text-gray-600 text-center">{t('home.fomo_trades')}</div>
+                                        </div>
+
+                                        <div className="text-2xl font-black text-gray-700 italic">VS</div>
+
+                                        {/* PLANNED Bar */}
+                                        <div className="flex flex-col items-center gap-2 w-1/3 group/bar2">
+                                            <div className="absolute -top-6 right-0 text-xl text-emerald-400 font-mono font-bold animate-bounce">+42.8% ROI</div>
+                                            <div className="w-full h-32 bg-gradient-to-t from-emerald-900/50 to-emerald-500/20 rounded-t-lg border-t border-emerald-500/50 relative shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                                            </div>
+                                            <div className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider text-center">{t('home.planned_entry')}</div>
+                                            <div className="text-[10px] text-gray-600 text-center">{t('home.planned_trades')}</div>
+                                        </div>
+                                    </div>
+
+                                    <h3 className="text-2xl font-black text-white mb-3 flex items-center gap-2">
+                                        <span className="text-emerald-500">#</span> {t('home.emotion_roi_title')}
+                                    </h3>
+                                    <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                                        {t('home.emotion_roi_subtitle')}
+                                    </p>
+                                    <p className="text-xs font-bold text-gray-300 bg-white/5 py-2 px-3 rounded-lg border border-white/5">
+                                        {t('home.emotion_roi_desc')}
+                                    </p>
+                                </div>
+                            </div>
+
                             {/* --- Pricing Section (Added for Compliance) --- */}
                             <div className="mt-32 mb-20 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
                                 <div className="text-center mb-16">
@@ -1533,12 +1746,16 @@ function GoldCatApp() {
                                         </ul>
                                         <button
                                             onClick={() => {
-                                                setIsRegisterMode(true);
-                                                setShowLoginModal(true);
+                                                if (user) {
+                                                    setExplicitLandingView(false);
+                                                } else {
+                                                    setIsRegisterMode(true);
+                                                    setShowLoginModal(true);
+                                                }
                                             }}
                                             className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all"
                                         >
-                                            {t('pricing.start_free')}
+                                            {user ? t('pricing.go_dashboard') : t('pricing.start_free')}
                                         </button>
                                     </div>
 
@@ -1579,992 +1796,749 @@ function GoldCatApp() {
                                             ))}
                                         </ul>
                                         <button
+                                            disabled={membership.isPremium}
                                             onClick={() => {
-                                                setIsRegisterMode(true);
-                                                setShowLoginModal(true);
+                                                if (membership.isPremium) return;
+
+                                                if (user) {
+                                                    setShowPaymentModal(true);
+                                                    setPaymentMethod(null);
+                                                } else {
+                                                    setIsRegisterMode(true);
+                                                    setShowLoginModal(true);
+                                                }
                                             }}
-                                            className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02]"
+                                            className={`group relative w-full py-4 ${membership.isPremium
+                                                ? 'bg-neutral-800 text-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-amber-400 to-amber-500 text-black hover:shadow-[0_0_60px_rgba(245,158,11,0.5)] hover:-translate-y-1'} 
+                                                font-black text-lg rounded-xl shadow-[0_0_40px_rgba(245,158,11,0.3)] transition-all overflow-hidden`}
                                         >
-                                            {t('pricing.get_pro')}
+                                            {membership.isPremium ? t('pricing.current_plan') : t('pricing.get_pro')}
                                         </button>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* FAQ Section */}
+                            <div className="max-w-4xl mx-auto mt-32 mb-20 px-4">
+                                <div className="text-center mb-12">
+                                    <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">{t('faq.title')}</h2>
+                                    <p className="text-gray-400 text-sm md:text-base">{t('faq.subtitle')}</p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {Array.isArray(t('faq.items')) && t('faq.items').map((item, index) => (
+                                        <div key={index} className="bg-neutral-900/50 border border-white/5 rounded-2xl overflow-hidden hover:bg-neutral-900/80 transition-colors p-8 text-left">
+                                            <h3 className="text-lg font-bold text-amber-500 mb-4">{item.q}</h3>
+                                            <div className="text-gray-400 text-sm md:text-base leading-relaxed">
+                                                <div dangerouslySetInnerHTML={{ __html: item.a.replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-200">$1</strong>') }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                )}
+                )
+                }
 
-                {user && (
-                    <>
-                        {/* 功能 Tab */}
-                        <div className="flex flex-wrap gap-2 mb-6">
-                            {[
-                                { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
-                                { id: 'journal', label: t('nav.journal'), icon: FileText },
-                                { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain },
-                            ].map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`
+                {
+                    ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
+                        <>
+                            {/* 功能 Tab */}
+                            <div className="flex flex-wrap gap-2 mb-6">
+                                {[
+                                    { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
+                                    { id: 'journal', label: t('nav.journal'), icon: FileText },
+                                    { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain },
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`
                                 flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all
                                 ${activeTab === tab.id
-                                            ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                                            : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-700'}
+                                                ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                                                : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-700'}
                             `}
-                                >
-                                    <tab.icon className="w-4 h-4" />
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* --- 1. 录入交易 (核心) --- */}
-                        {activeTab === 'new_trade' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
-                                {/* 左侧：录入表单 */}
-                                <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-                                    <div className="flex justify-between items-center mb-6 border-b border-neutral-800 pb-4">
-                                        <h2 className="text-xl font-black text-white flex items-center gap-2">
-                                            <Target className="w-5 h-5 text-amber-500" />
-                                            {t('form.title')}
-                                        </h2>
-                                        <span className="text-xs bg-neutral-800 text-gray-400 px-2 py-1 rounded">
-                                            {t('form.today_trade_count', { count: trades.filter(t => t.date === new Date().toLocaleDateString()).length + 1 })}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        {/* 第一行：基础信息 */}
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            <div className="col-span-2 md:col-span-1">
-                                                <label className="block text-xs text-gray-500 mb-1.5">{t('form.direction')}</label>
-                                                <div className="flex bg-neutral-800 rounded-lg p-1">
-                                                    <button
-                                                        onClick={() => handleInputChange('tradeType', 'buy')}
-                                                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'buy' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                    >{t('form.long')}</button>
-                                                    <button
-                                                        onClick={() => handleInputChange('tradeType', 'sell')}
-                                                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'sell' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                    >{t('form.short')}</button>
-                                                </div>
-                                            </div>
-                                            <div className="col-span-2 md:col-span-1">
-                                                <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
-                                                <input
-                                                    type="text" placeholder="BTC/USDT" value={formData.symbol}
-                                                    onChange={e => handleInputChange('symbol', e.target.value.toUpperCase())}
-                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
-                                                />
-                                            </div>
-                                            <div className="col-span-1">
-                                                <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>
-                                                <select
-                                                    value={formData.timeframe}
-                                                    onChange={e => handleInputChange('timeframe', e.target.value)}
-                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                >
-                                                    {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="col-span-1">
-                                                <div className="flex justify-between items-center mb-1.5">
-                                                    <label className="block text-xs text-gray-500">{t('form.pattern')}</label>
-                                                    <button onClick={() => setShowPatternModal(true)} className="text-[10px] text-amber-500 hover:underline flex items-center gap-1">
-                                                        <Settings className="w-3 h-3" /> {t('form.manage')}
-                                                    </button>
-                                                </div>
-                                                <select
-                                                    value={formData.pattern}
-                                                    onChange={e => handleInputChange('pattern', e.target.value)}
-                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                >
-                                                    {patterns.map(p => (
-                                                        <option key={p} value={p}>{p}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {/* Trading Pair Risk Warnings */}
-                                        {tradingPairRisk?.showDailyWarning && (
-                                            <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                                                <div className="text-xs text-red-400 leading-relaxed">
-                                                    <span className="font-bold">{t('risk.daily_loss_warning')}</span>
-                                                    <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {tradingPairRisk?.showHistoricalWarning && (
-                                            <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                                                <div className="text-xs text-orange-400 leading-relaxed">
-                                                    <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
-                                                    <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* 第二行：资金管理 */}
-                                        <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
-                                                    <input
-                                                        type="number" placeholder="1000" value={formData.margin}
-                                                        onChange={e => handleInputChange('margin', e.target.value)}
-                                                        step="any"
-                                                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.leverage')}</label>
-                                                    <input
-                                                        type="number" placeholder="10" value={formData.leverage}
-                                                        onChange={e => handleInputChange('leverage', e.target.value)}
-                                                        step="any"
-                                                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* 第三行：点位执行 */}
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
-                                                <input
-                                                    type="number" placeholder="0.00" value={formData.entryPrice}
-                                                    onChange={e => handleInputChange('entryPrice', e.target.value)}
-                                                    step="any"
-                                                    className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono font-bold notranslate"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1.5 text-red-400">{t('form.stop_loss')}</label>
-                                                <input
-                                                    type="number" placeholder="0.00" value={formData.stopLoss}
-                                                    onChange={e => handleInputChange('stopLoss', e.target.value)}
-                                                    step="any"
-                                                    className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
-                                                />
-                                                {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
-                                                {formData.entryPrice && formData.stopLoss && formData.margin && (
-                                                    <div className="text-[10px] text-gray-500 mt-1">
-                                                        预计亏损: <span className="text-red-500">
-                                                            ${Math.abs(((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
-                                                <input
-                                                    type="number" placeholder="0.00" value={formData.takeProfit}
-                                                    onChange={e => handleInputChange('takeProfit', e.target.value)}
-                                                    step="any"
-                                                    className={`w-full bg-neutral-800 border ${validationErrors.takeProfit ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-green-500 focus:outline-none font-mono notranslate`}
-                                                />
-                                                {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
-                                                {formData.entryPrice && formData.takeProfit && formData.margin && (
-                                                    <div className="text-[10px] text-gray-500 mt-1">
-                                                        预计盈利: <span className="text-green-500">
-                                                            ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* 提交按钮区域 */}
-                                        <div className="pt-4">
-                                            {!membership.isPremium && trades.length >= membership.maxTrades ? (
-                                                <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
-                                                    <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
-                                                    <span className="text-xs font-normal">{t('form.quota_desc')}</span>
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => {
-                                                        if (!riskAnalysis.valid) {
-                                                            setIsShaking(true);
-                                                            setTimeout(() => setIsShaking(false), 500);
-                                                            return;
-                                                        }
-                                                        handleSubmitTrade();
-                                                    }}
-                                                    className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
-                                                >
-                                                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
-                                                </button>)}
-                                            <p className="text-center text-xs text-gray-600 mt-3">
-                                                {t('form.honest_note')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 右侧：实时风控面板 */}
-                                <div className="space-y-6">
-                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
-                                        <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
-                                            <Shield className="w-4 h-4 text-amber-500" />
-                                            {t('risk.title')}
-                                        </h3>
-
-                                        {/* Total Capital Management */}
-                                        <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
-                                                {!isEditingCapital && (
-                                                    <button onClick={() => setIsEditingCapital(true)} className="text-amber-500 hover:text-amber-400">
-                                                        <Edit3 className="w-3 h-3" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                            {isEditingCapital ? (
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        value={totalCapital}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            if (val === '' || val === '-') {
-                                                                setTotalCapital('');
-                                                            } else {
-                                                                const parsed = parseFloat(val);
-                                                                setTotalCapital(isNaN(parsed) ? 0 : parsed);
-                                                            }
-                                                        }}
-                                                        className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
-                                                        autoFocus
-                                                    />
-                                                    <button onClick={() => setIsEditingCapital(false)} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
-                                                </div>
-                                            ) : (
-                                                <div className="text-xl font-black font-mono text-white tracking-wider">
-                                                    ${(totalCapital || 0).toLocaleString()}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
-                                                <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
-                                                <div className="text-3xl font-black font-mono flex items-end gap-2">
-                                                    {riskAnalysis.rrRatio || '0.00'}
-                                                    <span className="text-sm font-normal text-gray-400 mb-1">
-                                                        {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="p-3 bg-neutral-800 rounded-lg">
-                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
-                                                    <div className="text-lg font-bold font-mono text-white notranslate">
-                                                        {riskAnalysis.positionSize.toLocaleString()} USDT
-                                                    </div>
-                                                </div>
-                                                <div className="p-3 bg-neutral-800 rounded-lg">
-                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
-                                                    <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
-                                                        {riskAnalysis.riskPercent}%
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {riskAnalysis.riskPercent > 10 && (
-                                                <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
-                                                    <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                                    <p className="text-xs text-red-400 leading-relaxed">
-                                                        <span className="font-bold">{t('risk.warning_title')}</span>
-                                                        {t('risk.warning_msg')}
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {riskAnalysis.accountRiskPercent > 10 && (
-                                                <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > 15 ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
-                                                    <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-500' : 'text-yellow-500'}`} />
-                                                    <div className="text-xs leading-relaxed">
-                                                        <p className={`font-bold ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-400' : 'text-yellow-400'}`}>
-                                                            {riskAnalysis.accountRiskPercent > 15 ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
-                                                        </p>
-                                                        <p className="text-gray-400">
-                                                            当前账户风险为 {riskAnalysis.accountRiskPercent}%，
-                                                            {riskAnalysis.accountRiskPercent > 15 ? '严重超出安全范围 (>15%)！建议大幅降低仓位。' : '已超出建议值 (10%)，请谨慎操作。'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className="mt-4 pt-4 border-t border-neutral-800">
-                                                <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
-                                                <div className="space-y-2">
-                                                    {[
-                                                        { id: 'trend', label: t('risk.check_trend') },
-                                                        { id: 'close', label: t('risk.check_close') },
-                                                        { id: 'structure', label: t('risk.check_structure') }
-                                                    ].map(item => (
-                                                        <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
-                                                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
-                                                                {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
-                                                            </div>
-                                                            <input
-                                                                type="checkbox"
-                                                                className="hidden"
-                                                                checked={checklist[item.id]}
-                                                                onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                                                            />
-                                                            <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
-                                                        </label>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Market Sentiment (Moved from AI Analysis) */}
-                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-                                        <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
-                                            <Activity className="w-4 h-4 text-blue-400" />
-                                            <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
-                                        </div>
-
-                                        {/* BTC Price */}
-                                        <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
-                                                    <span className="text-[#F7931A] font-bold text-xs">₿</span>
-                                                </div>
-                                                <div>
-                                                    <div className="text-[10px] text-gray-400">BTC/USDT</div>
-                                                    <div className="text-sm font-bold text-white">
-                                                        ${(btcMarket.price || 0).toLocaleString()}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                    {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Fear & Greed */}
-                                        <div className="flex flex-col items-center justify-center py-2">
-                                            {(() => {
-                                                const fearIndex = 30 + (new Date().getDate() % 20);
-                                                return (
-                                                    <>
-                                                        <div className="flex items-baseline gap-2 mb-2">
-                                                            <span className="text-2xl font-black text-white">{fearIndex}</span>
-                                                            <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
-                                                        </div>
-                                                        <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
-                                                            <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
-                                                        </div>
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-                                        <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
-                                            {t('ai.sentiment_tip')}
-                                        </p>
-                                    </div>
-                                </div>
+                                    >
+                                        <tab.icon className="w-4 h-4" />
+                                        {tab.label}
+                                    </button>
+                                ))}
                             </div>
 
-                        )}
+                            {/* --- 1. 录入交易 (核心) --- */}
+                            {activeTab === 'new_trade' && (
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+                                    {/* 左侧：录入表单 */}
+                                    <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+                                        <div className="flex justify-between items-center mb-6 border-b border-neutral-800 pb-4">
+                                            <h2 className="text-xl font-black text-white flex items-center gap-2">
+                                                <Target className="w-5 h-5 text-amber-500" />
+                                                {t('form.title')}
+                                            </h2>
+                                            <span className="text-xs bg-neutral-800 text-gray-400 px-2 py-1 rounded">
+                                                {t('form.today_trade_count', { count: trades.filter(t => t.date === new Date().toLocaleDateString()).length + 1 })}
+                                            </span>
+                                        </div>
 
-                        {/* --- 2. 交易日记列表 --- */}
-                        {activeTab === 'journal' && (
-                            <div
-                                className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4"
-                                ref={(el) => {
-                                    if (el) {
-                                        console.log('🔍 Journal Tab Grid Container Width:', el.offsetWidth);
-                                        const child = el.querySelector('.lg\\:col-span-3');
-                                        if (child) {
-                                            console.log('🔍 Journal Tab Content Width:', child.offsetWidth);
-                                        }
-                                    }
-                                }}
-                            >
-                                <div className="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-                                    <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
-                                        <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
-                                        <div className="text-sm text-gray-400 flex items-center gap-4">
-                                            <div className="flex items-center gap-2">
-                                                <span>{t('journal.total_trades')}: <span className="text-white font-bold">{trades.length}</span></span>
-                                                <span className="text-gray-600">|</span>
-                                                <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
-                                                <span className="text-gray-600">|</span>
-                                                <span>{t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span></span>
+                                        <div className="space-y-6">
+                                            {/* 第一行：基础信息 */}
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div className="col-span-2 md:col-span-1">
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.direction')}</label>
+                                                    <div className="flex bg-neutral-800 rounded-lg p-1">
+                                                        <button
+                                                            onClick={() => handleInputChange('tradeType', 'buy')}
+                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'buy' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                                        >{t('form.long')}</button>
+                                                        <button
+                                                            onClick={() => handleInputChange('tradeType', 'sell')}
+                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'sell' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                                        >{t('form.short')}</button>
+                                                    </div>
+                                                </div>
+                                                <div className="col-span-2 md:col-span-1">
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
+                                                    <input
+                                                        type="text" placeholder="BTC/USDT" value={formData.symbol}
+                                                        onChange={e => handleInputChange('symbol', e.target.value.toUpperCase())}
+                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
+                                                    />
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>
+                                                    <select
+                                                        value={formData.timeframe}
+                                                        onChange={e => handleInputChange('timeframe', e.target.value)}
+                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
+                                                    >
+                                                        {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <label className="block text-xs text-gray-500">{t('form.pattern')}</label>
+                                                        <button onClick={() => setShowPatternModal(true)} className="text-[10px] text-amber-500 hover:underline flex items-center gap-1">
+                                                            <Settings className="w-3 h-3" /> {t('form.manage')}
+                                                        </button>
+                                                    </div>
+                                                    <select
+                                                        value={formData.pattern}
+                                                        onChange={e => handleInputChange('pattern', e.target.value)}
+                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
+                                                    >
+                                                        {patterns.map(p => (
+                                                            <option key={p} value={p}>{p}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <button
-                                                onClick={handleExportTrades}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors"
-                                            >
-                                                <FileText className="w-3.5 h-3.5" />
-                                                {t('journal.export_csv')}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    {trades.length === 0 ? (
-                                        <div className="p-20 text-center text-gray-600">
-                                            <Package className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                            <p>{t('journal.empty_state')}</p>
-                                        </div>
-                                    ) : (
-                                        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                                            <table className="w-full text-left text-sm whitespace-nowrap">
-                                                <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
-                                                    <tr>
-                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.date')}</th>
-                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[120px]">{t('journal.columns.symbol_dir')}</th>
-                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[180px]">{t('journal.columns.basis')}</th>
-                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[80px]">{t('journal.columns.rr')}</th>
-                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.status')}</th>
-                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">{t('journal.columns.review_content')}</th>
-                                                        <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[180px]">{t('journal.columns.action')}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-neutral-800">
-                                                    {trades.map(trade => (
-                                                        <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
-                                                            <td className="px-4 py-4 font-mono text-gray-400 text-xs">{trade.date}</td>
-                                                            <td className="px-4 py-4">
-                                                                <div className="font-bold text-white text-sm">{trade.symbol}</div>
-                                                                <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
-                                                                    {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-4">
-                                                                <div className="flex flex-col gap-1">
-                                                                    <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700 inline-block w-fit">
-                                                                        {trade.timeframe}
-                                                                    </span>
-                                                                    <span className="text-gray-400 text-xs">{trade.pattern || '-'}</span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-4 font-mono group relative text-sm">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <span>{trade.rrRatio}</span>
-                                                                    <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
-                                                                </div>
-                                                                {/* Tooltip with price details */}
-                                                                <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
-                                                                    <div className="space-y-1.5">
-                                                                        <div className="flex justify-between gap-3">
-                                                                            <span className="text-gray-400">{t('journal.entry_price')}</span>
-                                                                            <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
-                                                                        </div>
-                                                                        {trade.stopLoss && (
-                                                                            <div className="flex justify-between gap-3">
-                                                                                <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
-                                                                                <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
-                                                                            </div>
-                                                                        )}
-                                                                        {trade.takeProfit && (
-                                                                            <div className="flex justify-between gap-3">
-                                                                                <span className="text-gray-400">{t('journal.take_profit_price')}</span>
-                                                                                <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-4">
-                                                                <div className="flex items-center gap-2">
-                                                                    {trade.status === 'open' ? (
-                                                                        <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
-                                                                    ) : (
-                                                                        <>
-                                                                            <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
-                                                                            </span>
-                                                                            {trade.violatedDiscipline && (
-                                                                                <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
-                                                                            )}
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-4 max-w-[300px]">
-                                                                {trade.review ? (
-                                                                    <div className="text-xs text-gray-300 truncate" title={trade.review}>
-                                                                        {trade.review}
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-xs text-gray-600 italic">{t('journal.not_reviewed')}</span>
-                                                                )}
-                                                            </td>
-                                                            <td className="px-4 py-4">
-                                                                <div className="flex items-center justify-center gap-2">
-                                                                    {/* Settle/Closed button */}
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            if (trade.status === 'open') {
-                                                                                handleSettleTrade(trade.id);
-                                                                            }
-                                                                        }}
-                                                                        disabled={trade.status !== 'open'}
-                                                                        className={`
-                                                                            px-3 py-1.5 rounded border text-xs font-bold transition-all min-w-[70px]
-                                                                            ${trade.status === 'open'
-                                                                                ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
-                                                                                : 'border-neutral-700 text-gray-600 cursor-not-allowed bg-neutral-800/50'}
-                                                                        `}
-                                                                    >
-                                                                        {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
-                                                                    </button>
 
-                                                                    {/* Review button */}
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleReviewTrade(trade);
-                                                                        }}
-                                                                        className={`
-                                                                            px-3 py-1.5 rounded text-xs font-medium transition-all w-[100px] flex items-center justify-center gap-1
-                                                                            ${trade.review
-                                                                                ? 'bg-green-900/30 text-green-400 border border-green-500/30 hover:bg-green-900/50'
-                                                                                : 'bg-neutral-800 text-gray-400 border border-neutral-700 hover:bg-neutral-700 hover:text-white'}
-                                                                        `}
-                                                                    >
-                                                                        {trade.review ? (
-                                                                            <>
-                                                                                <CheckCircle2 className="w-3 h-3" />
-                                                                                <span>{t('journal.reviewed')}</span>
-                                                                            </>
-                                                                        ) : (
-                                                                            <span>{t('journal.review')}</span>
-                                                                        )}
-                                                                    </button>
+                                            {/* Trading Pair Risk Warnings */}
+                                            {tradingPairRisk?.showDailyWarning && (
+                                                <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                    <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                                    <div className="text-xs text-red-400 leading-relaxed">
+                                                        <span className="font-bold">{t('risk.daily_loss_warning')}</span>
+                                                        <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
+                                                    </div>
+                                                </div>
+                                            )}
 
-                                                                    {/* Delete button */}
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setTradeToDelete(trade);
-                                                                            setShowDeleteModal(true);
-                                                                        }}
-                                                                        className="p-2 rounded border border-neutral-700 text-gray-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-900/20 transition-all"
-                                                                        title={language === 'zh' ? '删除交易' : 'Delete Trade'}
-                                                                    >
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
+                                            {tradingPairRisk?.showHistoricalWarning && (
+                                                <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                    <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                                                    <div className="text-xs text-orange-400 leading-relaxed">
+                                                        <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
+                                                        <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
+                                                    </div>
+                                                </div>
+                                            )}
 
-                                    {/* 100笔交易修炼进度 */}
-                                    <div className="p-6 border-t border-neutral-800">
-                                        <div className="w-full">
-                                            <div className="flex items-center justify-between mb-4">
+                                            {/* 第二行：资金管理 */}
+                                            <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
+                                                        <input
+                                                            type="number" placeholder="1000" value={formData.margin}
+                                                            onChange={e => handleInputChange('margin', e.target.value)}
+                                                            step="any"
+                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-500 mb-1.5">{t('form.leverage')}</label>
+                                                        <input
+                                                            type="number" placeholder="10" value={formData.leverage}
+                                                            onChange={e => handleInputChange('leverage', e.target.value)}
+                                                            step="any"
+                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* 第三行：点位执行 */}
+                                            <div className="grid grid-cols-3 gap-4">
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                                        {language === 'zh' ? '交易纪律重塑之路' : 'The Path to Discipline'}
-                                                        {trades.length >= 100 && (
-                                                            <span className="text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded-full animate-pulse">
-                                                                {language === 'zh' ? '已出师！' : 'Mastered!'}
+                                                    <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
+                                                    <input
+                                                        type="number" placeholder="0.00" value={formData.entryPrice}
+                                                        onChange={e => handleInputChange('entryPrice', e.target.value)}
+                                                        step="any"
+                                                        className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono font-bold notranslate"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5 text-red-400">{t('form.stop_loss')}</label>
+                                                    <input
+                                                        type="number" placeholder="0.00" value={formData.stopLoss}
+                                                        onChange={e => handleInputChange('stopLoss', e.target.value)}
+                                                        step="any"
+                                                        className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
+                                                    />
+                                                    {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
+                                                    {formData.entryPrice && formData.stopLoss && formData.margin && (
+                                                        <div className="text-[10px] text-gray-500 mt-1">
+                                                            预计亏损: <span className="text-red-500">
+                                                                ${Math.abs(((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
                                                             </span>
-                                                        )}
-                                                    </h3>
-                                                    <p className="text-xs text-gray-500">
-                                                        {language === 'zh'
-                                                            ? '完成100笔手动记录，把交易变成一种本能。'
-                                                            : 'Log 100 trades manually to master your psychology.'}
-                                                    </p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="text-2xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                                                        {trades.length}/100
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        {language === 'zh' ? '已完成交易' : 'Trades Completed'}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Progress Bar */}
-                                            <div className="relative h-3 bg-neutral-800 rounded-full overflow-hidden select-none pointer-events-none">
-                                                <div
-                                                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-500 ease-out"
-                                                    style={{ width: `${Math.min((trades.length / 100) * 100, 100)}%` }}
-                                                >
-                                                    {/* AI Tech Flow Animation */}
-                                                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] animate-[shimmer_2s_infinite] border-r border-white/30"></div>
-
-                                                    {trades.length >= 100 && (
-                                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-pulse"></div>
+                                                        </div>
                                                     )}
                                                 </div>
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <span className="text-[10px] font-bold text-white drop-shadow-lg">
-                                                        {Math.min((trades.length / 100) * 100, 100).toFixed(0)}%
-                                                    </span>
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
+                                                    <input
+                                                        type="number" placeholder="0.00" value={formData.takeProfit}
+                                                        onChange={e => handleInputChange('takeProfit', e.target.value)}
+                                                        step="any"
+                                                        className={`w-full bg-neutral-800 border ${validationErrors.takeProfit ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-green-500 focus:outline-none font-mono notranslate`}
+                                                    />
+                                                    {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
+                                                    {formData.entryPrice && formData.takeProfit && formData.margin && (
+                                                        <div className="text-[10px] text-gray-500 mt-1">
+                                                            预计盈利: <span className="text-green-500">
+                                                                ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            {/* Milestone Messages */}
-                                            <div className="mt-4 text-center">
-                                                {trades.length >= 100 ? (
-                                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-lg">
-                                                        <span className="text-sm font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                                                            {language === 'zh'
-                                                                ? '🏆 试炼通关！ 恭喜！你已完成百场洗礼，正式晋升为纪律交易者。'
-                                                                : '🏆 Trial Cleared! 100 trades survived. You have evolved into a Disciplined Trader.'}
-                                                        </span>
-                                                    </div>
-                                                ) : trades.length >= 75 ? (
-                                                    <p className="text-xs text-amber-500">
-                                                        {language === 'zh' ? (
-                                                            <>决胜时刻： 距离解锁 <span className="font-bold text-amber-400">【百炼成金】</span> 成就，仅差 <span className="font-bold">{100 - trades.length}</span> 场战斗！</>
-                                                        ) : (
-                                                            <>Final Stretch: Just <span className="font-bold">{100 - trades.length}</span> battles away from unlocking the "Forged in Gold" achievement!</>
-                                                        )}
-                                                    </p>
-                                                ) : trades.length >= 50 ? (
-                                                    <p className="text-xs text-gray-500">
-                                                        {language === 'zh'
-                                                            ? '半程里程碑： 进度条过半！你的纪律属性正在战胜情绪恶魔。'
-                                                            : 'Halfway Point: Progress 50%! Your Discipline Stat is crushing your Emotion Demon.'}
-                                                    </p>
-                                                ) : trades.length >= 25 ? (
-                                                    <p className="text-xs text-gray-500">
-                                                        {language === 'zh'
-                                                            ? '交易者觉醒： 这是一个伟大的开端，你正在建立自己的交易圣经。'
-                                                            : 'Trader Awakening: A legendary start. You are writing your own trading bible.'}
-                                                    </p>
-                                                ) : null}
+                                            {/* 提交按钮区域 */}
+                                            <div className="pt-4">
+                                                {!membership.isPremium && trades.length >= membership.maxTrades ? (
+                                                    <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
+                                                        <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
+                                                        <span className="text-xs font-normal">{t('form.quota_desc')}</span>
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!riskAnalysis.valid) {
+                                                                setIsShaking(true);
+                                                                setTimeout(() => setIsShaking(false), 500);
+                                                                return;
+                                                            }
+                                                            handleSubmitTrade();
+                                                        }}
+                                                        className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
+                                                    >
+                                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
+                                                    </button>)}
+                                                <p className="text-center text-xs text-gray-600 mt-3">
+                                                    {t('form.honest_note')}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        )}
 
-                        {/* --- 3. AI 行为诊断 (核心卖点) --- */}
-                        {
-                            activeTab === 'ai_analysis' && (
-                                <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
-                                    {/* 会员锁定遮罩 */}
-                                    {!membership.isPremium && (
-                                        <div className="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30 relative overflow-hidden text-center">
-                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-                                            <Lock className="w-16 h-16 text-amber-500 mb-6 mx-auto relative z-10" />
-                                            <h2 className="text-3xl font-black text-white mb-4 relative z-10">{t('ai.locked_title')}</h2>
-                                            <p className="text-gray-400 mb-8 text-lg relative z-10">
-                                                {t('ai.locked_desc')}
-                                            </p>
-                                            <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="relative z-10 bg-amber-500 hover:bg-amber-400 text-black font-bold px-10 py-4 rounded-xl shadow-xl shadow-amber-500/20 text-lg hover:scale-105 transition-transform inline-flex items-center gap-2">
-                                                <Crown className="w-5 h-5" /> {t('ai.unlock_btn')}
-                                            </button>
+                                    {/* 右侧：实时风控面板 */}
+                                    <div className="space-y-6">
+                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
+                                            <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
+                                                <Shield className="w-4 h-4 text-amber-500" />
+                                                {t('risk.title')}
+                                            </h3>
+
+                                            {/* Total Capital Management */}
+                                            <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
+                                                    {!isEditingCapital && (
+                                                        <button onClick={() => setIsEditingCapital(true)} className="text-amber-500 hover:text-amber-400">
+                                                            <Edit3 className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {isEditingCapital ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            type="number"
+                                                            value={totalCapital}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (val === '' || val === '-') {
+                                                                    setTotalCapital('');
+                                                                } else {
+                                                                    const parsed = parseFloat(val);
+                                                                    setTotalCapital(isNaN(parsed) ? 0 : parsed);
+                                                                }
+                                                            }}
+                                                            className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
+                                                            autoFocus
+                                                        />
+                                                        <button onClick={() => setIsEditingCapital(false)} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xl font-black font-mono text-white tracking-wider">
+                                                        ${(totalCapital || 0).toLocaleString()}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
+                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
+                                                    <div className="text-3xl font-black font-mono flex items-end gap-2">
+                                                        {riskAnalysis.rrRatio || '0.00'}
+                                                        <span className="text-sm font-normal text-gray-400 mb-1">
+                                                            {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="p-3 bg-neutral-800 rounded-lg">
+                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
+                                                        <div className="text-lg font-bold font-mono text-white notranslate">
+                                                            {riskAnalysis.positionSize.toLocaleString()} USDT
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-3 bg-neutral-800 rounded-lg">
+                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
+                                                        <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
+                                                            {riskAnalysis.riskPercent}%
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {riskAnalysis.riskPercent > 10 && (
+                                                    <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
+                                                        <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                                                        <p className="text-xs text-red-400 leading-relaxed">
+                                                            <span className="font-bold">{t('risk.warning_title')}</span>
+                                                            {t('risk.warning_msg')}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {riskAnalysis.accountRiskPercent > 10 && (
+                                                    <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > 15 ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
+                                                        <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-500' : 'text-yellow-500'}`} />
+                                                        <div className="text-xs leading-relaxed">
+                                                            <p className={`font-bold ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-400' : 'text-yellow-400'}`}>
+                                                                {riskAnalysis.accountRiskPercent > 15 ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
+                                                            </p>
+                                                            <p className="text-gray-400">
+                                                                当前账户风险为 {riskAnalysis.accountRiskPercent}%，
+                                                                {riskAnalysis.accountRiskPercent > 15 ? '严重超出安全范围 (>15%)！建议大幅降低仓位。' : '已超出建议值 (10%)，请谨慎操作。'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="mt-4 pt-4 border-t border-neutral-800">
+                                                    <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
+                                                    <div className="space-y-2">
+                                                        {[
+                                                            { id: 'trend', label: t('risk.check_trend') },
+                                                            { id: 'close', label: t('risk.check_close') },
+                                                            { id: 'structure', label: t('risk.check_structure') }
+                                                        ].map(item => (
+                                                            <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
+                                                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
+                                                                    {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
+                                                                </div>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="hidden"
+                                                                    checked={checklist[item.id]}
+                                                                    onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                                                />
+                                                                <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    )}
 
-                                    {membership.isPremium && (
-                                        <div className="lg:col-span-3 space-y-6">
-                                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-                                                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                                                    <Brain className="w-5 h-5 text-amber-500" />
-                                                    {t('ai.gene_title')}
-                                                </h3>
+                                        {/* Market Sentiment (Moved from AI Analysis) */}
+                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+                                            <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
+                                                <Activity className="w-4 h-4 text-blue-400" />
+                                                <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
+                                            </div>
 
+                                            {/* BTC Price */}
+                                            <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
+                                                        <span className="text-[#F7931A] font-bold text-xs">₿</span>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-[10px] text-gray-400">BTC/USDT</div>
+                                                        <div className="text-sm font-bold text-white">
+                                                            ${(btcMarket.price || 0).toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                        {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Fear & Greed */}
+                                            <div className="flex flex-col items-center justify-center py-2">
                                                 {(() => {
-                                                    // 只分析已结算的交易
-                                                    const settledTrades = trades.filter(t => t.status === 'closed');
-
-                                                    // 如果没有已结算的交易，显示提示信息
-                                                    if (settledTrades.length === 0) {
-                                                        return (
-                                                            <div className="text-center py-12">
-                                                                <div className="mb-4">
-                                                                    <Activity className="w-16 h-16 mx-auto text-gray-600" />
-                                                                </div>
-                                                                <div className="text-lg font-bold text-gray-400 mb-2">
-                                                                    {language === 'zh' ? '数据不足' : 'Insufficient Data'}
-                                                                </div>
-                                                                <div className="text-sm text-gray-500">
-                                                                    {language === 'zh'
-                                                                        ? '请至少结算一笔交易后，AI 才能为您生成分析报告。'
-                                                                        : 'Please settle at least one trade for AI analysis.'}
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    }
-
-                                                    // 1. Calculate Best Pattern (只用已结算的交易)
-                                                    const patternStats = {};
-                                                    settledTrades.forEach(trade => {
-                                                        const p = trade.pattern || t('ai.unrecorded');
-                                                        if (!patternStats[p]) patternStats[p] = { wins: 0, total: 0 };
-                                                        patternStats[p].total++;
-                                                        if (trade.profitLoss > 0) patternStats[p].wins++;
-                                                    });
-                                                    let bestPattern = t('ai.not_enough_data');
-                                                    let bestWinRate = 0;
-                                                    Object.entries(patternStats).forEach(([pattern, stats]) => {
-                                                        // Skip 'Unrecorded' if possible, unless it's the only one
-                                                        if (pattern === t('ai.unrecorded') && Object.keys(patternStats).length > 1) return;
-
-                                                        // At least 3 trades needed for statistical significance
-                                                        if (stats.total < 3) return;
-
-                                                        const rate = stats.wins / stats.total;
-
-                                                        // Strict comparison: only replace if win rate is higher
-                                                        // If same win rate, prefer pattern with more trades (more reliable)
-                                                        const currentBestTotal = patternStats[bestPattern]?.total || 0;
-                                                        if (rate > bestWinRate || (rate === bestWinRate && stats.total > currentBestTotal)) {
-                                                            bestWinRate = rate;
-                                                            bestPattern = pattern;
-                                                        }
-                                                    });
-
-                                                    // 2. Calculate Worst Timeframe (只用已结算的交易)
-                                                    const tfStats = {};
-                                                    settledTrades.forEach(trade => {
-                                                        const tf = trade.timeframe || t('ai.unrecorded');
-                                                        if (!tfStats[tf]) tfStats[tf] = { losses: 0, total: 0 };
-                                                        tfStats[tf].total++;
-                                                        if (trade.profitLoss < 0) tfStats[tf].losses++;
-                                                    });
-                                                    let worstTimeframe = t('ai.not_enough_data');
-                                                    let worstLossRate = -1;
-                                                    Object.entries(tfStats).forEach(([tf, stats]) => {
-                                                        // Skip 'Unrecorded' if possible
-                                                        if (tf === t('ai.unrecorded') && Object.keys(tfStats).length > 1) return;
-
-                                                        // At least 3 trades needed for statistical significance
-                                                        if (stats.total < 3) return;
-
-                                                        const rate = stats.losses / stats.total;
-
-                                                        // Strict comparison: only replace if loss rate is higher
-                                                        // If same loss rate, prefer timeframe with more trades (more reliable)
-                                                        const currentWorstTotal = tfStats[worstTimeframe]?.total || 0;
-                                                        if (rate > worstLossRate || (rate === worstLossRate && stats.total > currentWorstTotal)) {
-                                                            worstLossRate = rate;
-                                                            worstTimeframe = tf;
-                                                        }
-                                                    });
-
-                                                    // 3. Calculate Discipline Score (只用已结算的交易)
-                                                    // Base 100, deduct for bad R:R, deduct for large losses
-                                                    let score = 100;
-                                                    if (settledTrades.length > 0) {
-                                                        const badRRTrades = settledTrades.filter(t => (parseFloat(t.rrRatio) || 0) < 1.5).length;
-                                                        score -= (badRRTrades / settledTrades.length) * 30;
-
-                                                        const losingTrades = settledTrades.filter(t => t.profitLoss < 0);
-                                                        const winningTrades = settledTrades.filter(t => t.profitLoss > 0);
-
-                                                        const avgLoss = losingTrades.length > 0
-                                                            ? losingTrades.reduce((acc, t) => acc + Math.abs(t.profitLoss), 0) / losingTrades.length
-                                                            : 0;
-                                                        const avgWin = winningTrades.length > 0
-                                                            ? winningTrades.reduce((acc, t) => acc + t.profitLoss, 0) / winningTrades.length
-                                                            : 1; // Avoid division by zero if no wins
-
-                                                        if (avgLoss > avgWin) score -= 20;
-                                                    }
-
-                                                    // 4. Review & PnL Check (只用已结算的交易)
-                                                    const reviewedTrades = settledTrades.filter(t => t.review && t.review.length > 5).length;
-                                                    const reviewRate = settledTrades.length > 0 ? reviewedTrades / settledTrades.length : 0;
-                                                    if (reviewRate < 0.5) score -= 10; // Deduct if less than 50% reviewed
-
-                                                    const totalPnL = settledTrades.reduce((acc, t) => acc + (t.profitLoss || 0), 0);
-
-                                                    score = Math.max(0, Math.round(score));
-
+                                                    const fearIndex = 30 + (new Date().getDate() % 20);
                                                     return (
                                                         <>
-                                                            <div className="grid grid-cols-3 gap-4 mb-6">
-                                                                <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700">
-                                                                    <div className="text-xs text-gray-500 mb-1">{t('ai.best_pattern')}</div>
-                                                                    {settledTrades.length < 5 ? (
-                                                                        <div className="text-sm text-gray-500 py-2">{language === 'zh' ? '数据不足' : 'Insufficient Data'}</div>
-                                                                    ) : (
-                                                                        <>
-                                                                            <div className="text-lg font-bold text-green-400">{bestPattern}</div>
-                                                                            <div className="text-xs text-gray-600 mt-1">{t('journal.win_rate')} {bestPattern !== t('ai.not_enough_data') ? (bestWinRate * 100).toFixed(0) : 0}%</div>
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                                <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700">
-                                                                    <div className="text-xs text-gray-500 mb-1">{t('ai.worst_timeframe')}</div>
-                                                                    {settledTrades.length < 5 ? (
-                                                                        <div className="text-sm text-gray-500 py-2">{language === 'zh' ? '数据不足' : 'Insufficient Data'}</div>
-                                                                    ) : (
-                                                                        <>
-                                                                            <div className="text-lg font-bold text-red-400">{worstTimeframe}</div>
-                                                                            <div className="text-xs text-gray-600 mt-1">{t('journal.status.loss')} {worstTimeframe !== t('ai.not_enough_data') ? (worstLossRate * 100).toFixed(0) : 0}%</div>
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                                <div className="p-4 bg-neutral-800/50 rounded-xl text-center border border-neutral-700 relative group">
-                                                                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                                                                        <div className="text-xs text-gray-500 border-b border-dashed border-gray-600 inline-block">{t('ai.discipline_score')}</div>
-                                                                        <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors cursor-help" />
-                                                                    </div>
-                                                                    <div className={`text-lg font-bold ${score >= 80 ? 'text-green-500' : score >= 60 ? 'text-amber-500' : 'text-red-500'}`}>{score}/100</div>
-                                                                    <div className="text-xs text-gray-600 mt-1">{score >= 80 ? t('ai.score_excellent') : score >= 60 ? t('ai.score_good') : t('ai.score_bad')}</div>
-
-                                                                    {/* Tooltip */}
-                                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                                                        <div className="font-bold text-white mb-1">评分规则：</div>
-                                                                        <ul className="list-disc list-inside space-y-1">
-                                                                            <li><span className="text-red-400">盈亏比 &lt; 1.5</span>：扣分 (权重最高)</li>
-                                                                            <li><span className="text-red-400">平均亏损 &gt; 盈利</span>：扣 20 分</li>
-                                                                            <li><span className="text-amber-500">复盘率 &lt; 50%</span>：扣 10 分</li>
-                                                                        </ul>
-                                                                    </div>
-                                                                </div>
+                                                            <div className="flex items-baseline gap-2 mb-2">
+                                                                <span className="text-2xl font-black text-white">{fearIndex}</span>
+                                                                <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
                                                             </div>
-
-                                                            <div className="bg-neutral-800/30 p-5 rounded-xl border border-neutral-800">
-                                                                <h4 className="text-sm font-bold text-gray-300 mb-3 flex items-center gap-2">
-                                                                    <MessageSquare className="w-4 h-4 text-blue-400" /> {t('ai.diagnosis_title')}
-                                                                </h4>
-                                                                <p className="text-sm text-gray-400 leading-relaxed">
-                                                                    {t('ai.diagnosis_intro', { count: trades.length })}
-                                                                    {trades.length < 5 ? (
-                                                                        t('ai.diagnosis_short')
-                                                                    ) : (
-                                                                        <>
-                                                                            {bestPattern !== t('ai.not_enough_data') ? (
-                                                                                <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5 text-green-500 shrink-0" />{t('ai.diagnosis_pattern', { pattern: bestPattern })}</span>
-                                                                            ) : (
-                                                                                <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5 text-gray-500 shrink-0" />{language === 'zh' ? '数据由于样本不足，暂无最佳形态推荐' : 'Insufficient data for pattern recommendation'}</span>
-                                                                            )}
-
-                                                                            {worstTimeframe !== t('ai.not_enough_data') && (
-                                                                                <span className="flex items-center gap-1.5 mt-1"><AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />{t('ai.diagnosis_timeframe', { timeframe: worstTimeframe })}</span>
-                                                                            )}
-                                                                            {score < 60 && <span className="flex items-center gap-1.5 mt-1"><Shield className="w-3.5 h-3.5 text-amber-500 shrink-0" />{t('ai.diagnosis_discipline')}</span>}
-                                                                            {reviewRate < 0.5 && <span className="flex items-center gap-1.5 text-amber-500 mt-1"><FileText className="w-3.5 h-3.5 shrink-0" />{t('ai.review_warning', { rate: (reviewRate * 100).toFixed(0) })}</span>}
-                                                                            <span className={`flex items-center gap-1.5 mt-2 font-bold ${totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                {totalPnL >= 0 ? <TrendingUp className="w-4 h-4 shrink-0" /> : <TrendingDown className="w-4 h-4 shrink-0" />}
-                                                                                {t('ai.pnl_status', {
-                                                                                    pnl: (totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2) + ' USDT',
-                                                                                    comment: totalPnL < 0 ? t('ai.pnl_comment_bad') : t('ai.pnl_comment_good')
-                                                                                })}
-                                                                            </span>
-
-                                                                            {/* 详细统计分析 */}
-                                                                            <div className="mt-4 p-3 bg-neutral-900/50 rounded-lg border border-neutral-700">
-                                                                                <div className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-2">
-                                                                                    <BarChart3 className="w-3 h-3" /> {t('ai.detailed_analysis')}
-                                                                                </div>
-                                                                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                                                                    <div>
-                                                                                        <span className="text-gray-500 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {t('ai.long_win_rate')}:</span>
-                                                                                        <span className="text-green-400 font-bold">
-                                                                                            {(() => {
-                                                                                                const longs = settledTrades.filter(t => t.direction === 'long' || t.tradeType === 'buy');
-                                                                                                const longWins = longs.filter(t => t.profitLoss > 0).length;
-                                                                                                return longs.length > 0 ? ((longWins / longs.length) * 100).toFixed(0) + '%' : 'N/A';
-                                                                                            })()}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <span className="text-gray-500 flex items-center gap-1"><TrendingDown className="w-3 h-3" /> {t('ai.short_win_rate')}:</span>
-                                                                                        <span className="text-red-400 font-bold">
-                                                                                            {(() => {
-                                                                                                const shorts = settledTrades.filter(t => t.direction === 'short' || t.tradeType === 'sell');
-                                                                                                const shortWins = shorts.filter(t => t.profitLoss > 0).length;
-                                                                                                return shorts.length > 0 ? ((shortWins / shorts.length) * 100).toFixed(0) + '%' : 'N/A';
-                                                                                            })()}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <span className="text-gray-500 flex items-center gap-1"><DollarSign className="w-3 h-3" /> {t('ai.avg_profit_label')}:</span>
-                                                                                        <span className="text-green-400 font-bold">
-                                                                                            {(() => {
-                                                                                                const wins = trades.filter(t => t.profitLoss > 0);
-                                                                                                const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + t.profitLoss, 0) / wins.length : 0;
-                                                                                                return '+$' + avgWin.toFixed(2);
-                                                                                            })()}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <span className="text-gray-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {t('ai.avg_loss_label')}:</span>
-                                                                                        <span className="text-red-400 font-bold">
-                                                                                            {(() => {
-                                                                                                const losses = trades.filter(t => t.profitLoss < 0);
-                                                                                                const avgLoss = losses.length > 0 ? losses.reduce((sum, t) => sum + Math.abs(t.profitLoss), 0) / losses.length : 0;
-                                                                                                return '-$' + avgLoss.toFixed(2);
-                                                                                            })()}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    <div className="col-span-2">
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <span className="text-gray-500 flex items-center gap-1"><Target className="w-3 h-3" /> {t('ai.rr_ratio_label')}:</span>
-                                                                                            <span className="text-amber-400 font-bold">
-                                                                                                {(() => {
-                                                                                                    const wins = trades.filter(t => t.profitLoss > 0);
-                                                                                                    const losses = trades.filter(t => t.profitLoss < 0);
-                                                                                                    const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + t.profitLoss, 0) / wins.length : 0;
-                                                                                                    const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, t) => sum + t.profitLoss, 0) / losses.length) : 1;
-                                                                                                    const plRatio = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : 'N/A';
-                                                                                                    return plRatio + ' ' + (plRatio >= 1.5 ? '✅' : plRatio >= 1 ? '⚠️' : '❌');
-                                                                                                })()}
-                                                                                            </span>
-                                                                                            <span className="text-gray-600 text-xs">{t('ai.rr_recommendation')}</span>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </>
-                                                                    )}
-                                                                </p>
-                                                            </div>
-
-                                                            {/* 资金曲线 */}
-                                                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-                                                                <h3 className="text-lg font-bold text-white mb-4">{t('ai.equity_curve')}</h3>
-                                                                <div className="h-[250px] w-full">
-                                                                    <ResponsiveContainer width="100%" height="100%">
-                                                                        <AreaChart data={trades.filter(t => t.status === 'closed').slice().reverse().reduce((acc, t) => {
-                                                                            const lastVal = acc.length > 0 ? acc[acc.length - 1].val : 0;
-                                                                            const pnl = parseFloat(t.profitLoss) || 0;
-                                                                            acc.push({ i: acc.length, val: lastVal + pnl });
-                                                                            return acc;
-                                                                        }, [])}>
-                                                                            <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
-                                                                            <XAxis dataKey="i" hide />
-                                                                            <YAxis domain={['auto', 'auto']} stroke="#525252" fontSize={10} />
-                                                                            <Tooltip contentStyle={{ backgroundColor: '#171717', border: '1px solid #404040' }} />
-                                                                            <Area type="monotone" dataKey="val" stroke="#fbbf24" fill="#fbbf24" fillOpacity={0.1} />
-                                                                        </AreaChart>
-                                                                    </ResponsiveContainer>
-                                                                </div>
+                                                            <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                                                                <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
                                                             </div>
                                                         </>
                                                     );
                                                 })()}
                                             </div>
+                                            <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
+                                                {t('ai.sentiment_tip')}
+                                            </p>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
-                            )
-                        }
-                    </>
-                )}
+
+                            )}
+
+                            {/* --- 2. 交易日记列表 --- */}
+                            {activeTab === 'journal' && (
+                                <div
+                                    className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4"
+                                    ref={(el) => {
+                                        if (el) {
+                                            console.log('🔍 Journal Tab Grid Container Width:', el.offsetWidth);
+                                            const child = el.querySelector('.lg\\:col-span-3');
+                                            if (child) {
+                                                console.log('🔍 Journal Tab Content Width:', child.offsetWidth);
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <div className="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+                                        <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
+                                            <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
+                                            <div className="text-sm text-gray-400 flex items-center gap-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{t('journal.total_trades')}: <span className="text-white font-bold">{trades.length}</span></span>
+                                                    <span className="text-gray-600">|</span>
+                                                    <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
+                                                    <span className="text-gray-600">|</span>
+                                                    <span>{t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span></span>
+                                                </div>
+                                                <button
+                                                    onClick={handleExportTrades}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors"
+                                                >
+                                                    <FileText className="w-3.5 h-3.5" />
+                                                    {t('journal.export_csv')}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {trades.length === 0 ? (
+                                            <div className="p-20 text-center text-gray-600">
+                                                <Package className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                                                <p>{t('journal.empty_state')}</p>
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                                                <table className="w-full text-left text-sm whitespace-nowrap">
+                                                    <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
+                                                        <tr>
+                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.date')}</th>
+                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[120px]">{t('journal.columns.symbol_dir')}</th>
+                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[180px]">{t('journal.columns.basis')}</th>
+                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[80px]">{t('journal.columns.rr')}</th>
+                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.status')}</th>
+                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">{t('journal.columns.review_content')}</th>
+                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[180px]">{t('journal.columns.action')}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-neutral-800">
+                                                        {trades.map(trade => (
+                                                            <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
+                                                                <td className="px-4 py-4 font-mono text-gray-400 text-xs">{trade.date}</td>
+                                                                <td className="px-4 py-4">
+                                                                    <div className="font-bold text-white text-sm">{trade.symbol}</div>
+                                                                    <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
+                                                                        {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-4 py-4">
+                                                                    <div className="flex flex-col gap-1">
+                                                                        <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700 inline-block w-fit">
+                                                                            {trade.timeframe}
+                                                                        </span>
+                                                                        <span className="text-gray-400 text-xs">{trade.pattern || '-'}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-4 py-4 font-mono group relative text-sm">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <span>{trade.rrRatio}</span>
+                                                                        <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
+                                                                    </div>
+                                                                    {/* Tooltip with price details */}
+                                                                    <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
+                                                                        <div className="space-y-1.5">
+                                                                            <div className="flex justify-between gap-3">
+                                                                                <span className="text-gray-400">{t('journal.entry_price')}</span>
+                                                                                <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
+                                                                            </div>
+                                                                            {trade.stopLoss && (
+                                                                                <div className="flex justify-between gap-3">
+                                                                                    <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
+                                                                                    <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
+                                                                                </div>
+                                                                            )}
+                                                                            {trade.takeProfit && (
+                                                                                <div className="flex justify-between gap-3">
+                                                                                    <span className="text-gray-400">{t('journal.take_profit_price')}</span>
+                                                                                    <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-4 py-4">
+                                                                    <div className="flex items-center gap-2">
+                                                                        {trade.status === 'open' ? (
+                                                                            <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
+                                                                        ) : (
+                                                                            <>
+                                                                                <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                    {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
+                                                                                </span>
+                                                                                {trade.violatedDiscipline && (
+                                                                                    <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
+                                                                                )}
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-4 py-4 max-w-[300px]">
+                                                                    {trade.review ? (
+                                                                        <div className="text-xs text-gray-300 truncate" title={trade.review}>
+                                                                            {trade.review}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-xs text-gray-600 italic">{t('journal.not_reviewed')}</span>
+                                                                    )}
+                                                                </td>
+                                                                <td className="px-4 py-4">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        {/* Settle/Closed button */}
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                if (trade.status === 'open') {
+                                                                                    handleSettleTrade(trade.id);
+                                                                                }
+                                                                            }}
+                                                                            disabled={trade.status !== 'open'}
+                                                                            className={`
+                                                                            px-3 py-1.5 rounded border text-xs font-bold transition-all min-w-[70px]
+                                                                            ${trade.status === 'open'
+                                                                                    ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
+                                                                                    : 'border-neutral-700 text-gray-600 cursor-not-allowed bg-neutral-800/50'}
+                                                                        `}
+                                                                        >
+                                                                            {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
+                                                                        </button>
+
+                                                                        {/* Review button */}
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleReviewTrade(trade);
+                                                                            }}
+                                                                            className={`
+                                                                            px-3 py-1.5 rounded text-xs font-medium transition-all w-[100px] flex items-center justify-center gap-1
+                                                                            ${trade.review
+                                                                                    ? 'bg-green-900/30 text-green-400 border border-green-500/30 hover:bg-green-900/50'
+                                                                                    : 'bg-neutral-800 text-gray-400 border border-neutral-700 hover:bg-neutral-700 hover:text-white'}
+                                                                        `}
+                                                                        >
+                                                                            {trade.review ? (
+                                                                                <>
+                                                                                    <CheckCircle2 className="w-3 h-3" />
+                                                                                    <span>{t('journal.reviewed')}</span>
+                                                                                </>
+                                                                            ) : (
+                                                                                <span>{t('journal.review')}</span>
+                                                                            )}
+                                                                        </button>
+
+                                                                        {/* Delete button */}
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setTradeToDelete(trade);
+                                                                                setShowDeleteModal(true);
+                                                                            }}
+                                                                            className="p-2 rounded border border-neutral-700 text-gray-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-900/20 transition-all"
+                                                                            title={language === 'zh' ? '删除交易' : 'Delete Trade'}
+                                                                        >
+                                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+
+                                        {/* 100笔交易修炼进度 */}
+                                        <div className="p-6 border-t border-neutral-800">
+                                            <div className="w-full">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div>
+                                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                                            {language === 'zh' ? '交易纪律重塑之路' : 'The Path to Discipline'}
+                                                            {trades.length >= 100 && (
+                                                                <span className="text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded-full animate-pulse">
+                                                                    {language === 'zh' ? '已出师！' : 'Mastered!'}
+                                                                </span>
+                                                            )}
+                                                        </h3>
+                                                        <p className="text-xs text-gray-500">
+                                                            {language === 'zh'
+                                                                ? '完成100笔手动记录，把交易变成一种本能。'
+                                                                : 'Log 100 trades manually to master your psychology.'}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-2xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+                                                            {trades.length}/100
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {language === 'zh' ? '已完成交易' : 'Trades Completed'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Progress Bar */}
+                                                <div className="relative h-3 bg-neutral-800 rounded-full overflow-hidden select-none pointer-events-none">
+                                                    <div
+                                                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-500 ease-out"
+                                                        style={{ width: `${Math.min((trades.length / 100) * 100, 100)}%` }}
+                                                    >
+                                                        {trades.length >= 100 && (
+                                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-pulse"></div>
+                                                        )}
+                                                    </div>
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <span className="text-[10px] font-bold text-white drop-shadow-lg">
+                                                            {Math.min((trades.length / 100) * 100, 100).toFixed(0)}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Milestone Messages */}
+                                                <div className="mt-4 text-center">
+                                                    {trades.length >= 100 ? (
+                                                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-lg">
+                                                            <span className="text-sm font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+                                                                {language === 'zh'
+                                                                    ? '🏆 试炼通关！ 恭喜！你已完成百场洗礼，正式晋升为纪律交易者。'
+                                                                    : '🏆 Trial Cleared! 100 trades survived. You have evolved into a Disciplined Trader.'}
+                                                            </span>
+                                                        </div>
+                                                    ) : trades.length >= 75 ? (
+                                                        <p className="text-xs text-amber-500">
+                                                            {language === 'zh' ? (
+                                                                <>决胜时刻： 距离解锁 <span className="font-bold text-amber-400">【百炼成金】</span> 成就，仅差 <span className="font-bold">{100 - trades.length}</span> 场战斗！</>
+                                                            ) : (
+                                                                <>Final Stretch: Just <span className="font-bold">{100 - trades.length}</span> battles away from unlocking the "Forged in Gold" achievement!</>
+                                                            )}
+                                                        </p>
+                                                    ) : trades.length >= 50 ? (
+                                                        <p className="text-xs text-gray-500">
+                                                            {language === 'zh'
+                                                                ? '半程里程碑： 进度条过半！你的纪律属性正在战胜情绪恶魔。'
+                                                                : 'Halfway Point: Progress 50%! Your Discipline Stat is crushing your Emotion Demon.'}
+                                                        </p>
+                                                    ) : trades.length >= 25 ? (
+                                                        <p className="text-xs text-gray-500">
+                                                            {language === 'zh'
+                                                                ? '交易者觉醒： 这是一个伟大的开端，你正在建立自己的交易圣经。'
+                                                                : 'Trader Awakening: A legendary start. You are writing your own trading bible.'}
+                                                        </p>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- 3. AI 行为诊断 (核心卖点) --- */}
+                            {
+                                activeTab === 'ai_analysis' && (
+                                    <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
+                                        {/* 会员锁定遮罩 */}
+                                        {!membership.isPremium && (
+                                            <div className="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30 relative overflow-hidden text-center">
+                                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+                                                <Lock className="w-16 h-16 text-amber-500 mb-6 mx-auto relative z-10" />
+                                                <h2 className="text-3xl font-black text-white mb-4 relative z-10">{t('ai.locked_title')}</h2>
+                                                <p className="text-gray-400 mb-8 text-lg relative z-10">
+                                                    {t('ai.locked_desc')}
+                                                </p>
+                                                <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="relative z-10 bg-amber-500 hover:bg-amber-400 text-black font-bold px-10 py-4 rounded-xl shadow-xl shadow-amber-500/20 text-lg hover:scale-105 transition-transform inline-flex items-center gap-2">
+                                                    <Crown className="w-5 h-5" /> {t('ai.unlock_btn')}
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {membership.isPremium && (
+                                            <div className="lg:col-span-3">
+                                                <AIAnalysisDashboard
+                                                    trades={trades}
+                                                    language={language}
+                                                    riskMode={riskMode}
+                                                    onRiskModeChange={handleRiskModeChange}
+                                                    totalCapital={totalCapital}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            }
+                        </>
+                    )
+                }
             </main >
+
 
             {/* Payment Modal */}
             {
@@ -3136,6 +3110,56 @@ function GoldCatApp() {
                                 </div>
                             </div>
 
+                            {/* Username Editor */}
+                            <div className="mb-6">
+                                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{language === 'zh' ? '用户名' : 'Username'}</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={editedUsername}
+                                        onChange={(e) => setEditedUsername(e.target.value)}
+                                        onFocus={() => {
+                                            if (!editedUsername) {
+                                                setEditedUsername(user?.user_metadata?.username || user?.email?.split('@')[0] || '');
+                                            }
+                                        }}
+                                        placeholder={user?.user_metadata?.username || user?.email?.split('@')[0] || (language === 'zh' ? '输入用户名' : 'Enter username')}
+                                        className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none text-sm"
+                                    />
+                                    <button
+                                        onClick={async () => {
+                                            if (!editedUsername.trim()) {
+                                                setErrorMessage(language === 'zh' ? '用户名不能为空' : 'Username cannot be empty');
+                                                setShowErrorToast(true);
+                                                return;
+                                            }
+                                            try {
+                                                const { error } = await supabase.auth.updateUser({
+                                                    data: { username: editedUsername.trim() }
+                                                });
+                                                if (error) throw error;
+                                                setToastMessage(language === 'zh' ? '用户名已更新！' : 'Username updated!');
+                                                setShowSuccessToast(true);
+                                                // Refresh user data
+                                                const { data: { user: refreshedUser } } = await supabase.auth.getUser();
+                                                if (refreshedUser) {
+                                                    setUser(refreshedUser);
+                                                }
+                                            } catch (error) {
+                                                setErrorMessage(error.message);
+                                                setShowErrorToast(true);
+                                            }
+                                        }}
+                                        className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2.5 rounded-lg font-bold text-sm transition-colors"
+                                    >
+                                        {language === 'zh' ? '保存' : 'Save'}
+                                    </button>
+                                </div>
+                                <div className="text-[10px] text-gray-500 mt-1">
+                                    {language === 'zh' ? '当前：' : 'Current: '}{user?.user_metadata?.username || user?.email?.split('@')[0] || '-'}
+                                </div>
+                            </div>
+
                             {/* Membership Benefits (Visible to all, highlighted for Pro) */}
                             <div className="mb-6">
                                 <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('payment.badge')}</label>
@@ -3240,7 +3264,7 @@ function GoldCatApp() {
                     setFeedbackForm({
                         ...feedbackForm,
                         name: user?.user_metadata?.username || '',
-                        email: user?.email || ''
+                        email: user?.email || user?.user_metadata?.email || ''
                     });
                     setShowFeedbackModal(true);
                 }}
@@ -3249,89 +3273,90 @@ function GoldCatApp() {
                 <MessageSquare className="w-6 h-6" />
             </button>
 
-            {/* 反馈弹窗 */}
+            {/* 反馈弹窗 (Founder Chat Style) */}
             {
                 showFeedbackModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-gradient-to-br from-neutral-900 to-neutral-950 w-full max-w-md rounded-2xl border border-amber-500/20 p-8 shadow-2xl relative animate-in zoom-in duration-300">
-                            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                                <MessageSquare className="w-6 h-6 text-amber-500" />
-                                {t('feedback.title')}
-                            </h3>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="w-full max-w-md bg-[#0D0D0D] border border-neutral-800 rounded-2xl shadow-2xl relative overflow-hidden animate-in zoom-in duration-300 font-sans">
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-2">{t('feedback.name_label')}</label>
-                                    <input
-                                        type="text"
-                                        placeholder={t('feedback.name_placeholder')}
-                                        value={feedbackForm.name}
-                                        onChange={(e) => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    />
+                            {/* Header */}
+                            <div className="flex items-center justify-between p-4 px-6 border-b border-neutral-800 bg-[#121212]">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                        <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-black">
+                                            <User className="w-6 h-6" />
+                                        </div>
+                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#121212]"></div>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white text-sm">{t('feedback.title')}</h3>
+                                        <div className="flex items-center gap-1.5 text-xs text-green-500 font-medium">
+                                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                                            {t('feedback.status')}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowFeedbackModal(false)}
+                                    className="text-gray-500 hover:text-white transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-6 space-y-6 bg-[#0D0D0D]">
+
+                                {/* Founder Message */}
+                                <div className="flex gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0 mt-1">
+                                        <User className="w-4 h-4 text-gray-500" />
+                                    </div>
+                                    <div className="bg-[#1C1C1E] text-gray-300 text-sm p-4 rounded-2xl rounded-tl-none border border-neutral-800 leading-relaxed whitespace-pre-wrap shadow-sm">
+                                        {t('feedback.greeting')}
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-2">{t('feedback.email_label')} *</label>
-                                    <input
-                                        type="email"
-                                        placeholder={t('feedback.email_placeholder')}
-                                        value={feedbackForm.email}
-                                        onChange={(e) => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    />
-                                </div>
+                                {/* Form */}
+                                <div className="space-y-4 pl-11">
+                                    {/* Message Input */}
+                                    <div>
+                                        <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 pl-1">
+                                            {t('feedback.message_label')}
+                                        </label>
+                                        <textarea
+                                            placeholder={t('feedback.message_placeholder')}
+                                            value={feedbackForm.content}
+                                            onChange={(e) => setFeedbackForm({ ...feedbackForm, content: e.target.value })}
+                                            rows={3}
+                                            className="w-full bg-[#121212] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:border-neutral-600 focus:outline-none resize-none transition-colors"
+                                        />
+                                    </div>
 
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-2">{t('feedback.type_label')}</label>
-                                    <select
-                                        value={feedbackForm.type}
-                                        onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    >
-                                        <option value="suggestion">{t('feedback.types.suggestion')}</option>
-                                        <option value="bug">{t('feedback.types.bug')}</option>
-                                        <option value="account">{t('feedback.types.account')}</option>
-                                        <option value="other">{t('feedback.types.other')}</option>
-                                    </select>
-                                </div>
+                                    {/* Contact Input */}
+                                    <div>
+                                        <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 pl-1">
+                                            {t('feedback.contact_label')}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder={t('feedback.contact_placeholder')}
+                                            value={feedbackForm.email}
+                                            onChange={(e) => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
+                                            className="w-full bg-[#121212] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:border-neutral-600 focus:outline-none transition-colors"
+                                        />
+                                    </div>
 
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-2">{t('feedback.content_label')} *</label>
-                                    <textarea
-                                        placeholder={t('feedback.content_placeholder')}
-                                        value={feedbackForm.content}
-                                        onChange={(e) => setFeedbackForm({ ...feedbackForm, content: e.target.value })}
-                                        rows={5}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none resize-none"
-                                    />
-                                </div>
-
-                                <div className="flex gap-3 pt-2">
+                                    {/* Submit Button */}
                                     <button
                                         onClick={handleSubmitFeedback}
-                                        className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 hover:scale-105"
+                                        className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 flex items-center justify-center gap-2 mt-2"
                                     >
                                         {t('feedback.submit_btn')}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const email = 'support@goldcat.trade';
-                                            navigator.clipboard.writeText(email);
-                                            setToastMessage(t('payment.copied'));
-                                            setShowSuccessToast(true);
-                                        }}
-                                        className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 hover:scale-105"
-                                    >
-                                        <Copy className="w-4 h-4" />
-                                        {t('feedback.email_btn')}
+                                        <Send className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
-
-                            <button onClick={() => setShowFeedbackModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
                         </div>
                     </div>
                 )
@@ -3475,7 +3500,7 @@ function GoldCatApp() {
                 )
             }
 
-        </div>
+        </div >
     );
 }
 
