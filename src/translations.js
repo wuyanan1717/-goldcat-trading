@@ -15,8 +15,8 @@ export const translations = {
         home: {
             title: "手动记录，即是修行",
             slogan: "金猫系统 - 您的财富守护神",
-            desc_1: "为什么我们需要手动记录？因为这是对每一笔交易的尊重。",
-            desc_2: "拒绝随意开单，拒绝由于冲动而忽视止损。通过严格的流程化记录，让交易回归理性，让利润成为纪律的副产品。",
+            desc_1: "首款引入 AI 模型的加密货币复盘终端。",
+            desc_2: "拒绝随意开单，让动态风控模式守护本金，用R值形态矩阵发现优势。我们通过刻意的手动录入，将交易纪律转化为实实在在的利润。",
             start_btn: "开启交易修行",
             feature_manual_title: "深度复盘",
             feature_manual_desc: "每一次手动录入，都是一次与市场的深度对话，强化您的交易记忆。",
@@ -380,8 +380,8 @@ export const translations = {
         home: {
             title: "Manual Recording is Discipline",
             slogan: "GoldCat - Your Guardian of Wealth",
-            desc_1: "GoldCat is a professional trading journal tool designed to help traders build discipline through structured record-keeping.",
-            desc_2: "Why record manually? Because it shows respect for every trade.",
+            desc_1: "Goldcat is the first crypto trading terminal powered by an AI Agent.",
+            desc_2: "Stop impulsive trading. Let Dynamic Risk Modes guard your capital and the R-Multiple Pattern Matrix reveal your edge. Through deliberate manual entry, we transform trading discipline into tangible profits.",
             desc_3: "Reject impulsive entries. Never ignore stop-losses. Through strict procedural recording, let trading return to rationality, making profit a byproduct of discipline.",
             start_btn: "Start the Journey",
             feature_manual_title: "Deep Review",
