@@ -1821,6 +1821,22 @@ function GoldCatApp() {
 
                             {/* FAQ Section */}
                             <div className="max-w-4xl mx-auto mt-32 mb-20 px-4">
+                                {/* JSON-LD Schema Markup for SEO */}
+                                <script type="application/ld+json" dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify({
+                                        "@context": "https://schema.org",
+                                        "@type": "FAQPage",
+                                        "mainEntity": Array.isArray(t('faq.items')) ? t('faq.items').map(item => ({
+                                            "@type": "Question",
+                                            "name": item.q,
+                                            "acceptedAnswer": {
+                                                "@type": "Answer",
+                                                "text": item.a.replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown formatting
+                                            }
+                                        })) : []
+                                    })
+                                }} />
+
                                 <div className="text-center mb-12">
                                     <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">{t('faq.title')}</h2>
                                     <p className="text-gray-400 text-sm md:text-base">{t('faq.subtitle')}</p>
