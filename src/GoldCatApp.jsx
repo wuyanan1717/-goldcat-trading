@@ -164,8 +164,8 @@ function GoldCatApp() {
         const saved = localStorage.getItem('goldcat_language');
         if (saved) return saved;
 
-        // 2. 默认英语（将通过IP检测自动调整）
-        return 'en';
+        // 2. 默认中文（适合中国用户，避免闪现英文）
+        return 'zh';
     });
 
     // IP-based language detection on mount
@@ -1453,11 +1453,11 @@ function GoldCatApp() {
                             }
                         }}
                     >
-                        <div className="w-10 h-10 flex items-center justify-center">
-                            <img src="/goldcat_logo_transparent.png?v=2" alt="GoldCat Logo" className="w-full h-full object-contain" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
+                            <img src="/goldcat_logo_neon.png" alt="GoldCat Logo" className="w-full h-full object-contain" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-black text-white tracking-tighter leading-none">
+                            <h1 className="text-sm sm:text-base md:text-lg font-black text-white tracking-tighter leading-none">
                                 {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v2</span>
                             </h1>
 
@@ -1573,8 +1573,8 @@ function GoldCatApp() {
                             {/* Vignette for seamless blending */}
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
 
-                            {/* Particle Logo Effect */}
-                            <div className="absolute inset-0 z-[5] opacity-60" style={{ transform: 'translateY(-1480px)' }}>
+                            {/* Particle Logo Effect - Hidden on mobile for performance */}
+                            <div className="hidden sm:block absolute inset-0 z-[5] opacity-60" style={{ transform: 'translateY(-1480px)' }}>
                                 <ParticleLogo />
                             </div>
                         </div>
@@ -1584,11 +1584,11 @@ function GoldCatApp() {
                                 <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v2
                             </div>
 
-                            <h1 className="text-5xl md:text-8xl font-black text-white mb-8 tracking-tight leading-tight drop-shadow-2xl">
+                            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black text-white mb-6 sm:mb-8 tracking-tight leading-tight drop-shadow-2xl">
                                 {t('home.title')}
                             </h1>
 
-                            <p className="text-gray-300 text-lg md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
+                            <p className="text-gray-300 text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 md:mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-md px-4">
                                 {t('home.desc_1')} {t('home.desc_2')}
                             </p>
 
@@ -1601,7 +1601,7 @@ function GoldCatApp() {
                                             setShowGuestDashboard(true);
                                         }
                                     }}
-                                    className="group relative w-full md:w-auto bg-amber-500 hover:bg-amber-400 text-black font-black text-xl px-10 py-5 rounded-2xl shadow-[0_0_40px_rgba(245,158,11,0.4)] hover:shadow-[0_0_60px_rgba(245,158,11,0.6)] hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden"
+                                    className="group relative w-full md:w-auto bg-amber-500 hover:bg-amber-400 text-black font-black text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-[0_0_40px_rgba(245,158,11,0.4)] hover:shadow-[0_0_60px_rgba(245,158,11,0.6)] hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                     <span className="relative flex items-center gap-2">{t('home.start_btn')} <ChevronRight className="w-6 h-6" /></span>
@@ -1611,7 +1611,7 @@ function GoldCatApp() {
                                         setIsRegisterMode(false);
                                         setShowLoginModal(true);
                                     }}
-                                    className="w-full md:w-auto bg-white/5 hover:bg-white/10 text-white font-bold text-xl px-10 py-5 rounded-2xl border border-white/10 hover:border-white/20 transition-all backdrop-blur-sm"
+                                    className="w-full md:w-auto bg-white/5 hover:bg-white/10 text-white font-bold text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-2xl border border-white/10 hover:border-white/20 transition-all backdrop-blur-sm"
                                 >
                                     {t('auth.login_btn')}
                                 </button>
@@ -1719,7 +1719,7 @@ function GoldCatApp() {
                             {/* --- Pricing Section (Added for Compliance) --- */}
                             <div className="mt-32 mb-20 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
                                 <div className="text-center mb-16">
-                                    <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight">{t('pricing.title')}</h2>
+                                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6 tracking-tight">{t('pricing.title')}</h2>
                                     <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
                                         {t('pricing.subtitle')}
                                     </p>
@@ -1727,7 +1727,7 @@ function GoldCatApp() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative group-hover:gap-12 transition-all duration-500">
                                     {/* Free Plan */}
-                                    <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start">
+                                    <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start">
                                         <div className="mb-8 w-full">
                                             <h3 className="text-xl font-bold text-white mb-2">{t('pricing.free_title')}</h3>
                                             <div className="flex items-baseline gap-1 mb-4">
@@ -1760,7 +1760,7 @@ function GoldCatApp() {
                                     </div>
 
                                     {/* Lifetime Plan */}
-                                    <div className="relative bg-black/80 backdrop-blur-md border border-amber-500/30 rounded-3xl p-8 hover:border-amber-500 transition-all hover:-translate-y-2 duration-300 shadow-[0_0_50px_rgba(245,158,11,0.1)] flex flex-col scale-105 z-10 text-left items-start">
+                                    <div className="relative bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-md border-2 border-amber-500/50 rounded-3xl p-6 sm:p-8 hover:border-amber-400/70 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start shadow-[0_0_40px_rgba(245,158,11,0.15)]">
                                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg">
                                             <Crown className="w-3 h-3" /> {t('pricing.pro_badge')}
                                         </div>
@@ -1838,14 +1838,14 @@ function GoldCatApp() {
                                 }} />
 
                                 <div className="text-center mb-12">
-                                    <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">{t('faq.title')}</h2>
+                                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-3 sm:mb-4 tracking-tight">{t('faq.title')}</h2>
                                     <p className="text-gray-400 text-sm md:text-base">{t('faq.subtitle')}</p>
                                 </div>
 
                                 <div className="space-y-4">
                                     {Array.isArray(t('faq.items')) && t('faq.items').map((item, index) => (
-                                        <div key={index} className="bg-neutral-900/50 border border-white/5 rounded-2xl overflow-hidden hover:bg-neutral-900/80 transition-colors p-8 text-left">
-                                            <h3 className="text-lg font-bold text-amber-500 mb-4">{item.q}</h3>
+                                        <div key={index} className="bg-neutral-900/50 border border-white/5 rounded-2xl overflow-hidden hover:bg-neutral-900/80 transition-colors p-5 sm:p-6 md:p-8 text-left">
+                                            <h3 className="text-base sm:text-lg font-bold text-amber-500 mb-3 sm:mb-4">{item.q}</h3>
                                             <div className="text-gray-400 text-sm md:text-base leading-relaxed">
                                                 <div dangerouslySetInnerHTML={{ __html: item.a.replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-200">$1</strong>') }} />
                                             </div>
@@ -2287,149 +2287,151 @@ function GoldCatApp() {
                                             </div>
                                         ) : (
                                             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                                                <table className="w-full text-left text-sm whitespace-nowrap">
-                                                    <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
-                                                        <tr>
-                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.date')}</th>
-                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[120px]">{t('journal.columns.symbol_dir')}</th>
-                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[180px]">{t('journal.columns.basis')}</th>
-                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[80px]">{t('journal.columns.rr')}</th>
-                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.status')}</th>
-                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">{t('journal.columns.review_content')}</th>
-                                                            <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[180px]">{t('journal.columns.action')}</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-neutral-800">
-                                                        {trades.map(trade => (
-                                                            <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
-                                                                <td className="px-4 py-4 font-mono text-gray-400 text-xs">{trade.date}</td>
-                                                                <td className="px-4 py-4">
-                                                                    <div className="font-bold text-white text-sm">{trade.symbol}</div>
-                                                                    <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
-                                                                        {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-4 py-4">
-                                                                    <div className="flex flex-col gap-1">
-                                                                        <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700 inline-block w-fit">
-                                                                            {trade.timeframe}
-                                                                        </span>
-                                                                        <span className="text-gray-400 text-xs">{trade.pattern || '-'}</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-4 py-4 font-mono group relative text-sm">
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <span>{trade.rrRatio}</span>
-                                                                        <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
-                                                                    </div>
-                                                                    {/* Tooltip with price details */}
-                                                                    <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
-                                                                        <div className="space-y-1.5">
-                                                                            <div className="flex justify-between gap-3">
-                                                                                <span className="text-gray-400">{t('journal.entry_price')}</span>
-                                                                                <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
-                                                                            </div>
-                                                                            {trade.stopLoss && (
-                                                                                <div className="flex justify-between gap-3">
-                                                                                    <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
-                                                                                    <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
-                                                                                </div>
-                                                                            )}
-                                                                            {trade.takeProfit && (
-                                                                                <div className="flex justify-between gap-3">
-                                                                                    <span className="text-gray-400">{t('journal.take_profit_price')}</span>
-                                                                                    <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
-                                                                                </div>
-                                                                            )}
+                                                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                                                    <table className="w-full text-left text-sm whitespace-nowrap min-w-[640px]">
+                                                        <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
+                                                            <tr>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.date')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[120px]">{t('journal.columns.symbol_dir')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[180px]">{t('journal.columns.basis')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[80px]">{t('journal.columns.rr')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.status')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">{t('journal.columns.review_content')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[180px]">{t('journal.columns.action')}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-neutral-800">
+                                                            {trades.map(trade => (
+                                                                <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
+                                                                    <td className="px-4 py-4 font-mono text-gray-400 text-xs">{trade.date}</td>
+                                                                    <td className="px-4 py-4">
+                                                                        <div className="font-bold text-white text-sm">{trade.symbol}</div>
+                                                                        <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
+                                                                            {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
                                                                         </div>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-4 py-4">
-                                                                    <div className="flex items-center gap-2">
-                                                                        {trade.status === 'open' ? (
-                                                                            <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
-                                                                        ) : (
-                                                                            <>
-                                                                                <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                    {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
-                                                                                </span>
-                                                                                {trade.violatedDiscipline && (
-                                                                                    <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
+                                                                    </td>
+                                                                    <td className="px-4 py-4">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700 inline-block w-fit">
+                                                                                {trade.timeframe}
+                                                                            </span>
+                                                                            <span className="text-gray-400 text-xs">{trade.pattern || '-'}</span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-4 py-4 font-mono group relative text-sm">
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <span>{trade.rrRatio}</span>
+                                                                            <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
+                                                                        </div>
+                                                                        {/* Tooltip with price details */}
+                                                                        <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
+                                                                            <div className="space-y-1.5">
+                                                                                <div className="flex justify-between gap-3">
+                                                                                    <span className="text-gray-400">{t('journal.entry_price')}</span>
+                                                                                    <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
+                                                                                </div>
+                                                                                {trade.stopLoss && (
+                                                                                    <div className="flex justify-between gap-3">
+                                                                                        <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
+                                                                                        <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
+                                                                                    </div>
                                                                                 )}
-                                                                            </>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-4 py-4 max-w-[300px]">
-                                                                    {trade.review ? (
-                                                                        <div className="text-xs text-gray-300 truncate" title={trade.review}>
-                                                                            {trade.review}
+                                                                                {trade.takeProfit && (
+                                                                                    <div className="flex justify-between gap-3">
+                                                                                        <span className="text-gray-400">{t('journal.take_profit_price')}</span>
+                                                                                        <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                    ) : (
-                                                                        <span className="text-xs text-gray-600 italic">{t('journal.not_reviewed')}</span>
-                                                                    )}
-                                                                </td>
-                                                                <td className="px-4 py-4">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        {/* Settle/Closed button */}
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                if (trade.status === 'open') {
-                                                                                    handleSettleTrade(trade.id);
-                                                                                }
-                                                                            }}
-                                                                            disabled={trade.status !== 'open'}
-                                                                            className={`
+                                                                    </td>
+                                                                    <td className="px-4 py-4">
+                                                                        <div className="flex items-center gap-2">
+                                                                            {trade.status === 'open' ? (
+                                                                                <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                        {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
+                                                                                    </span>
+                                                                                    {trade.violatedDiscipline && (
+                                                                                        <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
+                                                                                    )}
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-4 py-4 max-w-[300px]">
+                                                                        {trade.review ? (
+                                                                            <div className="text-xs text-gray-300 truncate" title={trade.review}>
+                                                                                {trade.review}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="text-xs text-gray-600 italic">{t('journal.not_reviewed')}</span>
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="px-4 py-4">
+                                                                        <div className="flex items-center justify-center gap-2">
+                                                                            {/* Settle/Closed button */}
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    if (trade.status === 'open') {
+                                                                                        handleSettleTrade(trade.id);
+                                                                                    }
+                                                                                }}
+                                                                                disabled={trade.status !== 'open'}
+                                                                                className={`
                                                                             px-3 py-1.5 rounded border text-xs font-bold transition-all min-w-[70px]
                                                                             ${trade.status === 'open'
-                                                                                    ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
-                                                                                    : 'border-neutral-700 text-gray-600 cursor-not-allowed bg-neutral-800/50'}
+                                                                                        ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
+                                                                                        : 'border-neutral-700 text-gray-600 cursor-not-allowed bg-neutral-800/50'}
                                                                         `}
-                                                                        >
-                                                                            {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
-                                                                        </button>
+                                                                            >
+                                                                                {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
+                                                                            </button>
 
-                                                                        {/* Review button */}
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleReviewTrade(trade);
-                                                                            }}
-                                                                            className={`
+                                                                            {/* Review button */}
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleReviewTrade(trade);
+                                                                                }}
+                                                                                className={`
                                                                             px-3 py-1.5 rounded text-xs font-medium transition-all w-[100px] flex items-center justify-center gap-1
                                                                             ${trade.review
-                                                                                    ? 'bg-green-900/30 text-green-400 border border-green-500/30 hover:bg-green-900/50'
-                                                                                    : 'bg-neutral-800 text-gray-400 border border-neutral-700 hover:bg-neutral-700 hover:text-white'}
+                                                                                        ? 'bg-green-900/30 text-green-400 border border-green-500/30 hover:bg-green-900/50'
+                                                                                        : 'bg-neutral-800 text-gray-400 border border-neutral-700 hover:bg-neutral-700 hover:text-white'}
                                                                         `}
-                                                                        >
-                                                                            {trade.review ? (
-                                                                                <>
-                                                                                    <CheckCircle2 className="w-3 h-3" />
-                                                                                    <span>{t('journal.reviewed')}</span>
-                                                                                </>
-                                                                            ) : (
-                                                                                <span>{t('journal.review')}</span>
-                                                                            )}
-                                                                        </button>
+                                                                            >
+                                                                                {trade.review ? (
+                                                                                    <>
+                                                                                        <CheckCircle2 className="w-3 h-3" />
+                                                                                        <span>{t('journal.reviewed')}</span>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <span>{t('journal.review')}</span>
+                                                                                )}
+                                                                            </button>
 
-                                                                        {/* Delete button */}
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                setTradeToDelete(trade);
-                                                                                setShowDeleteModal(true);
-                                                                            }}
-                                                                            className="p-2 rounded border border-neutral-700 text-gray-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-900/20 transition-all"
-                                                                            title={language === 'zh' ? '删除交易' : 'Delete Trade'}
-                                                                        >
-                                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                                        </button>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                                                            {/* Delete button */}
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setTradeToDelete(trade);
+                                                                                    setShowDeleteModal(true);
+                                                                                }}
+                                                                                className="p-2 rounded border border-neutral-700 text-gray-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-900/20 transition-all"
+                                                                                title={language === 'zh' ? '删除交易' : 'Delete Trade'}
+                                                                            >
+                                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         )}
 
@@ -3394,6 +3396,15 @@ function GoldCatApp() {
                     >
                         {language === 'zh' ? '服务条款' : 'Terms of Service'}
                     </button>
+                    <span className="text-gray-600">|</span>
+                    <a
+                        href="https://paragraph.com/@goldcat.trade/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-gray-400 hover:text-amber-500 transition-colors underline"
+                    >
+                        {language === 'zh' ? '博客' : 'Blog'}
+                    </a>
                     <span className="text-gray-600">|</span>
                     <button
                         onClick={() => setShowDisclaimer(!showDisclaimer)}

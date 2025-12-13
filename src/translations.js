@@ -26,13 +26,13 @@ export const translations = {
             feature_ai_desc: "您的私人交易教练。AI 深度分析您的每一笔交易数据，精准识别情绪波动与策略漏洞，助您构建稳定盈利系统。",
             ai_risk_title: "AI 风险阻断",
             ai_risk_subtitle: "立即停手。",
-            ai_risk_desc: "当你的多巴胺接管大脑时，Goldcat 接管你的账户。它比你更了解你的亏损模式，在你犯错前直接“骂醒你”。",
+            ai_risk_desc: "当你的多巴胺接管大脑时，Goldcat Terminal 接管你的账户。它比你更了解你的亏损模式，在你犯错前直接\"骂醒你\"。",
             ai_risk_warning: "警告：立即停手",
             ai_risk_backtesting: "检测到你在连续亏损 2 单后的\"报复性加仓\"行为。大数据回测显示，你在这种状态下的操作导致历史上 92% 的本金回撤。",
             ai_risk_button: "强制冷静 1小时",
             ai_risk_example: "刚刚止损两单，这把直接梭哈！赢回来！",
             emotion_roi_title: "情绪 ROI 可视化",
-            emotion_roi_subtitle: "数据不会说谎。Goldcat 帮你分离\"情绪单\"与\"逻辑单\"，看一眼图表就知道：",
+            emotion_roi_subtitle: "数据不会说谎。Goldcat Terminal 帮你分离\"情绪单\"与\"逻辑单\"，看一眼图表就知道：",
             emotion_roi_desc: "所有的亏损都是来自心存侥幸，所有的盈利来自严格执行。",
             fomo_entry: "FOMO ENTRY",
             fomo_trades: "追涨杀跌",
@@ -76,19 +76,19 @@ export const translations = {
             items: [
                 {
                     q: "什么是 Goldcat Terminal，它能帮我赚钱吗？",
-                    a: "Goldcat 不仅仅是一个记账工具，它是你的 AI 战术指挥官。它通过深度分析你的历史交易数据，识别出你最赚钱的形态（Setup）和亏钱的坏习惯。我们无法直接给你“带单”，但我们能帮你发现你的交易优势 (Edge)，从而提高胜率和盈亏比。"
+                    a: "Goldcat Terminal 不仅仅是一个记账工具，它是你的 AI 战术指挥官。它通过深度分析你的历史交易数据，识别出你最赚钱的形态（Setup）和亏钱的坏习惯。我们无法直接给你\"带单\"，但我们能帮你发现你的交易优势 (Edge)，从而提高胜率和盈亏比。"
                 },
                 {
-                    q: "Goldcat 的 AI 是如何工作的？是黑盒吗？",
+                    q: "Goldcat Terminal 的 AI 是如何工作的？是黑盒吗？",
                     a: "不是黑盒。我们的 AI 基于透明的统计学和风控模型。它会计算你每一笔交易的 R 值 (R-Multiple)，并生成 “形态 x 周期”策略矩阵。AI 会告诉你：“你在 4h 级别做趋势跟随胜率 70%，但在 15m 级别做反转亏损严重”，并据此给出建议。"
                 },
                 {
                     q: "为什么不支持 API 自动导入？我不想手动记账怎么办？",
-                    a: "Goldcat 刻意不支持自动导入。 我们坚信：“没有经过审视的记录毫无意义”。自动导入只会让你在交易所随意开单，产生大量垃圾数据。 手动录入是交易纪律的第一步。我们希望你在录入每一笔入场、止损、止盈时，都能重新经历一次决策过程。这种**“仪式感”**能有效抑制随意交易（Over-trading），从源头训练你的职业交易行为。如果你觉得记录很麻烦，也许那笔交易一开始就不该做。"
+                    a: "Goldcat Terminal 刻意不支持自动导入。 我们坚信：“没有经过审视的记录毫无意义”。自动导入只会让你在交易所随意开单，产生大量垃圾数据。 手动录入是交易纪律的第一步。我们希望你在录入每一笔入场、止损、止盈时，都能重新经历一次决策过程。这种**“仪式感”**能有效抑制随意交易（Over-trading），从源头训练你的职业交易行为。如果你觉得记录很麻烦，也许那笔交易一开始就不该做。"
                 },
                 {
                     q: "你们支持哪些交易所的记录？",
-                    a: "由于采用通用标准录入，理论上支持所有交易所和所有币种。只要符合开平仓逻辑，你都可以将其录入 Goldcat 系统。我们将重点放在“策略分析”上，而不是单纯的数据搬运。"
+                    a: "由于采用通用标准录入，理论上支持所有交易所和所有币种。只要符合开平仓逻辑，你都可以将其录入 Goldcat Terminal 系统。我们将重点放在\"策略分析\"上，而不是单纯的数据搬运。"
                 },
                 {
                     q: "我是一个新手，Goldcat Terminal适合我吗？",
@@ -380,7 +380,7 @@ export const translations = {
         home: {
             title: "Manual Recording is Discipline",
             slogan: "GoldCat - Your Guardian of Wealth",
-            desc_1: "Goldcat is the first crypto trading terminal powered by an AI Agent.",
+            desc_1: "Goldcat Terminal is the first crypto trading terminal powered by an AI Agent.",
             desc_2: "Stop impulsive trading. Let Dynamic Risk Modes guard your capital and the R-Multiple Pattern Matrix reveal your edge. Through deliberate manual entry, we transform trading discipline into tangible profits.",
             desc_3: "Reject impulsive entries. Never ignore stop-losses. Through strict procedural recording, let trading return to rationality, making profit a byproduct of discipline.",
             start_btn: "Start the Journey",
@@ -392,13 +392,13 @@ export const translations = {
             feature_ai_desc: "Your private trading coach. AI deeply analyzes every trade, identifying emotional fluctuations and strategy flaws to help you build a profitable system.",
             ai_risk_title: "AI Risk Prevention",
             ai_risk_subtitle: "Stop Now.",
-            ai_risk_desc: "When dopamine takes over your brain, GoldCat takes over your account. It knows your losing patterns better than you do, and 'scolds you awake' before you make a mistake.",
+            ai_risk_desc: "When dopamine takes over your brain, GoldCat Terminal takes over your account. It knows your losing patterns better than you do, and 'scolds you awake' before you make a mistake.",
             ai_risk_warning: "WARNING: STOP IMMEDIATELY",
             ai_risk_backtesting: "Detected 'revenge trading' behavior after 2 consecutive losses. Backtesting shows this operation in this state results in 92% historical capital drawdown.",
             ai_risk_button: "Forced Cool Down 1h",
             ai_risk_example: "Just stopped out twice, going all in now! Win it back!",
             emotion_roi_title: "Emotion ROI Visualization",
-            emotion_roi_subtitle: "Data doesn't lie. GoldCat helps you distinguish 'Emotion Rate' vs 'Logic Rate', glancing at the chart tells you:",
+            emotion_roi_subtitle: "Data doesn't lie. GoldCat Terminal helps you distinguish 'Emotion Rate' vs 'Logic Rate', glancing at the chart tells you:",
             emotion_roi_desc: "All losses come from wishful thinking, all profits come from strict execution.",
             fomo_entry: "FOMO ENTRY",
             fomo_trades: "Chasing/Revenge",
@@ -442,19 +442,19 @@ export const translations = {
             items: [
                 {
                     q: "What is Goldcat Terminal, and can it make me money?",
-                    a: "Goldcat is not just a journaling tool; it is your AI tactical commander. By deeply analyzing your historical trade data, it identifies your most profitable setups and costly bad habits. We cannot give you 'signals', but we can help you discover your trading Edge, thereby improving your win rate and risk-reward ratio."
+                    a: "Goldcat Terminal is not just a journaling tool; it is your AI tactical commander. By deeply analyzing your historical trade data, it identifies your most profitable setups and costly bad habits. We cannot give you 'signals', but we can help you discover your trading Edge, thereby improving your win rate and risk-reward ratio."
                 },
                 {
-                    q: "How does Goldcat's AI work? Is it a black box?",
+                    q: "How does Goldcat Terminal's AI work? Is it a black box?",
                     a: "It is not a black box. Our AI is based on transparent statistical and risk management models. It calculates the R-Multiple of every trade and generates a 'Pattern x Timeframe' strategy matrix. The AI might tell you: 'You have a 70% win rate following trends on the 4h timeframe, but you lose heavily on reversals on the 15m timeframe', and offer advice accordingly."
                 },
                 {
                     q: "Why no API auto-import? What if I don't want to journal manually?",
-                    a: "Goldcat deliberately does not support auto-import. We firmly believe: 'Unreviewed records are meaningless'. Auto-import only encourages reckless trading on exchanges, creating massive amounts of junk data. Manual entry is the first step of trading discipline. We want you to relive the decision process when entering every entry, stop loss, and take profit. This **'ritual'** effectively suppresses over-trading and trains your professional trading behavior from the source. If you find recording troublesome, perhaps that trade shouldn't have been taken in the first place."
+                    a: "Goldcat Terminal deliberately does not support auto-import. We firmly believe: 'Unreviewed records are meaningless'. Auto-import only encourages reckless trading on exchanges, creating massive amounts of junk data. Manual entry is the first step of trading discipline. We want you to relive the decision process when entering every entry, stop loss, and take profit. This **'ritual'** effectively suppresses over-trading and trains your professional trading behavior from the source. If you find recording troublesome, perhaps that trade shouldn't have been taken in the first place."
                 },
                 {
                     q: "Which exchanges do you support?",
-                    a: "Since we use standard manual entry, we theoretically support all exchanges and all coins. As long as it follows opening/closing logic, you can record it in Goldcat. We focus on 'strategic analysis', not just simple data porting."
+                    a: "Since we use standard manual entry, we theoretically support all exchanges and all coins. As long as it follows opening/closing logic, you can record it in Goldcat Terminal. We focus on 'strategic analysis', not just simple data porting."
                 },
                 {
                     q: "I am a beginner, is Goldcat Terminal suitable for me?",
