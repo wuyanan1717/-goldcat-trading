@@ -241,9 +241,19 @@ function GoldCatApp() {
         }
     }, [showLoginModal, isRegisterMode]);
 
+    // Ensure body scroll is unlocked when component unmounts or reloads
+    useEffect(() => {
+        return () => {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        };
+    }, []);
+
     // Lock body scroll when modals are open (prevents background scrolling on mobile)
     useEffect(() => {
-        const isAnyModalOpen = showLoginModal || showPaymentModal || showSettingsModal || showFeedbackModal || showLogoutModal;
+        const isAnyModalOpen = showLoginModal || showPaymentModal || showSettingsModal || showFeedbackModal || showLogoutModal ||
+            showDisclaimer || showCloseTradeModal || showReviewModal || showPatternModal || showRiskWarningModal || showSettleModal || showDeleteModal;
 
         if (isAnyModalOpen) {
             // Lock scroll
@@ -2062,7 +2072,7 @@ function GoldCatApp() {
                                             </div>
 
                                             {/* 第三行：点位执行 */}
-                                            <div className="grid grid-cols-3 gap-4">
+                                            <div className="grid grid-cols-1 xs:grid-cols-3 gap-4">
                                                 <div>
                                                     <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
                                                     <input
