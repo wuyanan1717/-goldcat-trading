@@ -1939,7 +1939,7 @@ function GoldCatApp() {
                                 flex-1 min-w-[100px] flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all
                                 ${activeTab === tab.id
                                                 ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                                                : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-700'}
+                                                : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'}
                             `}
                                     >
                                         <tab.icon className="w-4 h-4" />
