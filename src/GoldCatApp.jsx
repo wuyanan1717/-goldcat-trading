@@ -2095,7 +2095,7 @@ function GoldCatApp() {
                                                     {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
                                                     {formData.entryPrice && formData.stopLoss && formData.margin && (
                                                         <div className="text-[10px] text-gray-500 mt-1">
-                                                            预计亏损: <span className="text-red-500">
+                                                            {t('form.predicted_loss')}: <span className="text-red-500">
                                                                 ${Math.abs(((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
                                                             </span>
                                                         </div>
@@ -2112,7 +2112,7 @@ function GoldCatApp() {
                                                     {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
                                                     {formData.entryPrice && formData.takeProfit && formData.margin && (
                                                         <div className="text-[10px] text-gray-500 mt-1">
-                                                            预计盈利: <span className="text-green-500">
+                                                            {t('form.predicted_profit')}: <span className="text-green-500">
                                                                 ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
                                                             </span>
                                                         </div>

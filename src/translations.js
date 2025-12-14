@@ -161,7 +161,9 @@ export const translations = {
             honest_note: "* 所有的交易记录将不可篡改，请对自己诚实。",
             manage_patterns: "管理交易形态",
             reset_default: "重置默认",
-            save: "保存"
+            save: "保存",
+            predicted_loss: "预计亏损",
+            predicted_profit: "预计盈利"
         },
         risk: {
             title: "交易纪律预审",
@@ -508,7 +510,9 @@ export const translations = {
             honest_note: "* All records are immutable. Be honest with yourself.",
             manage_patterns: "Manage Patterns",
             reset_default: "Reset to Default",
-            save: "Save"
+            save: "Save",
+            predicted_loss: "Est. Loss",
+            predicted_profit: "Est. Profit"
         },
         risk: {
             title: "Risk Pre-check",
