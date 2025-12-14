@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import ReactGA from 'react-ga4';
 import { supabase } from './supabaseClient';
 import { getCheckoutUrl, CREEM_CONFIG } from './creemConfig';
 import PrivacyPolicyPage from './PrivacyPolicyPage';
@@ -195,11 +196,73 @@ function GoldCatApp() {
         detectLanguageByIP();
     }, []);
 
+    // Initialize Google Analytics 4
+    useEffect(() => {
+        // TODO: Replace with your actual GA4 Measurement ID
+        // Get it from https://analytics.google.com/
+        const GA4_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // Replace this!
+
+        if (GA4_MEASUREMENT_ID !== 'G-XXXXXXXXXX') {
+            ReactGA.initialize(GA4_MEASUREMENT_ID);
+            console.log('GA4 initialized');
+        }
+    }, []);
+
     // 监听语言变化并保存
     useEffect(() => {
         localStorage.setItem('goldcat_language', language);
         setPatterns(getInitialPatterns(language)); // 更新 patterns
     }, [language]);
+
+    // Track page views: Landing vs Dashboard
+    useEffect(() => {
+        if (user && !explicitLandingView) {
+            // User is on Dashboard (Trading Input Page)
+            ReactGA.send({ hitType: "pageview", page: "/dashboard", title: "Dashboard - Trading Input" });
+        } else if (!user && showGuestDashboard) {
+            // Guest is viewing Dashboard
+            ReactGA.send({ hitType: "pageview", page: "/guest-dashboard", title: "Guest Dashboard" });
+        } else {
+            // Landing page
+            ReactGA.send({ hitType: "pageview", page: "/", title: "Landing Page" });
+        }
+    }, [user, explicitLandingView, showGuestDashboard]);
+
+    // Track Login/Register modal opens
+    useEffect(() => {
+        if (showLoginModal) {
+            const eventAction = isRegisterMode ? 'Open Register Modal' : 'Open Login Modal';
+            ReactGA.event({
+                category: 'User',
+                action: eventAction,
+                label: 'Authentication'
+            });
+        }
+    }, [showLoginModal, isRegisterMode]);
+
+    // Lock body scroll when modals are open (prevents background scrolling on mobile)
+    useEffect(() => {
+        const isAnyModalOpen = showLoginModal || showPaymentModal || showSettingsModal || showFeedbackModal || showLogoutModal;
+
+        if (isAnyModalOpen) {
+            // Lock scroll
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        } else {
+            // Unlock scroll
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        }
+
+        // Cleanup on unmount
+        return () => {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        };
+    }, [showLoginModal, showPaymentModal, showSettingsModal, showFeedbackModal, showLogoutModal]);
 
     const t = (path, params = {}) => {
         const keys = path.split('.');
