@@ -37,10 +37,6 @@ const SyncStatusIndicator = ({ status, language }) => {
         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-medium ${config.color} transition-all duration-300`}>
             <Icon className={`w-3.5 h-3.5 ${config.animate || ''}`} />
             <span>{config.text[language]}</span>
-            {/* DEBUG BANNER - TEMPORARY */}
-            <div className="fixed bottom-0 left-0 w-full bg-red-600 text-white text-[10px] text-center z-[9999] p-1 font-bold">
-                DEBUG MODE: v2.2.5 (Grid Fixed) - IF YOU SEE THIS, CACHE IS CLEARED
-            </div>
         </div>
     );
 };
@@ -260,12 +256,14 @@ function GoldCatApp() {
             showDisclaimer || showCloseTradeModal || showReviewModal || showPatternModal || showRiskWarningModal || showSettleModal || showDeleteModal;
 
         if (isAnyModalOpen) {
-            // Lock scroll
+            // Lock scroll (Target both html and body for mobile safaris)
+            document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
             document.body.style.position = 'fixed';
             document.body.style.width = '100%';
         } else {
             // Unlock scroll
+            document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
             document.body.style.position = '';
             document.body.style.width = '';
@@ -2075,8 +2073,8 @@ function GoldCatApp() {
                                                 </div>
                                             </div>
 
-                                            {/* 第三行：点位执行 */}
-                                            <div className="grid grid-cols-1 xs:grid-cols-3 gap-4">
+                                            {/* 第三行：点位执行 - Mobile: Single Column (Safe), Desktop: 3 Columns */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                                 <div>
                                                     <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
                                                     <input
