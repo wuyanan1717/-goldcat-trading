@@ -165,8 +165,9 @@ function GoldCatApp() {
         const saved = localStorage.getItem('goldcat_language');
         if (saved) return saved;
 
-        // 2. 默认中文（适合中国用户，避免闪现英文）
-        return 'zh';
+        // 2. 默认英语（适合国际用户）
+        // IP 检测会在后台运行，中国用户会自动切换到中文
+        return 'en';
     });
 
     // IP-based language detection on mount
