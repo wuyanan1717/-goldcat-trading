@@ -37,6 +37,10 @@ const SyncStatusIndicator = ({ status, language }) => {
         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-medium ${config.color} transition-all duration-300`}>
             <Icon className={`w-3.5 h-3.5 ${config.animate || ''}`} />
             <span>{config.text[language]}</span>
+            {/* DEBUG BANNER - TEMPORARY */}
+            <div className="fixed bottom-0 left-0 w-full bg-red-600 text-white text-[10px] text-center z-[9999] p-1 font-bold">
+                DEBUG MODE: v2.2.5 (Grid Fixed) - IF YOU SEE THIS, CACHE IS CLEARED
+            </div>
         </div>
     );
 };
