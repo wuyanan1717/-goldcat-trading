@@ -199,11 +199,11 @@ function GoldCatApp() {
 
     // Initialize Google Analytics 4
     useEffect(() => {
-        // TODO: Replace with your actual GA4 Measurement ID
-        // Get it from https://analytics.google.com/
-        const GA4_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // Replace this!
+        // Initialize Google Analytics 4
+        // ID Provided by user: G-7Q56V8W9DX
+        const GA4_MEASUREMENT_ID = 'G-7Q56V8W9DX';
 
-        if (GA4_MEASUREMENT_ID !== 'G-XXXXXXXXXX') {
+        if (GA4_MEASUREMENT_ID) {
             ReactGA.initialize(GA4_MEASUREMENT_ID);
             console.log('GA4 initialized');
         }
