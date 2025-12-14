@@ -1926,7 +1926,7 @@ function GoldCatApp() {
                     ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
                         <>
                             {/* 功能 Tab */}
-                            <div className="flex flex-wrap gap-2 mb-6">
+                            <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
                                 {[
                                     { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
                                     { id: 'journal', label: t('nav.journal'), icon: FileText },
@@ -1936,14 +1936,14 @@ function GoldCatApp() {
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`
-                                flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all
+                                flex-1 min-w-[100px] flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all
                                 ${activeTab === tab.id
                                                 ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
                                                 : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-700'}
                             `}
                                     >
                                         <tab.icon className="w-4 h-4" />
-                                        {tab.label}
+                                        <span className="hidden xs:inline sm:inline">{tab.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -1952,9 +1952,9 @@ function GoldCatApp() {
                             {activeTab === 'new_trade' && (
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
                                     {/* 左侧：录入表单 */}
-                                    <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-                                        <div className="flex justify-between items-center mb-6 border-b border-neutral-800 pb-4">
-                                            <h2 className="text-xl font-black text-white flex items-center gap-2">
+                                    <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+                                        <div className="flex justify-between items-center mb-4 sm:mb-6 border-b border-neutral-800 pb-3 sm:pb-4">
+                                            <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
                                                 <Target className="w-5 h-5 text-amber-500" />
                                                 {t('form.title')}
                                             </h2>
@@ -1963,7 +1963,7 @@ function GoldCatApp() {
                                             </span>
                                         </div>
 
-                                        <div className="space-y-6">
+                                        <div className="space-y-4 sm:space-y-6">
                                             {/* 第一行：基础信息 */}
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                 <div className="col-span-2 md:col-span-1">
@@ -1984,7 +1984,7 @@ function GoldCatApp() {
                                                     <input
                                                         type="text" placeholder="BTC/USDT" value={formData.symbol}
                                                         onChange={e => handleInputChange('symbol', e.target.value.toUpperCase())}
-                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
+                                                        className="w-full min-h-[44px] bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
                                                     />
                                                 </div>
                                                 <div className="col-span-1">
