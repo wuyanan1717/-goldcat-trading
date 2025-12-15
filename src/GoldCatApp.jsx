@@ -5,6 +5,7 @@ import { getCheckoutUrl, CREEM_CONFIG } from './creemConfig';
 import PrivacyPolicyPage from './PrivacyPolicyPage';
 import TermsOfServicePage from './TermsOfServicePage';
 import ParticleLogo from './ParticleLogo';
+import BackgroundParticles from './BackgroundParticles';
 import {
     TrendingUp, TrendingDown, DollarSign, Package, AlertCircle, BarChart3, Target,
     Award, Plus, X, Crown, Calendar, CreditCard, Wallet, User, LogOut, Trash2,
@@ -1515,6 +1516,8 @@ function GoldCatApp() {
 
     return (
         <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate overflow-auto flex flex-col min-h-screen" translate="no">
+            {/* Background Animation (KuCoin Style) */}
+            <BackgroundParticles />
 
             {/* 顶部导航栏 (Header) */}
             <header className="border-b border-neutral-800 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-50">
