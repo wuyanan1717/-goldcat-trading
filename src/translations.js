@@ -117,22 +117,24 @@ export const translations = {
             login_failed: "账号或密码错误",
             password_mismatch: "两次输入的密码不一致",
             fill_all_fields: "请填写完整信息",
-            email_registered: "该邮箱已被注册"
+            email_registered: "该邮箱已被注册",
+            forgot_password: "忘记密码?",
+            forgot_password_content: "我忘记了密码。我的邮箱是: "
         },
         feedback: {
             // Founder Chat Style
-            title: "Wuffett (Founder)",
-            status: "Online & Trading",
+            title: "Wuffett (创始人)",
+            status: "在线交易中",
             greeting: "Hey! 👋 我是 GoldCat Terminal 的创始人。这里没有机器人，只有我。\n\n无论是遇到 Bug，还是想聊聊产品功能，你的消息会直接推送到我的邮件上。",
-            message_label: "YOUR MESSAGE",
-            message_placeholder: "Yo Wuffett, 我觉得这功能有点...",
-            contact_label: "YOUR CONTACT (Optional)",
-            contact_placeholder: "@username or email",
-            submit_btn: "Send to my Email",
-            success_msg: "Sent! I'll reply soon.",
-            error_msg: "Failed to send.",
-            email_required: "Please enter contact info",
-            content_required: "Please say something"
+            message_label: "您的留言",
+            message_placeholder: "Wuffett, 我觉得这功能有点...",
+            contact_label: "联系方式 (选填)",
+            contact_placeholder: "@WeChat 或 邮箱",
+            submit_btn: "发送到我的邮箱",
+            success_msg: "已发送！我会尽快回复。",
+            error_msg: "发送失败。",
+            email_required: "请填写联系方式",
+            content_required: "请输入留言内容"
         },
         common: {
             success: "操作成功",
@@ -380,7 +382,7 @@ export const translations = {
             pro_member: "PRO Member"
         },
         home: {
-            title: "Manual Recording is Discipline",
+            title: "Manual Entry. Agent Intelligence",
             slogan: "GoldCat - Your Guardian of Wealth",
             desc_1: "Goldcat Terminal is the first crypto trading terminal powered by an AI Agent.",
             desc_2: "Stop impulsive trading. Let Dynamic Risk Modes guard your capital and the R-Multiple Pattern Matrix reveal your edge. Through deliberate manual entry, we transform trading discipline into tangible profits.",
@@ -485,7 +487,9 @@ export const translations = {
             login_failed: "Invalid email or password",
             password_mismatch: "Passwords do not match",
             fill_all_fields: "Please fill in all fields",
-            email_registered: "Email already registered"
+            email_registered: "Email already registered",
+            forgot_password: "Forgot Password?",
+            forgot_password_content: "I forgot my password. My email is: "
         },
         form: {
             title: "Trade Execution",

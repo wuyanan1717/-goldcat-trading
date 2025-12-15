@@ -2951,6 +2951,19 @@ function GoldCatApp() {
                                     <button onClick={() => setIsRegisterMode(!isRegisterMode)} className="text-amber-500 hover:underline">
                                         {isRegisterMode ? t('auth.to_login') : t('auth.to_register')}
                                     </button>
+                                    {!isRegisterMode && (
+                                        <button onClick={() => {
+                                            setShowLoginModal(false);
+                                            setShowFeedbackModal(true);
+                                            setFeedbackForm({
+                                                ...feedbackForm,
+                                                type: 'support',
+                                                content: t('auth.forgot_password_content') + loginForm.email
+                                            });
+                                        }} className="text-gray-500 hover:text-gray-300">
+                                            {t('auth.forgot_password')}
+                                        </button>
+                                    )}
 
                                 </div>
                             </div>
