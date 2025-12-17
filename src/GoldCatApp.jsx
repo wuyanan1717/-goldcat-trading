@@ -199,14 +199,19 @@ function GoldCatApp() {
     }, []);
 
     // Initialize Google Analytics 4
+    // Initialize Google Analytics 4
     useEffect(() => {
-        // Initialize Google Analytics 4
-        // ID Provided by user: G-7Q56V8W9DX
-        const GA4_MEASUREMENT_ID = 'G-7Q56V8W9DX';
+        try {
+            // Initialize Google Analytics 4
+            // ID Provided by user: G-7Q56V8W9DX
+            const GA4_MEASUREMENT_ID = 'G-7Q56V8W9DX';
 
-        if (GA4_MEASUREMENT_ID) {
-            ReactGA.initialize(GA4_MEASUREMENT_ID);
-            console.log('GA4 initialized');
+            if (GA4_MEASUREMENT_ID) {
+                ReactGA.initialize(GA4_MEASUREMENT_ID);
+                console.log('GA4 initialized');
+            }
+        } catch (error) {
+            console.warn('GA4 Initialization Failed:', error);
         }
     }, []);
 
@@ -216,17 +221,37 @@ function GoldCatApp() {
         setPatterns(getInitialPatterns(language)); // 更新 patterns
     }, [language]);
 
-    // Track page views: Landing vs Dashboard
+    // Track page views: Landing vs Dashboard with clear naming
     useEffect(() => {
-        if (user && !explicitLandingView) {
-            // User is on Dashboard (Trading Input Page)
-            ReactGA.send({ hitType: "pageview", page: "/dashboard", title: "Dashboard - Trading Input" });
-        } else if (!user && showGuestDashboard) {
-            // Guest is viewing Dashboard
-            ReactGA.send({ hitType: "pageview", page: "/guest-dashboard", title: "Guest Dashboard" });
-        } else {
-            // Landing page
-            ReactGA.send({ hitType: "pageview", page: "/", title: "Landing Page" });
+        try {
+            if (user && !explicitLandingView) {
+                // User is logged in and on Dashboard
+                ReactGA.send({
+                    hitType: "pageview",
+                    page: "/app/dashboard",
+                    title: "APP: Trading Dashboard"
+                });
+                // Set custom dimension for user state
+                ReactGA.set({ user_state: 'logged_in' });
+            } else if (!user && showGuestDashboard) {
+                // Guest is viewing Dashboard (trial mode)
+                ReactGA.send({
+                    hitType: "pageview",
+                    page: "/app/guest-dashboard",
+                    title: "APP: Guest Dashboard (Trial)"
+                });
+                ReactGA.set({ user_state: 'guest' });
+            } else {
+                // Landing page (marketing website)
+                ReactGA.send({
+                    hitType: "pageview",
+                    page: "/",
+                    title: "LANDING: Homepage"
+                });
+                ReactGA.set({ user_state: user ? 'logged_in_viewing_landing' : 'anonymous' });
+            }
+        } catch (error) {
+            console.warn('GA4 PageView Tracking Failed:', error);
         }
     }, [user, explicitLandingView, showGuestDashboard]);
 
@@ -342,6 +367,28 @@ function GoldCatApp() {
     const [checklist, setChecklist] = useState({ trend: false, close: false, structure: false });
     const [isShaking, setIsShaking] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submission
+
+    // Track Dashboard Tab Changes (must be after activeTab declaration)
+    useEffect(() => {
+        try {
+            if ((user && !explicitLandingView) || (!user && showGuestDashboard)) {
+                // Only track if user is on Dashboard
+                const tabLabels = {
+                    'new_trade': 'Trading Input',
+                    'journal': 'Trade Journal',
+                    'ai_analysis': 'AI Analysis'
+                };
+                ReactGA.event({
+                    category: 'Dashboard',
+                    action: 'Switch Tab',
+                    label: tabLabels[activeTab] || activeTab
+                });
+            }
+        } catch (error) {
+            console.warn('GA4 Tab Tracking Failed:', error);
+        }
+    }, [activeTab, user, explicitLandingView, showGuestDashboard]);
+
     const [isDataLoaded, setIsDataLoaded] = useState(false); // Prevent overwriting local storage before load
 
     const [showCloseTradeModal, setShowCloseTradeModal] = useState(false);
@@ -1554,7 +1601,15 @@ function GoldCatApp() {
                                     </span>
                                 </div>
                                 {!membership.isPremium && (
-                                    <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="bg-amber-600 hover:bg-amber-500 text-black text-xs font-bold px-3 py-1.5 rounded-full animate-pulse flex items-center gap-1">
+                                    <button onClick={() => {
+                                        ReactGA.event({
+                                            category: 'Conversion',
+                                            action: 'Click Upgrade',
+                                            label: 'Header Upgrade Button'
+                                        });
+                                        setShowPaymentModal(true);
+                                        setPaymentMethod(null);
+                                    }} className="bg-amber-600 hover:bg-amber-500 text-black text-xs font-bold px-3 py-1.5 rounded-full animate-pulse flex items-center gap-1">
                                         <Lock className="w-3 h-3" /> {t('nav.upgrade')}
                                     </button>
                                 )}
@@ -1568,7 +1623,14 @@ function GoldCatApp() {
                                 </button>
                             </div>
                         ) : (
-                            <button onClick={() => setShowLoginModal(true)} className="text-sm font-bold text-amber-500 hover:text-amber-400">{t('nav.login_register')}</button>
+                            <button onClick={() => {
+                                ReactGA.event({
+                                    category: 'Navigation',
+                                    action: 'Click Login',
+                                    label: 'Header Login Button'
+                                });
+                                setShowLoginModal(true);
+                            }} className="text-sm font-bold text-amber-500 hover:text-amber-400">{t('nav.login_register')}</button>
                         )}
                         <button
                             onClick={() => setLanguage(l => l === 'zh' ? 'en' : 'zh')}
@@ -1663,17 +1725,41 @@ function GoldCatApp() {
                                 <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v2
                             </div>
 
-                            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black text-white mb-6 sm:mb-8 tracking-tight leading-tight drop-shadow-2xl">
-                                {t('home.title')}
+                            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white mb-6 sm:mb-8 md:mb-10 leading-tight tracking-tight drop-shadow-2xl px-4">
+                                {language === 'zh' ? (
+                                    <>别再独自交易<br /> 部署你的 <span className="text-amber-500">AI Agent</span></>
+                                ) : (
+                                    <>Don't Trade Alone<br /> Deploy Your <span className="text-amber-500">Agent</span></>
+                                )}
                             </h1>
 
-                            <p className="text-gray-300 text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 md:mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-md px-4">
-                                {t('home.desc_1')} {t('home.desc_2')}
+
+                            <p style={{ maxWidth: '1200px', lineHeight: '1.6', color: '#b0b0b0' }} className="text-lg sm:text-xl md:text-2xl mb-36 text-center mx-auto">
+                                {language === 'zh' ? (
+                                    <>
+                                        Goldcat 是首个由风控 Agent 驱动的交易终端。它不仅记录数据，更监控你的<span style={{ color: '#fff', fontWeight: 'bold' }}>“心理资本”</span>。
+                                        <br className="block my-2" />
+                                        通过分析你的手动录入，Agent 实时检测上头和 FOMO —— <span style={{ color: '#fff', fontWeight: 'bold' }}>强制你保持纪律。</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        Goldcat is the first trading terminal powered by a Risk Control Agent. It doesn't just record data; it monitors your <span style={{ color: '#fff', fontWeight: 'bold' }}>"Mental Capital"</span>.
+                                        <br className="block my-2" />
+                                        By analyzing your manual entries, the Agent detects tilt and FOMO in real-time— <span style={{ color: '#fff', fontWeight: 'bold' }}>forcing you to stay disciplined.</span>
+                                    </>
+                                )}
                             </p>
 
                             <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-20">
                                 <button
                                     onClick={() => {
+                                        // GA Tracking
+                                        ReactGA.event({
+                                            category: 'Landing Page',
+                                            action: 'Click CTA',
+                                            label: 'Start Journey Button'
+                                        });
+                                        // Original logic
                                         if (user) {
                                             setExplicitLandingView(false);
                                         } else {
@@ -1877,9 +1963,15 @@ function GoldCatApp() {
                                         <button
                                             disabled={membership.isPremium}
                                             onClick={() => {
-                                                if (membership.isPremium) return;
+                                                if (membership.isPremium) return; // If already premium, do nothing
 
+                                                // If not premium, track GA event and proceed with purchase/login flow
                                                 if (user) {
+                                                    ReactGA.event({
+                                                        category: 'Conversion',
+                                                        action: 'Click Purchase',
+                                                        label: 'Landing Pricing - Get Pro Button'
+                                                    });
                                                     setShowPaymentModal(true);
                                                     setPaymentMethod(null);
                                                 } else {
@@ -1889,7 +1981,8 @@ function GoldCatApp() {
                                             }}
                                             className={`group relative w-full py-4 ${membership.isPremium
                                                 ? 'bg-neutral-800 text-gray-400 cursor-not-allowed'
-                                                : 'bg-gradient-to-r from-amber-400 to-amber-500 text-black hover:shadow-[0_0_60px_rgba(245,158,11,0.5)] hover:-translate-y-1'} 
+                                                : 'bg-gradient-to-r from-amber-400 to-amber-500 text-black hover:shadow-[0_0_60px_rgba(245,158,11,0.5)] hover:-translate-y-1'
+                                                } 
                                                 font-black text-lg rounded-xl shadow-[0_0_40px_rgba(245,158,11,0.3)] transition-all overflow-hidden`}
                                         >
                                             {membership.isPremium ? t('pricing.current_plan') : t('pricing.get_pro')}
@@ -1951,8 +2044,8 @@ function GoldCatApp() {
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`
-                                flex-1 min-w-[100px] flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all
-                                ${activeTab === tab.id
+                                flex - 1 min - w - [100px] flex items - center justify - center gap - 2 px - 4 sm:px-6 py-3 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all
+                                            ${activeTab === tab.id
                                                 ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
                                                 : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'}
                             `}
