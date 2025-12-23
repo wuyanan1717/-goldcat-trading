@@ -13,11 +13,12 @@ export const translations = {
             pro_member: "PRO会员"
         },
         home: {
-            title: "别再独自交易。部署你的 AI Agent。",
-            slogan: "金猫系统 - 您的财富守护神",
-            desc_1: "Goldcat 是首个由风控 Agent 驱动的交易终端。它不仅记录数据，更监控你的\"心理资本\"。通过分析你的手动录入，Agent 实时检测上头和 FOMO —— 强制你保持纪律。",
+            title: "手动录入 即是修行",
+            slogan: "首个强制\"纪律进化\"的交易终端，记录\"人性数据\"是盈利的唯一捷径。",
+            desc_1: "让 AI Agent 监控心理资本并强制拦截执行偏差，助你构建职业级\"盈利模型\"",
             desc_2: "",
-            start_btn: "激活 Agent",
+            start_btn: "开始 100 笔交易试炼",
+            challenge_count: "{count} 位交易员正在重塑纪律",
             feature_manual_title: "手动协议",
             feature_manual_desc: "手动录入建立与 Agent 的深度链接。每一次手动敲击，都在强化你的交易神经回路，并为风控分析提供唯一的真实数据源。",
             feature_discipline_title: "主动拦截",
@@ -36,8 +37,46 @@ export const translations = {
             emotion_roi_desc: "所有的亏损都是来自心存侥幸，所有的盈利来自严格执行。",
             fomo_entry: "FOMO ENTRY",
             fomo_trades: "追涨杀跌",
-            planned_entry: "PLANNED ENTRY",
-            planned_trades: "交易计划执行"
+            fomo_trades: "追涨杀跌",
+            footer_title: "职业盈利模型构建",
+            footer_subtitle: "100 笔交易，重塑你的职业复利曲线",
+            phases: {
+                phase1: {
+                    range: "0-20",
+                    title: "止血期：封堵利润漏洞",
+                    logic: "停止为情绪买单",
+                    desc: "正在拦截账户失血。物理隔离 80% 的情绪化‘废单’，保住本金。",
+                    hint: "少亏即是赚。",
+                    unlock: "解锁“情绪废单”识别功能"
+                },
+                phase2: {
+                    range: "21-50",
+                    title: "觉醒期：构建胜率优势",
+                    logic: "只有懂风险，才能拿住利润",
+                    desc: "正在校准风险概率。AI Agent 开始介入计算真实的期望值 (EV)，让盈利从运气走向确定性。",
+                    hint: "盈利的确定性在增加。",
+                    unlock: "解锁“EV 期望值”实时计算"
+                },
+                phase3: {
+                    range: "51-80",
+                    title: "稳态期：复刻盈利基因",
+                    logic: "系统的一致性等于提款机的稳定性",
+                    desc: "正在磨练系统一致性。当纪律产生复利，你的模型将成为可复制的“私人提款机”。",
+                    hint: "你的模型正在变成提款机。",
+                    unlock: "解锁“盈利模式”深度复盘"
+                },
+                phase4: {
+                    range: "81-100",
+                    title: "职业期：Alpha 收割模式",
+                    logic: "纪律已入骨髓，你就是收割者",
+                    desc: "获利模型已达成。纪律入骨，Agent 自动化护航，正式开启职业级 Alpha 获利。",
+                    hint: "恭喜，你已获得在市场长期提现的特权。",
+                    unlock: "解锁“Alpha 自动化”护航"
+                }
+            },
+            maturity_index: "系统成熟度",
+            ev_plus_title: "正期望值 (EV+)",
+            ev_plus_desc: "Expected Value Positive.\n这意味着你的交易系统具有数学上的盈利优势，长期坚持执行即可获利。"
         },
         pricing: {
             title: "选择您的套餐",
@@ -382,36 +421,75 @@ export const translations = {
             pro_member: "PRO Member"
         },
         home: {
-            title: "Don't Trade Alone. Deploy Your Agent.",
-            slogan: "GoldCat - Your Guardian of Wealth",
-            desc_1: "Goldcat is the first trading terminal powered by a Risk Control Agent. It doesn't just record data; it monitors your \"Mental Capital\". By analyzing your manual entries, the Agent detects tilt and FOMO in real-time—forcing you to stay disciplined.",
-            desc_2: "",
-            desc_3: "Reject impulsive entries. Never ignore stop-losses. Through strict procedural recording, let trading return to rationality, making profit a byproduct of discipline.",
-            start_btn: "Activate Agent",
+            title: "Execution Discipline",
+            slogan: "The First Terminal That Forces \"Discipline Evolution\"",
+            desc_1: "Capturing Behavioral Alpha is your only shortcut to consistent profits.",
+            desc_2: "Let AI Agent monitor mental capital and force-intercept execution deviation, helping you build a pro-level profit model",
+            start_btn: "Begin Your 100-Trade Evolution",
+            challenge_count: "{count} Active Challengers",
             feature_manual_title: "Protocol: Manual",
             feature_manual_desc: "Establish a deep neural link with your Agent. Every manual keystroke reinforces your trading circuit and provides the only source of truth for risk analysis.",
             feature_discipline_title: "Action: Intercept",
-            feature_discipline_desc: "FOMO signal detected? The Agent intervenes immediately. We don't just advise you to stay calm; we enforce a mandatory cool-down protocol to physically stop the bleed.",
+            feature_discipline_desc: "FOMO signal detected? The Agent intervenes immediately. We don't just advise you to stay calm; we enforce a mandatory cool-down protocol to technically stop the bleed.",
             feature_ai_title: "Status: Evolving",
             feature_ai_desc: "Extracting algorithms from your losses. The Agent continuously scans your blind spots, turning every expensive tuition fee into a defensive moat for your next trade.",
             ai_risk_title: "AI Risk Prevention",
             ai_risk_subtitle: "Stop Now.",
-            ai_risk_desc: "When dopamine takes over your brain, GoldCat Terminal takes over your account. It knows your losing patterns better than you do, and 'scolds you awake' before you make a mistake.",
+            ai_risk_desc: "When dopamine takes over your brain, GoldCat Terminal takes over your account. It knows your losing patterns better than you do, and 'shocks' you back to logic before you make a mistake.",
             ai_risk_warning: "WARNING: STOP IMMEDIATELY",
-            ai_risk_backtesting: "Detected 'revenge trading' behavior after 2 consecutive losses. Backtesting shows this operation in this state results in 92% historical capital drawdown.",
+            ai_risk_backtesting: "Detected 'revenge trading' behavior after 2 consecutive losses. Backtesting shows this operation in this state results in a 92% historical probability of major capital drawdown.",
             ai_risk_button: "Forced Cool Down 1h",
             ai_risk_example: "Just stopped out twice, going all in now! Win it back!",
             emotion_roi_title: "Emotion ROI Visualization",
-            emotion_roi_subtitle: "Data doesn't lie. GoldCat Terminal helps you distinguish 'Emotion Rate' vs 'Logic Rate', glancing at the chart tells you:",
+            emotion_roi_subtitle: "Data doesn't lie. GoldCat Terminal helps you distinguish 'Emotional Bias' vs 'Systematic Logic', one glance at the chart reveals the truth:",
             emotion_roi_desc: "All losses come from wishful thinking, all profits come from strict execution.",
             fomo_entry: "FOMO ENTRY",
             fomo_trades: "Chasing/Revenge",
             planned_entry: "PLANNED ENTRY",
-            planned_trades: "Plan Execution"
+            planned_trades: "Plan Execution",
+            footer_title: "Build Professional Profit Model",
+            footer_subtitle: "100 Trades to Master Your Compounding Edge",
+            phases: {
+                phase1: {
+                    range: "0-20",
+                    title: "Stop the Bleeding",
+                    logic: "Stop Paying for Emotions",
+                    desc: "Intercepting account bleeding. Physically isolating 80% of emotional 'junk trades' to preserve capital.",
+                    hint: "Less loss is profit.",
+                    unlock: "Unlock 'Emotional Junk Trade' ID"
+                },
+                phase2: {
+                    range: "21-50",
+                    title: "Awakening: Build Edge",
+                    logic: "Understand Risk to Hold Profit",
+                    desc: "Calibrating risk probability. AI Agent calculates real Expected Value (EV), moving profit from luck to certainty.",
+                    hint: "Certainty is increasing.",
+                    unlock: "Unlock 'Real-time EV' Calc"
+                },
+                phase3: {
+                    range: "51-80",
+                    title: "Steady: Replicate Profit",
+                    logic: "Consistency = ATM Stability",
+                    desc: "Honing consistency. When discipline compounds, your model becomes a replicable 'Private ATM'.",
+                    hint: "Model becoming an ATM.",
+                    unlock: "Unlock 'Profit Model' Review"
+                },
+                phase4: {
+                    range: "81-100",
+                    title: "Pro: Alpha Harvest",
+                    logic: "Discipline is the Reaper",
+                    desc: "Profit model achieved. Discipline ingrained, Agent automated escort, officially opening professional Alpha harvesting.",
+                    hint: "Earned long-term withdrawal privilege.",
+                    unlock: "Unlock 'Alpha Automation' Escort"
+                }
+            },
+            maturity_index: "System Maturity",
+            ev_plus_title: "Positive Expected Value (EV+)",
+            ev_plus_desc: "Expected Value Positive.\nThis means your trading system has a mathematical edge. Stick to it to profit in the long run."
         },
         pricing: {
             title: "Choose Your Plan",
-            subtitle: "Build better trading habits with professional tools",
+            subtitle: "Forge your edge with the ultimate discipline terminal.",
             free_title: "Free",
             free_price: "Free",
             free_desc: "Perfect for getting started",
@@ -431,9 +509,9 @@ export const translations = {
                 "Unlimited Trade Logging",
                 "Unlimited AI Deep Review",
                 "Advanced Risk Strategy Recommendations",
-                "Dedicated Support (support@goldcat.trade)",
+                "Priority 24/7 Support",
                 "Priority Access to New Features",
-                "Ad-free Experience"
+                "Exclusive Pro Insights Agent"
             ],
             start_free: "Start for Free",
             get_pro: "Get Annual Access",
@@ -445,7 +523,7 @@ export const translations = {
             subtitle: "For questions, contact us at support@goldcat.trade",
             items: [
                 {
-                    q: "What is Goldcat Terminal, and can it make me money?",
+                    q: "What is Goldcat Terminal, and will it make me profitable?",
                     a: "Goldcat Terminal is not just a journaling tool; it is your AI tactical commander. By deeply analyzing your historical trade data, it identifies your most profitable setups and costly bad habits. We cannot give you 'signals', but we can help you discover your trading Edge, thereby improving your win rate and risk-reward ratio."
                 },
                 {
@@ -454,7 +532,7 @@ export const translations = {
                 },
                 {
                     q: "Why no API auto-import? What if I don't want to journal manually?",
-                    a: "Goldcat Terminal deliberately does not support auto-import. We firmly believe: 'Unreviewed records are meaningless'. Auto-import only encourages reckless trading on exchanges, creating massive amounts of junk data. Manual entry is the first step of trading discipline. We want you to relive the decision process when entering every entry, stop loss, and take profit. This **'ritual'** effectively suppresses over-trading and trains your professional trading behavior from the source. If you find recording troublesome, perhaps that trade shouldn't have been taken in the first place."
+                    a: "Goldcat Terminal deliberately does not support auto-import. We firmly believe: 'Records without reflection are just noise'. Auto-import only encourages reckless high-frequency trading. Manual entry is the first step of trading discipline. We want you to relive the decision process when entering every entry, stop loss, and take profit. This **'ritual'** effectively suppresses over-trading and trains your professional trading behavior from the source. If a trade isn't worth the 30 seconds it takes to log, it probably wasn't worth taking."
                 },
                 {
                     q: "Which exchanges do you support?",
@@ -462,7 +540,7 @@ export const translations = {
                 },
                 {
                     q: "I am a beginner, is Goldcat Terminal suitable for me?",
-                    a: "Very suitable. The biggest problem for beginners is 'not knowing how they lost'. Goldcat Terminal's AI coach helps you build the professional habit of 'Record-Review-Optimize' early in your trading journey, which is more valuable than blind trading."
+                    a: "Very suitable. The fatal flaw for most beginners is the inability to diagnose their own failures. Goldcat Terminal's AI coach helps you build the professional habit of 'Record-Review-Optimize' early in your trading journey, which is more valuable than blind trading."
                 },
                 {
                     q: "How do I contact support or report bugs?",
@@ -500,7 +578,7 @@ export const translations = {
             short: "Short",
             symbol: "Symbol",
             timeframe: "Timeframe",
-            pattern: "Pattern (Editable)",
+            pattern: "Setup (Editable)",
             pattern_placeholder: "Select or type...",
             capital_management: "Capital Management",
             margin: "Margin (USDT)",
@@ -554,7 +632,7 @@ export const translations = {
             total_trades: "Total Trades",
             win_rate: "Win Rate",
             net_pnl: "Net PnL",
-            empty_state: "No data. Go to 'New Trade' to start.",
+            empty_state: "No trades recorded yet. Begin your 100-trade discipline evolution now.",
             columns: {
                 date: "Date",
                 symbol_dir: "Symbol/Dir",

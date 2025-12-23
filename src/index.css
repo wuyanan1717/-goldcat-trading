@@ -2,11 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
+html,
+body {
   overflow-x: hidden;
   width: 100%;
   position: relative;
-  overscroll-behavior-y: none; /* Prevents rubber-banding on Mac/iOS if desired, use with caution */
+  overscroll-behavior-y: none;
+  /* Prevents rubber-banding on Mac/iOS if desired, use with caution */
 }
 
 /* Ensure no element can cause horizontal scroll */
@@ -18,4 +20,14 @@ html, body {
 /* Restore overscroll for scrollable containers */
 .overflow-y-auto {
   overscroll-behavior-y: auto;
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
 }
