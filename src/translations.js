@@ -405,6 +405,14 @@ export const translations = {
             auto_save_success: "已自动为您保存刚才的交易！",
             migration_success: "云端同步完成",
             migration_error: "同步失败，请检查网络"
+        },
+        christmas: {
+            wish: "愿你的每一份坚持，都化作新一年的满盘红利",
+            title: "圣诞暖心赠礼 -50%",
+            desc: "把这一年的波折留在雪地，带着金色的好运开启新篇章。",
+            voucher: "圣诞礼券 (立减 50%)",
+            click_claim: "点击领取",
+            claimed: "已领取"
         }
     },
     en: {
@@ -808,6 +816,14 @@ export const translations = {
             auto_save_success: "Your trade has been automatically saved!",
             migration_success: "Cloud sync complete",
             migration_error: "Sync failed. Check connection"
+        },
+        christmas: {
+            wish: "May every persistence turn into profit in the New Year",
+            title: "Christmas Special Gift -50%",
+            desc: "Leave the year's volatility in the snow, start the new chapter with golden luck.",
+            voucher: "Christmas Voucher (50% OFF)",
+            click_claim: "Click to Claim",
+            claimed: "Claimed"
         }
     }
 };

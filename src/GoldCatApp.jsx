@@ -13,7 +13,7 @@ import {
     Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, ChevronDown, Lock, Unlock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
     PlusCircle, Check, RotateCcw, Info, Loader2, Trophy, Clock, Snowflake, BarChart2,
-    Send
+    Send, Star, Gift
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -120,6 +120,187 @@ const generateMarketData = () => {
         data.push({ time: i, price });
     }
     return data;
+};
+
+// Custom Santa Icon Component
+const SantaIcon = ({ className }) => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+    >
+        <path d="M17 7c-2-3-7-3-10 0-3 3 0 7 0 7l3 3h4l3-3s3-4 0-7z" fill="white" fillOpacity="0.15" />
+        <path d="M7 14s-3-4 0-7c3-3 8-3 10 0 3 3 0 7 0 7" stroke="currentColor" />
+        <circle cx="12" cy="3" r="1.5" fill="white" />
+        <path d="M9 14c0 2 1 4 3 4s3-2 3-4" />
+        <path d="M7 14h10" />
+        <path d="M12 18c-3 0-5-2-5-5h10c0 3-2 5-5 5z" fill="white" fillOpacity="0.2" />
+        <circle cx="10" cy="11" r="0.6" fill="currentColor" />
+        <circle cx="14" cy="11" r="0.6" fill="currentColor" />
+        <circle cx="12" cy="14" r="0.4" fill="#ef4444" stroke="none" />
+    </svg>
+);
+
+const ChristmasBanner = ({ children, t }) => {
+    const [copied, setCopied] = useState(false);
+
+    const copyCode = () => {
+        try {
+            const el = document.createElement('textarea');
+            el.value = 'D2MUNZAK';
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('无法复制内容: ', err);
+        }
+    };
+
+    return (
+        <div className="w-full py-24 my-16 bg-[#050505] text-zinc-100 font-sans selection:bg-red-500/30 overflow-hidden relative rounded-3xl border border-neutral-800">
+
+            {/* 氛围背景：圣诞夜深红光晕 */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[700px] bg-gradient-to-b from-red-800/25 via-red-900/5 to-transparent pointer-events-none" />
+
+            {/* 动态飘雪效果 */}
+            <div className="absolute inset-0 pointer-events-none">
+                {[...Array(40)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="absolute bg-white rounded-full blur-[1px] animate-snow"
+                        style={{
+                            top: '-10%',
+                            left: `${Math.random() * 100}%`,
+                            width: `${Math.random() * 3 + 1}px`,
+                            height: `${Math.random() * 3 + 1}px`,
+                            opacity: Math.random() * 0.4 + 0.2,
+                            animationDuration: `${Math.random() * 12 + 8}s`,
+                            animationDelay: `${Math.random() * 10}s`
+                        }}
+                    />
+                ))}
+            </div>
+
+            <div className="max-w-4xl mx-auto px-6 relative z-10 flex flex-col items-center justify-center">
+
+                {/* 顶部节日 Header */}
+                <div className="flex flex-col items-center mb-12 text-center">
+                    <div className="relative mb-8">
+                        <div className="absolute -inset-10 bg-red-600/40 blur-[50px] rounded-full animate-pulse" />
+
+                        <div className="relative w-32 h-32 bg-gradient-to-br from-red-500 to-red-700 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(239,68,68,0.7)] border border-red-400/40 overflow-hidden group">
+                            <SantaIcon className="text-white w-22 h-22 animate-santa-nod z-10 drop-shadow-[0_5px_15px_rgba(0,0,0,0.3)]" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                        </div>
+
+                        <Star className="absolute -top-4 -right-4 text-amber-400 w-10 h-10 fill-amber-400 animate-spin-slow drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" />
+                    </div>
+
+                    <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent italic uppercase">
+                        Merry Christmas
+                    </h1>
+                    <p className="text-red-500 font-black tracking-[0.4em] text-[10px] uppercase bg-red-500/10 px-6 py-1.5 rounded-full border border-red-500/20 backdrop-blur-sm">
+                        {t('christmas.wish')}
+                    </p>
+                </div>
+
+                {/* 核心圣诞横幅 */}
+                <div className="w-full bg-zinc-900/60 border border-red-500/30 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-8 backdrop-blur-xl relative overflow-hidden group/banner shadow-2xl">
+                    <div className="absolute top-0 right-0 p-2 opacity-10">
+                        <Snowflake size={120} className="rotate-12" />
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        <div className="flex flex-col gap-1 text-center md:text-left">
+                            <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase">{t('christmas.title')}</h2>
+                            <p className="text-zinc-400 text-base max-w-sm">
+                                {t('christmas.desc')}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* 折扣码区域 */}
+                    <div className="flex flex-col items-center md:items-end gap-3">
+                        <span className="text-[11px] font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
+                            <Gift size={14} /> {t('christmas.voucher')}
+                        </span>
+                        <div
+                            onClick={copyCode}
+                            className="relative cursor-pointer group/code active:scale-95 transition-all"
+                        >
+                            <div className="absolute -inset-2 bg-gradient-to-r from-red-600 to-amber-500 rounded-2xl blur opacity-40 group-hover/code:opacity-100 transition duration-500" />
+                            <div className="relative flex items-center gap-6 px-8 py-4 bg-red-600 rounded-2xl border border-white/20 shadow-2xl">
+                                <span className="font-mono text-3xl font-black text-white tracking-[0.2em] italic">D2MUNZAK</span>
+                                <div className="w-px h-8 bg-white/20" />
+                                <div className="flex flex-col items-center min-w-[50px]">
+                                    {copied ? (
+                                        <Check className="text-white animate-bounce" size={24} />
+                                    ) : (
+                                        <Copy className="text-white/80 group-hover/code:text-white" size={24} />
+                                    )}
+                                    <span className="text-[9px] font-black mt-1 uppercase text-white/70">
+                                        {copied ? t('christmas.claimed') : t('christmas.click_claim')}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 底部祝福语 */}
+                {/* 底部祝福语 - Keep it, but render children (Pricing) before or after it? Let's render children BEFORE the footer blessing */}
+
+                {children && <div className="mt-16 w-full">{children}</div>}
+
+                <div className="mt-24 flex flex-col items-center gap-6 opacity-60 hover:opacity-100 transition-opacity">
+                    <div className="flex gap-4">
+                        <Snowflake className="text-red-900/40" size={20} />
+                        <Snowflake className="text-red-900/80" size={24} />
+                        <Snowflake className="text-red-900/40" size={20} />
+                    </div>
+                    <p className="text-zinc-600 text-[10px] tracking-[0.5em] uppercase font-black text-center">
+                        圣诞之夜 · 愿盈余与你常在
+                    </p>
+                </div>
+
+            </div>
+
+            {/* 动画关键帧 */}
+        </div>
+    );
+};
+
+const SnowfallOverlay = () => {
+    return (
+        <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
+            {[...Array(50)].map((_, i) => (
+                <div
+                    key={i}
+                    className="absolute bg-white rounded-full blur-[1px] animate-snow"
+                    style={{
+                        top: '-10%',
+                        left: `${Math.random() * 100}%`,
+                        width: `${Math.random() * 4 + 2}px`,
+                        height: `${Math.random() * 4 + 2}px`,
+                        opacity: Math.random() * 0.5 + 0.3,
+                        animationDuration: `${Math.random() * 10 + 10}s`,
+                        animationDelay: `${Math.random() * 5}s`
+                    }}
+                />
+            ))}
+        </div>
+    );
 };
 
 function GoldCatApp() {
@@ -1536,6 +1717,7 @@ function GoldCatApp() {
 
     return (
         <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate overflow-auto flex flex-col min-h-screen" translate="no">
+            {((!user && !showGuestDashboard) || (user && explicitLandingView)) && <SnowfallOverlay />}
             {/* Background Animation (KuCoin Style) */}
             <BackgroundParticles />
 
@@ -1833,108 +2015,110 @@ function GoldCatApp() {
                                 </div>
                             </div>
 
-                            {/* --- Pricing Section (Added for Compliance) --- */}
-                            <div className="mt-32 mb-20 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
-                                <div className="text-center mb-16">
-                                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6 tracking-tight">{t('pricing.title')}</h2>
-                                    <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-                                        {t('pricing.subtitle')}
-                                    </p>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative group-hover:gap-12 transition-all duration-500">
-                                    {/* Free Plan */}
-                                    <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start">
-                                        <div className="mb-8 w-full">
-                                            <h3 className="text-xl font-bold text-white mb-2">{t('pricing.free_title')}</h3>
-                                            <div className="flex items-baseline gap-1 mb-4">
-                                                <span className="text-4xl font-black text-white">{t('pricing.free_price')}</span>
-                                            </div>
-                                            <p className="text-gray-400 text-sm">{t('pricing.free_desc')}</p>
-                                        </div>
-                                        <div className="border-t border-white/10 my-8 w-full"></div>
-                                        <ul className="space-y-4 mb-8 flex-1 w-full">
-                                            {Array.isArray(t('pricing.free_features')) && t('pricing.free_features').map((feature, i) => (
-                                                <li key={i} className="flex items-center gap-3 text-gray-300">
-                                                    <Check className="w-5 h-5 text-gray-500 shrink-0" />
-                                                    <span className="text-sm">{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        <button
-                                            onClick={() => {
-                                                if (user) {
-                                                    setExplicitLandingView(false);
-                                                } else {
-                                                    setIsRegisterMode(true);
-                                                    setShowLoginModal(true);
-                                                }
-                                            }}
-                                            className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all"
-                                        >
-                                            {user ? t('pricing.go_dashboard') : t('pricing.start_free')}
-                                        </button>
+                            <ChristmasBanner t={t}>
+                                {/* --- Pricing Section (Added for Compliance) --- */}
+                                <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
+                                    <div className="text-center mb-16">
+                                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6 tracking-tight">{t('pricing.title')}</h2>
+                                        <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                                            {t('pricing.subtitle')}
+                                        </p>
                                     </div>
 
-                                    {/* Lifetime Plan */}
-                                    <div className="relative bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-md border-2 border-amber-500/50 rounded-3xl p-6 sm:p-8 hover:border-amber-400/70 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start shadow-[0_0_40px_rgba(245,158,11,0.15)]">
-                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg">
-                                            <Crown className="w-3 h-3" /> {t('pricing.pro_badge')}
-                                        </div>
-                                        <div className="mb-8 w-full">
-                                            <h3 className="text-xl font-bold text-amber-500 mb-2 flex items-center gap-2">
-                                                {t('pricing.pro_title')}
-                                            </h3>
-                                            <div className="mb-2">
-                                                {/* Original Price (Strikethrough) */}
-                                                <div className="text-xl font-bold text-gray-500 line-through">$39.00</div>
-
-                                                {/* Discounted Price */}
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-5xl font-black text-white">$27.30</span>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative group-hover:gap-12 transition-all duration-500">
+                                        {/* Free Plan */}
+                                        <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start">
+                                            <div className="mb-8 w-full">
+                                                <h3 className="text-xl font-bold text-white mb-2">{t('pricing.free_title')}</h3>
+                                                <div className="flex items-baseline gap-1 mb-4">
+                                                    <span className="text-4xl font-black text-white">{t('pricing.free_price')}</span>
                                                 </div>
-
-                                                {/* Discount Badge */}
-                                                <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block mt-2">
-                                                    30% OFF · {t('pricing.pro_type')}
-                                                </div>
+                                                <p className="text-gray-400 text-sm">{t('pricing.free_desc')}</p>
                                             </div>
-                                            <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
+                                            <div className="border-t border-white/10 my-8 w-full"></div>
+                                            <ul className="space-y-4 mb-8 flex-1 w-full">
+                                                {Array.isArray(t('pricing.free_features')) && t('pricing.free_features').map((feature, i) => (
+                                                    <li key={i} className="flex items-center gap-3 text-gray-300">
+                                                        <Check className="w-5 h-5 text-gray-500 shrink-0" />
+                                                        <span className="text-sm">{feature}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            <button
+                                                onClick={() => {
+                                                    if (user) {
+                                                        setExplicitLandingView(false);
+                                                    } else {
+                                                        setIsRegisterMode(true);
+                                                        setShowLoginModal(true);
+                                                    }
+                                                }}
+                                                className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all"
+                                            >
+                                                {user ? t('pricing.go_dashboard') : t('pricing.start_free')}
+                                            </button>
                                         </div>
-                                        <div className="border-t border-white/10 my-8 w-full"></div>
-                                        <ul className="space-y-4 mb-8 flex-1 w-full">
-                                            {Array.isArray(t('pricing.pro_features')) && t('pricing.pro_features').map((feature, i) => (
-                                                <li key={i} className="flex items-center gap-3 text-white">
-                                                    <div className="bg-amber-500/20 rounded-full p-0.5">
-                                                        <Check className="w-4 h-4 text-amber-500 shrink-0" />
+
+                                        {/* Lifetime Plan */}
+                                        <div className="relative bg-gradient-to-br from-red-500/10 to-rose-500/5 backdrop-blur-md border-2 border-red-500/50 rounded-3xl p-6 sm:p-8 hover:border-red-400/70 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg border border-red-400/30">
+                                                <Crown className="w-3 h-3 text-white" /> {t('pricing.pro_badge')}
+                                            </div>
+                                            <div className="mb-8 w-full">
+                                                <h3 className="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
+                                                    {t('pricing.pro_title')}
+                                                </h3>
+                                                <div className="mb-2">
+                                                    {/* Original Price (Strikethrough) */}
+                                                    <div className="text-xl font-bold text-gray-500 line-through">$39.00</div>
+
+                                                    {/* Discounted Price */}
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="text-5xl font-black text-white">$19.50</span>
                                                     </div>
-                                                    <span className="text-sm font-medium">{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        <button
-                                            disabled={membership.isPremium}
-                                            onClick={() => {
-                                                if (membership.isPremium) return;
 
-                                                if (user) {
-                                                    setShowPaymentModal(true);
-                                                    setPaymentMethod(null);
-                                                } else {
-                                                    setIsRegisterMode(true);
-                                                    setShowLoginModal(true);
-                                                }
-                                            }}
-                                            className={`group relative w-full py-4 ${membership.isPremium
-                                                ? 'bg-neutral-800 text-gray-400 cursor-not-allowed'
-                                                : 'bg-gradient-to-r from-amber-400 to-amber-500 text-black hover:shadow-[0_0_60px_rgba(245,158,11,0.5)] hover:-translate-y-1'} 
-                                                font-black text-lg rounded-xl shadow-[0_0_40px_rgba(245,158,11,0.3)] transition-all overflow-hidden`}
-                                        >
-                                            {membership.isPremium ? t('pricing.current_plan') : t('pricing.get_pro')}
-                                        </button>
+                                                    {/* Discount Badge */}
+                                                    <div className="text-xs text-white font-bold bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1.5 rounded-full inline-block mt-2 shadow-lg shadow-red-500/20">
+                                                        50% OFF · {t('pricing.pro_type')}
+                                                    </div>
+                                                </div>
+                                                <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
+                                            </div>
+                                            <div className="border-t border-white/10 my-8 w-full"></div>
+                                            <ul className="space-y-4 mb-8 flex-1 w-full">
+                                                {Array.isArray(t('pricing.pro_features')) && t('pricing.pro_features').map((feature, i) => (
+                                                    <li key={i} className="flex items-center gap-3 text-white">
+                                                        <div className="bg-red-500/20 rounded-full p-0.5">
+                                                            <Check className="w-4 h-4 text-red-500 shrink-0" />
+                                                        </div>
+                                                        <span className="text-sm font-medium">{feature}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            <button
+                                                disabled={membership.isPremium}
+                                                onClick={() => {
+                                                    if (membership.isPremium) return;
+
+                                                    if (user) {
+                                                        setShowPaymentModal(true);
+                                                        setPaymentMethod(null);
+                                                    } else {
+                                                        setIsRegisterMode(true);
+                                                        setShowLoginModal(true);
+                                                    }
+                                                }}
+                                                className={`group relative w-full py-4 ${membership.isPremium
+                                                    ? 'bg-neutral-800 text-gray-400 cursor-not-allowed'
+                                                    : 'bg-gradient-to-r from-red-600 to-rose-600 text-white hover:shadow-[0_0_60px_rgba(239,68,68,0.5)] hover:-translate-y-1'} 
+                                                font-black text-lg rounded-xl shadow-[0_0_40px_rgba(239,68,68,0.3)] transition-all overflow-hidden`}
+                                            >
+                                                {membership.isPremium ? t('pricing.current_plan') : t('pricing.get_pro')}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </ChristmasBanner>
 
                             {/* FAQ Section */}
                             <div className="max-w-4xl mx-auto mt-32 mb-20 px-4">
@@ -1970,8 +2154,8 @@ function GoldCatApp() {
                                     ))}
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </div >
+                    </div >
                 )
                 }
 
@@ -2658,153 +2842,155 @@ function GoldCatApp() {
                 }
                 {/* Fixed Bottom Progress Bar - The Path to Discipline */}
                 {/* Fixed Bottom Alpha Asset Bar - Only show in Dashboard Mode */}
-                {((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
-                    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/80 backdrop-blur-xl border-t border-white/5 pb-8 pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
-                        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
-                            {
-                                (() => {
-                                    const count = trades.length;
-                                    // 4 Segments Definition
-                                    const segments = [
-                                        { id: 'phase1', min: 0, max: 20, width: '20%' },
-                                        { id: 'phase2', min: 20, max: 50, width: '30%' },
-                                        { id: 'phase3', min: 50, max: 80, width: '30%' },
-                                        { id: 'phase4', min: 80, max: 100, width: '20%' },
-                                    ];
+                {
+                    ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
+                        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/80 backdrop-blur-xl border-t border-white/5 pb-8 pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+                            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
+                                {
+                                    (() => {
+                                        const count = trades.length;
+                                        // 4 Segments Definition
+                                        const segments = [
+                                            { id: 'phase1', min: 0, max: 20, width: '20%' },
+                                            { id: 'phase2', min: 20, max: 50, width: '30%' },
+                                            { id: 'phase3', min: 50, max: 80, width: '30%' },
+                                            { id: 'phase4', min: 80, max: 100, width: '20%' },
+                                        ];
 
-                                    let currentPhaseKey = 'phase1';
-                                    if (count > 80) currentPhaseKey = 'phase4';
-                                    else if (count > 50) currentPhaseKey = 'phase3';
-                                    else if (count > 20) currentPhaseKey = 'phase2';
+                                        let currentPhaseKey = 'phase1';
+                                        if (count > 80) currentPhaseKey = 'phase4';
+                                        else if (count > 50) currentPhaseKey = 'phase3';
+                                        else if (count > 20) currentPhaseKey = 'phase2';
 
-                                    const currentPhase = t(`home.phases.${currentPhaseKey}`, { returnObjects: true }) || {};
-                                    const maturity = Math.min((count / 100) * 100, 100).toFixed(1);
+                                        const currentPhase = t(`home.phases.${currentPhaseKey}`, { returnObjects: true }) || {};
+                                        const maturity = Math.min((count / 100) * 100, 100).toFixed(1);
 
-                                    return (
-                                        <div className="flex flex-col md:flex-row items-end md:items-center justify-between gap-4 md:gap-8">
+                                        return (
+                                            <div className="flex flex-col md:flex-row items-end md:items-center justify-between gap-4 md:gap-8">
 
-                                            {/* LEFT: Global Title & Subtitle */}
-                                            <div className="flex-1 w-full md:w-1/3 min-w-[280px]">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-amber-500 font-bold font-mono text-xs tracking-wider">[{t('home.footer_title')}]</span>
-                                                    <div className="h-px bg-white/10 flex-1"></div>
+                                                {/* LEFT: Global Title & Subtitle */}
+                                                <div className="flex-1 w-full md:w-1/3 min-w-[280px]">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-amber-500 font-bold font-mono text-xs tracking-wider">[{t('home.footer_title')}]</span>
+                                                        <div className="h-px bg-white/10 flex-1"></div>
+                                                    </div>
+                                                    <h3 className="text-sm sm:text-base font-bold text-white mb-1 shadow-black drop-shadow-md">
+                                                        {t('home.footer_subtitle')}
+                                                    </h3>
                                                 </div>
-                                                <h3 className="text-sm sm:text-base font-bold text-white mb-1 shadow-black drop-shadow-md">
-                                                    {t('home.footer_subtitle')}
-                                                </h3>
-                                            </div>
 
-                                            {/* CENTER: Segmented Energy Bar */}
+                                                {/* CENTER: Segmented Energy Bar */}
 
-                                            {/* CENTER: Segmented Energy Bar */}
-                                            <div className="w-full md:w-1/2 flex flex-col justify-end pb-1 mt-4 md:mt-0">
-                                                {/* Bar Container */}
-                                                <div className="flex items-center gap-1.5 w-full h-3 md:h-4 mb-2 relative">
-                                                    {/* Left Static Labels */}
-                                                    <div className="absolute -left-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 font-mono -translate-x-full">0</div>
+                                                {/* CENTER: Segmented Energy Bar */}
+                                                <div className="w-full md:w-1/2 flex flex-col justify-end pb-1 mt-4 md:mt-0">
+                                                    {/* Bar Container */}
+                                                    <div className="flex items-center gap-1.5 w-full h-3 md:h-4 mb-2 relative">
+                                                        {/* Left Static Labels */}
+                                                        <div className="absolute -left-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 font-mono -translate-x-full">0</div>
 
-                                                    {segments.map((seg, index) => {
-                                                        // Force equal visual width (25%)
-                                                        const segmentWidth = '25%';
+                                                        {segments.map((seg, index) => {
+                                                            // Force equal visual width (25%)
+                                                            const segmentWidth = '25%';
 
-                                                        let segProgress = 0;
-                                                        if (count >= seg.max) segProgress = 100;
-                                                        else if (count > seg.min) {
-                                                            segProgress = ((count - seg.min) / (seg.max - seg.min)) * 100;
-                                                        }
+                                                            let segProgress = 0;
+                                                            if (count >= seg.max) segProgress = 100;
+                                                            else if (count > seg.min) {
+                                                                segProgress = ((count - seg.min) / (seg.max - seg.min)) * 100;
+                                                            }
 
-                                                        const isCompleted = count >= seg.max;
-                                                        const isActive = count > seg.min && count < seg.max;
-                                                        // Special handling for phase label display
-                                                        const isCurrent = (count === 0 && index === 0) || (count > seg.min && count <= seg.max);
+                                                            const isCompleted = count >= seg.max;
+                                                            const isActive = count > seg.min && count < seg.max;
+                                                            // Special handling for phase label display
+                                                            const isCurrent = (count === 0 && index === 0) || (count > seg.min && count <= seg.max);
 
-                                                        const phaseData = t(`home.phases.${seg.id}`, { returnObjects: true });
+                                                            const phaseData = t(`home.phases.${seg.id}`, { returnObjects: true });
 
-                                                        return (
-                                                            <div
-                                                                key={seg.id}
-                                                                className="relative h-full rounded-sm border border-white/5 group transition-all duration-300 hover:border-amber-500/30"
-                                                                style={{ width: segmentWidth }}
-                                                            >
-                                                                {/* Inner Bar (Overflow Hidden) */}
-                                                                <div className="absolute inset-0 overflow-hidden rounded-sm bg-neutral-900/80">
-                                                                    {/* Fill */}
-                                                                    <div
-                                                                        className={`absolute inset-y-0 left-0 transition-all duration-700 ease-out ${isCompleted ? 'bg-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-400'}`}
-                                                                        style={{ width: `${segProgress}%` }}
-                                                                    >
-                                                                        {(isActive || isCompleted) && (
-                                                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_infinite] -translate-x-full"></div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* Unlock Icon / Marker at end */}
-                                                                <div className="absolute right-0 top-0 bottom-0 w-px bg-black/20 pointer-events-none"></div>
-                                                                {isCompleted && (
-                                                                    <div className="absolute right-0.5 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-                                                                        <Unlock className="w-2 h-2 text-black/50" />
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Tooltip (Hover) */}
-                                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-[200px] hidden group-hover:block animate-in fade-in slide-in-from-bottom-2 z-50 pointer-events-none">
-                                                                    <div className="bg-[#121212] border border-amber-500/30 text-xs p-2.5 rounded-lg shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] relative">
-                                                                        <div className="text-amber-500 font-bold mb-0.5 text-[10px] uppercase tracking-wider flex items-center gap-1">
-                                                                            <Unlock className="w-3 h-3" /> UNLOCK
+                                                            return (
+                                                                <div
+                                                                    key={seg.id}
+                                                                    className="relative h-full rounded-sm border border-white/5 group transition-all duration-300 hover:border-amber-500/30"
+                                                                    style={{ width: segmentWidth }}
+                                                                >
+                                                                    {/* Inner Bar (Overflow Hidden) */}
+                                                                    <div className="absolute inset-0 overflow-hidden rounded-sm bg-neutral-900/80">
+                                                                        {/* Fill */}
+                                                                        <div
+                                                                            className={`absolute inset-y-0 left-0 transition-all duration-700 ease-out ${isCompleted ? 'bg-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-400'}`}
+                                                                            style={{ width: `${segProgress}%` }}
+                                                                        >
+                                                                            {(isActive || isCompleted) && (
+                                                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_infinite] -translate-x-full"></div>
+                                                                            )}
                                                                         </div>
-                                                                        <div className="text-white/90 font-medium mb-1">{phaseData.unlock?.replace('解锁', '')}</div>
-                                                                        <div className="text-[9px] text-gray-500 leading-tight">{phaseData.logic}</div>
-
-                                                                        {/* Arrow */}
-                                                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#121212] border-r border-b border-amber-500/30 rotate-45"></div>
                                                                     </div>
+
+                                                                    {/* Unlock Icon / Marker at end */}
+                                                                    <div className="absolute right-0 top-0 bottom-0 w-px bg-black/20 pointer-events-none"></div>
+                                                                    {isCompleted && (
+                                                                        <div className="absolute right-0.5 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                                                                            <Unlock className="w-2 h-2 text-black/50" />
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Tooltip (Hover) */}
+                                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-[200px] hidden group-hover:block animate-in fade-in slide-in-from-bottom-2 z-50 pointer-events-none">
+                                                                        <div className="bg-[#121212] border border-amber-500/30 text-xs p-2.5 rounded-lg shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] relative">
+                                                                            <div className="text-amber-500 font-bold mb-0.5 text-[10px] uppercase tracking-wider flex items-center gap-1">
+                                                                                <Unlock className="w-3 h-3" /> UNLOCK
+                                                                            </div>
+                                                                            <div className="text-white/90 font-medium mb-1">{phaseData.unlock?.replace('解锁', '')}</div>
+                                                                            <div className="text-[9px] text-gray-500 leading-tight">{phaseData.logic}</div>
+
+                                                                            {/* Arrow */}
+                                                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#121212] border-r border-b border-amber-500/30 rotate-45"></div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Current Phase Badge (Hanging Below) */}
+                                                                    <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-3 transition-opacity duration-500 whitespace-nowrap z-20 ${isCurrent ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                                                                        <span className="text-amber-500 font-bold font-mono text-[10px] sm:text-xs block text-shadow-sm">
+                                                                            [{phaseData.range}] {phaseData.title?.split(/[:：]/)[0]}
+                                                                        </span>
+                                                                        {/* Connecting Line */}
+                                                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gradient-to-b from-amber-500 to-transparent opacity-50"></div>
+                                                                    </div>
+
                                                                 </div>
+                                                            )
+                                                        })}
 
-                                                                {/* Current Phase Badge (Hanging Below) */}
-                                                                <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-3 transition-opacity duration-500 whitespace-nowrap z-20 ${isCurrent ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                                                                    <span className="text-amber-500 font-bold font-mono text-[10px] sm:text-xs block text-shadow-sm">
-                                                                        [{phaseData.range}] {phaseData.title?.split(/[:：]/)[0]}
-                                                                    </span>
-                                                                    {/* Connecting Line */}
-                                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gradient-to-b from-amber-500 to-transparent opacity-50"></div>
-                                                                </div>
-
-                                                            </div>
-                                                        )
-                                                    })}
-
-                                                    {/* Right Static Labels */}
-                                                    <div className="absolute -right-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 font-mono translate-x-full">100</div>
+                                                        {/* Right Static Labels */}
+                                                        <div className="absolute -right-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 font-mono translate-x-full">100</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            {/* RIGHT: Metrics */}
-                                            <div className="w-full md:w-auto min-w-[120px] text-right hidden sm:block">
-                                                <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-0.5">{t('home.maturity_index')}</p>
-                                                <div className="text-2xl font-black bg-gradient-to-r from-amber-200 to-orange-400 bg-clip-text text-transparent font-mono flex items-center justify-end gap-2">
-                                                    {maturity}%
-                                                    <div className="relative group cursor-help flex items-center">
-                                                        <span className="text-[10px] text-gray-600 font-normal border border-gray-800 rounded px-1 bg-black/50 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 group-hover:text-amber-500 transition-colors">EV+</span>
-                                                        {/* EV+ Definition Tooltip */}
-                                                        <div className="absolute bottom-full right-0 mb-2 w-48 hidden group-hover:block animate-in fade-in slide-in-from-bottom-1 z-50">
-                                                            <div className="bg-[#121212] border border-amber-500/30 text-xs p-3 rounded-lg shadow-xl text-left">
-                                                                <div className="text-amber-500 font-bold mb-1">{t('home.ev_plus_title')}</div>
-                                                                <p className="text-gray-400 leading-relaxed">
-                                                                    {t('home.ev_plus_desc')}
-                                                                </p>
+                                                {/* RIGHT: Metrics */}
+                                                <div className="w-full md:w-auto min-w-[120px] text-right hidden sm:block">
+                                                    <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-0.5">{t('home.maturity_index')}</p>
+                                                    <div className="text-2xl font-black bg-gradient-to-r from-amber-200 to-orange-400 bg-clip-text text-transparent font-mono flex items-center justify-end gap-2">
+                                                        {maturity}%
+                                                        <div className="relative group cursor-help flex items-center">
+                                                            <span className="text-[10px] text-gray-600 font-normal border border-gray-800 rounded px-1 bg-black/50 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 group-hover:text-amber-500 transition-colors">EV+</span>
+                                                            {/* EV+ Definition Tooltip */}
+                                                            <div className="absolute bottom-full right-0 mb-2 w-48 hidden group-hover:block animate-in fade-in slide-in-from-bottom-1 z-50">
+                                                                <div className="bg-[#121212] border border-amber-500/30 text-xs p-3 rounded-lg shadow-xl text-left">
+                                                                    <div className="text-amber-500 font-bold mb-1">{t('home.ev_plus_title')}</div>
+                                                                    <p className="text-gray-400 leading-relaxed">
+                                                                        {t('home.ev_plus_desc')}
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                        </div>
-                                    );
-                                })()
-                            }
+                                            </div>
+                                        );
+                                    })()
+                                }
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
             </main >
 
@@ -2817,8 +3003,15 @@ function GoldCatApp() {
                             <div className="absolute top-0 right-0 p-4 opacity-10">
                                 <Crown className="w-32 h-32 text-amber-500" />
                             </div>
-                            <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">{t('payment.title')}</h3>
-                            <p className="text-gray-400 mb-8">{t('payment.subtitle')}</p>
+
+                            <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2 mt-4">{t('payment.title')}</h3>
+                            <p className="text-gray-400 mb-8 flex items-center gap-2">
+                                <span className="text-green-500">🎄</span>
+                                <span className="bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-transparent font-bold">
+                                    {language === 'zh' ? '圣诞特惠 50% OFF · 限时折扣' : 'Holiday Special 50% OFF · Limited Time'}
+                                </span>
+                                <span className="text-red-500">🎁</span>
+                            </p>
 
                             {!isPaymentSuccess && (
                                 <button onClick={() => { setShowPaymentModal(false); setPaymentMethod(null); }} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
@@ -2856,9 +3049,14 @@ function GoldCatApp() {
 
                                         {/* Stripe Credit Card Option */}
                                         <button
-                                            onClick={() => setPaymentMethod('stripe')}
-                                            className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group"
+                                            onClick={handleUpgrade}
+                                            disabled={isUpgrading}
+                                            className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
                                         >
+                                            {/* 50% OFF Badge - Premium */}
+                                            <div className="absolute top-0 right-0 bg-gradient-to-bl from-amber-500 to-amber-700 text-black text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-lg z-10">
+                                                50% OFF
+                                            </div>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <CreditCard className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
@@ -2870,8 +3068,14 @@ function GoldCatApp() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-2xl font-black text-amber-500">$39.00</div>
-                                                    <div className="text-xs text-gray-500">/year</div>
+                                                    {isUpgrading ? (
+                                                        <div className="w-5 h-5 border-3 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="text-2xl font-black text-amber-500">$19.50</div>
+                                                            <div className="text-xs text-gray-500">/year</div>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                         </button>
@@ -2879,8 +3083,12 @@ function GoldCatApp() {
                                         {/* USDT Crypto Option */}
                                         <button
                                             onClick={() => setPaymentMethod('usdt')}
-                                            className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group"
+                                            className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group relative overflow-hidden"
                                         >
+                                            {/* 50% OFF Badge - Premium */}
+                                            <div className="absolute top-0 right-0 bg-gradient-to-bl from-amber-500 to-amber-700 text-black text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-lg z-10">
+                                                50% OFF
+                                            </div>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <Wallet className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
@@ -2890,73 +3098,20 @@ function GoldCatApp() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-2xl font-black text-amber-500">27 USDT</div>
+                                                    <div className="text-2xl font-black text-amber-500">19.5 USDT</div>
                                                     <div className="text-xs text-gray-500">/year</div>
                                                 </div>
                                             </div>
                                         </button>
                                     </div>
 
-                                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-6">
-                                        <Shield className="w-4 h-4" />
-                                        <span>{language === 'zh' ? 'SSL 安全加密支付' : 'SSL Encrypted Payment'}</span>
-                                    </div>
-                                </>
-                            ) : paymentMethod === 'stripe' ? (
-                                <>
-                                    {/* Stripe Payment Flow */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                            <ArrowRight className="w-4 h-4 rotate-180" /> {language === 'zh' ? '返回选择支付方式' : 'Back to Payment Methods'}
-                                        </button>
-                                    </div>
-
-                                    {/* Price Display */}
-                                    <div className="text-center mb-8 p-6 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl border-2 border-amber-500/30">
-                                        <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
-                                        <div className="text-5xl font-black text-white mb-2">$39.00</div>
-                                        <div className="text-xs text-gray-400">{language === 'zh' ? '年度会员' : 'Annual Membership'}</div>
-                                    </div>
-
-                                    {/* Feature List */}
-                                    <ul className="space-y-3 mb-6">
-                                        {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
-                                            <li key={i} className="flex items-center gap-3 text-white">
-                                                <div className="bg-amber-500/20 rounded-full p-0.5">
-                                                    <Check className="w-4 h-4 text-amber-500 shrink-0" />
-                                                </div>
-                                                <span className="text-sm font-medium">{feature}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-
-                                    {/* Stripe Checkout Button */}
-                                    <button
-                                        onClick={handleUpgrade}
-                                        disabled={isUpgrading}
-                                        className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isUpgrading ? (
-                                            <div className="flex items-center justify-center gap-2">
-                                                <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin"></div>
-                                                <span>{language === 'zh' ? '创建支付会话...' : 'Creating Session...'}</span>
-                                            </div>
-                                        ) : (
-                                            t('pricing.get_pro')
-                                        )}
-                                    </button>
-
-                                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-4">
-                                        <Shield className="w-4 h-4" />
-                                        <span>{language === 'zh' ? 'SSL 安全加密支付' : 'SSL Encrypted Payment'}</span>
-                                    </div>
                                 </>
                             ) : paymentMethod === 'usdt' ? (
                                 <>
                                     {/* USDT 手动支付界面 */}
                                     <div className="flex items-center justify-between mb-4">
                                         <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                            <ArrowRight className="w-4 h-4 rotate-180" /> 返回选择支付方式
+                                            <ArrowRight className="w-4 h-4 rotate-180" /> {language === 'zh' ? '返回选择支付方式' : 'Back to Payment Methods'}
                                         </button>
                                     </div>
 
@@ -2999,7 +3154,7 @@ function GoldCatApp() {
 
                                         <div className="p-4 bg-neutral-800 rounded-xl">
                                             <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                            <div className="text-3xl font-black text-amber-500">27.00 USDT</div>
+                                            <div className="text-3xl font-black text-amber-500">19.50 USDT</div>
                                         </div>
 
                                         <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
