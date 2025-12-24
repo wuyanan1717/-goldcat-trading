@@ -2848,77 +2848,107 @@ function GoldCatApp() {
                                 </div>
                             ) : !paymentMethod ? (
                                 <>
-                                    {/* Price and Features Display */}
-                                    <div className="mb-6">
-                                        <div className="text-center mb-8 p-6 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl border-2 border-amber-500/30">
-                                            <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
+                                    {/* Payment Method Selection */}
+                                    <div className="space-y-4">
+                                        <p className="text-gray-400 text-sm mb-6 text-center">
+                                            {language === 'zh' ? '请选择支付方式' : 'Choose Your Payment Method'}
+                                        </p>
 
-                                            {/* Original Price (Strikethrough) */}
-                                            <div className="text-2xl font-bold text-gray-500 line-through mb-1">$39.00</div>
-
-                                            {/* Discounted Price */}
-                                            <div className="text-5xl font-black text-white mb-2">$27.30</div>
-
-                                            {/* Discount Badge */}
-                                            <div className="text-xs text-green-400 font-bold bg-green-500/10 px-3 py-1.5 rounded-full inline-block mb-3">
-                                                30% OFF · {t('payment.lifetime_access')}
-                                            </div>
-
-                                            {/* Promo Code */}
-                                            <div className="mt-4 p-3 bg-amber-500/5 border border-amber-500/30 rounded-lg">
-                                                <div className="text-xs text-gray-400 mb-1">
-                                                    {language === 'zh' ? '促销码（自动应用）' : 'Promo Code (Auto-applied)'}
-                                                </div>
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <code className="text-sm font-mono font-bold text-amber-500 tracking-wider">LAUNCH30</code>
-                                                    <button
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText('LAUNCH30');
-                                                            setToastMessage(language === 'zh' ? '促销码已复制！' : 'Promo code copied!');
-                                                            setShowSuccessToast(true);
-                                                            setTimeout(() => setShowSuccessToast(false), 2000);
-                                                        }}
-                                                        className="p-1.5 hover:bg-amber-500/10 rounded transition-colors"
-                                                        title={language === 'zh' ? '复制促销码' : 'Copy promo code'}
-                                                    >
-                                                        <Copy className="w-3.5 h-3.5 text-amber-500" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Feature List */}
-                                        <ul className="space-y-3 mb-6">
-                                            {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
-                                                <li key={i} className="flex items-center gap-3 text-white">
-                                                    <div className="bg-amber-500/20 rounded-full p-0.5">
-                                                        <Check className="w-4 h-4 text-amber-500 shrink-0" />
-                                                    </div>
-                                                    <span className="text-sm font-medium">{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-
-                                        {/* Payment Button */}
+                                        {/* Stripe Credit Card Option */}
                                         <button
-                                            onClick={handleUpgrade}
-                                            disabled={isUpgrading}
-                                            className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                                            onClick={() => setPaymentMethod('stripe')}
+                                            className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group"
                                         >
-                                            {isUpgrading ? (
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin"></div>
-                                                    <span>Creating Session...</span>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <CreditCard className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
+                                                    <div className="text-left">
+                                                        <div className="text-xl font-black text-white mb-1">
+                                                            {language === 'zh' ? '信用卡/借记卡' : 'Credit/Debit Card'}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">Visa, Mastercard, Amex</div>
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                t('pricing.get_pro')
-                                            )}
+                                                <div className="text-right">
+                                                    <div className="text-2xl font-black text-amber-500">$39.00</div>
+                                                    <div className="text-xs text-gray-500">/year</div>
+                                                </div>
+                                            </div>
+                                        </button>
+
+                                        {/* USDT Crypto Option */}
+                                        <button
+                                            onClick={() => setPaymentMethod('usdt')}
+                                            className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <Wallet className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
+                                                    <div className="text-left">
+                                                        <div className="text-xl font-black text-white mb-1">{t('payment.usdt')}</div>
+                                                        <div className="text-xs text-gray-500">{t('payment.crypto_payment')}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-2xl font-black text-amber-500">27 USDT</div>
+                                                    <div className="text-xs text-gray-500">/year</div>
+                                                </div>
+                                            </div>
                                         </button>
                                     </div>
 
-                                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-6">
                                         <Shield className="w-4 h-4" />
-                                        <span>SSL 安全加密支付</span>
+                                        <span>{language === 'zh' ? 'SSL 安全加密支付' : 'SSL Encrypted Payment'}</span>
+                                    </div>
+                                </>
+                            ) : paymentMethod === 'stripe' ? (
+                                <>
+                                    {/* Stripe Payment Flow */}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
+                                            <ArrowRight className="w-4 h-4 rotate-180" /> {language === 'zh' ? '返回选择支付方式' : 'Back to Payment Methods'}
+                                        </button>
+                                    </div>
+
+                                    {/* Price Display */}
+                                    <div className="text-center mb-8 p-6 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl border-2 border-amber-500/30">
+                                        <div className="text-xl font-black text-white mb-1">{t('payment.usd')}</div>
+                                        <div className="text-5xl font-black text-white mb-2">$39.00</div>
+                                        <div className="text-xs text-gray-400">{language === 'zh' ? '年度会员' : 'Annual Membership'}</div>
+                                    </div>
+
+                                    {/* Feature List */}
+                                    <ul className="space-y-3 mb-6">
+                                        {t('pricing.pro_features', { returnObjects: true }).map((feature, i) => (
+                                            <li key={i} className="flex items-center gap-3 text-white">
+                                                <div className="bg-amber-500/20 rounded-full p-0.5">
+                                                    <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                                                </div>
+                                                <span className="text-sm font-medium">{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    {/* Stripe Checkout Button */}
+                                    <button
+                                        onClick={handleUpgrade}
+                                        disabled={isUpgrading}
+                                        className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isUpgrading ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin"></div>
+                                                <span>{language === 'zh' ? '创建支付会话...' : 'Creating Session...'}</span>
+                                            </div>
+                                        ) : (
+                                            t('pricing.get_pro')
+                                        )}
+                                    </button>
+
+                                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-4">
+                                        <Shield className="w-4 h-4" />
+                                        <span>{language === 'zh' ? 'SSL 安全加密支付' : 'SSL Encrypted Payment'}</span>
                                     </div>
                                 </>
                             ) : paymentMethod === 'usdt' ? (
@@ -2969,7 +2999,7 @@ function GoldCatApp() {
 
                                         <div className="p-4 bg-neutral-800 rounded-xl">
                                             <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                            <div className="text-3xl font-black text-amber-500">15.00 USDT</div>
+                                            <div className="text-3xl font-black text-amber-500">27.00 USDT</div>
                                         </div>
 
                                         <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
