@@ -304,24 +304,39 @@ const SnowfallOverlay = () => {
 };
 
 function GoldCatApp() {
-    // Dynamic challenge count logic (Daily Growth)
-    const [challengeCount, setChallengeCount] = useState(() => {
-        // Base starting point: 324 (as of 2025-12-23)
-        const baseCount = 324;
-        const baseDate = new Date('2025-12-23').getTime();
+    // Dynamic challenge count logic (Deterministic & Time-based)
+    // 逻辑：基于固定锚点时间的纯数学计算，确保刷新、不同设备、长期挂机保持严格一致
+    // 用户指定：起始数 340，固定增长逻辑
+    const calculateChallengeCount = () => {
+        // Anchor: 2025-12-25 00:00:00 Base: 340
+        const anchorTime = new Date('2025-12-25T00:00:00').getTime();
+        const baseCount = 340;
         const now = Date.now();
-        const daysDiff = Math.max(0, Math.floor((now - baseDate) / (1000 * 60 * 60 * 24)));
-        // Grow by approx 8-15 per day
-        return baseCount + (daysDiff * 12) + Math.floor(Math.random() * 5);
-    });
+
+        // Rate: Composite frequency to create "organic" irregular growth
+        // 算法：叠加两个不同周期的增长线 (0.4/h 和 0.15/h)
+        // 效果：增长间隔不固定（有时快有时慢），但总体呈上升趋势，且严格一致
+        const hoursPassed = Math.max(0, (now - anchorTime) / (1000 * 60 * 60));
+
+        // Growth Component 1: Main steady stream (approx 1 per 2.5 hours)
+        const g1 = Math.floor(hoursPassed * 0.4);
+
+        // Growth Component 2: Occasional bursts (approx 1 per 7 hours)
+        const g2 = Math.floor(hoursPassed * 0.15);
+
+        // Growth Component 3: Micro-variations based on day of year (adds 0-2 fixed offset per day)
+        const dayOffset = Math.floor(hoursPassed / 24) % 3;
+
+        return baseCount + g1 + g2 + dayOffset;
+    };
+
+    const [challengeCount, setChallengeCount] = useState(calculateChallengeCount);
 
     useEffect(() => {
+        // Sync every minute to update if natural growth happens
         const interval = setInterval(() => {
-            setChallengeCount(prev => {
-                // 30% chance to increment by 1 every 30s (simulating live growth)
-                return Math.random() > 0.7 ? prev + 1 : prev;
-            });
-        }, 30000);
+            setChallengeCount(calculateChallengeCount());
+        }, 60000); // Check every minute
         return () => clearInterval(interval);
     }, []);
     // --- 2. 状态管理 (带持久化) ---
