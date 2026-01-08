@@ -6,6 +6,7 @@ import PrivacyPolicyPage from './PrivacyPolicyPage';
 import TermsOfServicePage from './TermsOfServicePage';
 import ParticleLogo from './ParticleLogo';
 import BackgroundParticles from './BackgroundParticles';
+import DailyAlphaTab from './components/DailyAlphaTab';
 import {
     TrendingUp, TrendingDown, DollarSign, Package, AlertCircle, BarChart3, Target,
     Award, Plus, X, Crown, Calendar, CreditCard, Wallet, User, LogOut, Trash2,
@@ -13,7 +14,7 @@ import {
     Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, ChevronDown, Lock, Unlock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
     PlusCircle, Check, RotateCcw, Info, Loader2, Trophy, Clock, Snowflake, BarChart2,
-    Send, Star, Gift
+    Send, Star, Gift, Newspaper, Terminal
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -21,6 +22,7 @@ import {
 } from 'recharts';
 import { translations } from './translations';
 import AIAnalysisDashboard from './components/AIAnalysisDashboard';
+import TerminalApp from './features/TerminalV2/TerminalApp_v3'; // 实验性布局 V3 - 日志在右侧
 
 
 // Data Sync Status Indicator Component
@@ -606,11 +608,31 @@ function GoldCatApp() {
 
             const userKey = user.email;
 
-            // 1. Total Capital now loaded from database (see section 4 below)
-            // const savedCapitalStr = localStorage.getItem(`goldcat_total_capital_${userKey}`);
-            // const savedCapital = parseFloat(savedCapitalStr) || 0;
-            // console.log('[Debug] Loading capital immediately:', { key: `goldcat_total_capital_${userKey}`, val: savedCapitalStr, parsed: savedCapital });
-            // setTotalCapital(savedCapital);
+            // 1. Total Capital - Load from DB first, fallback to LocalStorage
+            try {
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('total_capital')
+                    .eq('id', user.id)
+                    .single();
+
+                if (!error && profile) {
+                    setTotalCapital(Number(profile.total_capital) || 0);
+                    // Update cache
+                    localStorage.setItem(`goldcat_total_capital_${userKey}`, profile.total_capital);
+                } else {
+                    // Fallback to cache if DB fetch fails or no profile
+                    const savedCapitalStr = localStorage.getItem(`goldcat_total_capital_${userKey}`);
+                    const savedCapital = parseFloat(savedCapitalStr);
+                    if (!isNaN(savedCapital)) {
+                        setTotalCapital(savedCapital);
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading profile capital:', err);
+                const savedCapitalStr = localStorage.getItem(`goldcat_total_capital_${userKey}`);
+                if (savedCapitalStr) setTotalCapital(parseFloat(savedCapitalStr));
+            }
 
             // 2. Load Patterns from Database
             try {
@@ -765,7 +787,12 @@ function GoldCatApp() {
             } catch (err) {
                 console.error('CRITICAL: Error loading trades from DB:', err);
                 setSyncStatus('error');
-                setErrorMessage('Cloud Data Load Failed: ' + err.message);
+                const errorMsg = err.message || '';
+                if (errorMsg.includes('Failed to fetch') || errorMsg.includes('Network request failed')) {
+                    setErrorMessage(language === 'zh' ? '网络连接失败，请检查您的网络设置' : 'Network Error: Please check your connection.');
+                } else {
+                    setErrorMessage(language === 'zh' ? `数据加载失败: ${errorMsg}` : `Data Load Failed: ${errorMsg}`);
+                }
                 setShowErrorToast(true);
                 // DO NOT FALLBACK TO LOCAL STORAGE HERE. 
                 // Showing stale local data while DB is unreachable is the root cause of data loss confusion.
@@ -880,16 +907,15 @@ function GoldCatApp() {
         }
     }, [trades, user, isDataLoaded]);
 
+    // Save Capital to DB and localStorage on change
     useEffect(() => {
         if (user && user.email && isDataLoaded) {
-            // Save to both database and localStorage
             const saveCapital = async () => {
                 try {
-                    // 1. Save to Supabase (primary storage)
+                    // 1. Save to Supabase (primary storage) - Upsert to handle inconsistencies
                     await supabase
                         .from('profiles')
-                        .update({ total_capital: totalCapital })
-                        .eq('id', user.id);
+                        .upsert({ id: user.id, total_capital: totalCapital });
 
                     // 2. Save to localStorage (cache for faster loading)
                     localStorage.setItem(`goldcat_total_capital_${user.email}`, totalCapital);
@@ -900,7 +926,9 @@ function GoldCatApp() {
                 }
             };
 
-            saveCapital();
+            // Debounce save to avoid too many DB calls
+            const timer = setTimeout(saveCapital, 1000);
+            return () => clearTimeout(timer);
         }
     }, [totalCapital, user, isDataLoaded]);
 
@@ -1223,7 +1251,7 @@ function GoldCatApp() {
 
         try {
             // Use the simple redirect method with the configured URL (Stripe/Creem)
-            const checkoutUrl = getCheckoutUrl(user?.email);
+            const checkoutUrl = getCheckoutUrl(user?.email, user?.id);
             window.location.href = checkoutUrl;
         } catch (err) {
             console.error('Payment redirect failed:', err);
@@ -1251,6 +1279,13 @@ function GoldCatApp() {
         } catch (err) {
             console.error('Error saving risk mode:', err);
         }
+    };
+
+    // Handle Save Total Capital
+    const handleSaveCapital = () => {
+        setIsEditingCapital(false);
+        // The actual save happens automatically via useEffect
+        // Just close the editor
     };
 
     // 模拟登录
@@ -1284,12 +1319,15 @@ function GoldCatApp() {
     // 注册逻辑
     // 注册逻辑 -> Supabase Register
     const handleRegister = async () => {
-        if (!registerForm.email || !registerForm.password) {
+        // Validate all required fields
+        if (!registerForm.email || !registerForm.password || !registerForm.username) {
             setErrorMessage(t('auth.fill_all_fields'));
             setShowErrorToast(true);
             setTimeout(() => setShowErrorToast(false), 3000);
             return;
         }
+
+
 
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1731,7 +1769,7 @@ function GoldCatApp() {
     // --- 4. 界面渲染 ---
 
     return (
-        <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate overflow-auto flex flex-col min-h-screen" translate="no">
+        <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate flex flex-col" translate="no">
             {((!user && !showGuestDashboard) || (user && explicitLandingView)) && <SnowfallOverlay />}
             {/* Background Animation (KuCoin Style) */}
             <BackgroundParticles />
@@ -1754,7 +1792,7 @@ function GoldCatApp() {
                         </div>
                         <div>
                             <h1 className="text-sm sm:text-base md:text-lg font-black text-white tracking-tighter leading-none">
-                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v2</span>
+                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v3</span>
                             </h1>
 
                         </div>
@@ -1816,7 +1854,7 @@ function GoldCatApp() {
             }
             */}
 
-            <main className="w-full max-w-7xl mx-auto px-4 py-6 pb-20 relative">
+            <main className="w-full max-w-7xl mx-auto px-4 py-6 pb-20 relative flex-1 overflow-y-auto">
 
                 {/* 登录引导 */}
                 {/* 登录引导 (Landing Page Redesign) */}
@@ -1877,7 +1915,7 @@ function GoldCatApp() {
 
                         <div className="relative z-10 max-w-5xl mx-auto animate-in fade-in zoom-in duration-1000 slide-in-from-bottom-8 py-20">
                             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-400 text-xs font-bold mb-8 tracking-wider uppercase backdrop-blur-md shadow-lg">
-                                <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v2
+                                <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v3
                             </div>
 
                             <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black text-white mb-6 sm:mb-8 tracking-tight leading-tight drop-shadow-2xl">
@@ -1895,6 +1933,7 @@ function GoldCatApp() {
                                     <button
                                         onClick={() => {
                                             if (user) {
+                                                setActiveTab('new_trade');
                                                 setExplicitLandingView(false);
                                             } else {
                                                 setShowGuestDashboard(true);
@@ -1940,19 +1979,19 @@ function GoldCatApp() {
                                     <h3 className="text-xl font-bold text-white mb-3 group-hover:text-amber-400 transition-colors">{t('home.feature_manual_title')}</h3>
                                     <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_manual_desc')}</p>
                                 </div>
-                                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-blue-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300">
-                                    <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(59,130,246,0.1)] border border-blue-500/20">
-                                        <ShieldCheck className="w-7 h-7 text-blue-500" />
+                                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300">
+                                    <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20">
+                                        <Newspaper className="w-7 h-7 text-amber-500" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">{t('home.feature_discipline_title')}</h3>
-                                    <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_discipline_desc')}</p>
+                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-amber-400 transition-colors">{t('home.feature_intel_title')}</h3>
+                                    <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_intel_desc')}</p>
                                 </div>
-                                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-yellow-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300">
-                                    <div className="w-14 h-14 bg-yellow-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(234,179,8,0.1)] border border-yellow-500/20">
-                                        <Brain className="w-7 h-7 text-yellow-500" />
+                                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-purple-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300">
+                                    <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(168,85,247,0.1)] border border-purple-500/20">
+                                        <Cpu className="w-7 h-7 text-purple-500" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-yellow-400 transition-colors">{t('home.feature_ai_title')}</h3>
-                                    <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_ai_desc')}</p>
+                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors">{t('home.feature_quantum_title')}</h3>
+                                    <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_quantum_desc')}</p>
                                 </div>
                             </div>
 
@@ -2030,110 +2069,102 @@ function GoldCatApp() {
                                 </div>
                             </div>
 
-                            <ChristmasBanner t={t}>
-                                {/* --- Pricing Section (Added for Compliance) --- */}
-                                <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
-                                    <div className="text-center mb-16">
-                                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6 tracking-tight">{t('pricing.title')}</h2>
-                                        <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-                                            {t('pricing.subtitle')}
-                                        </p>
+
+                            {/* --- Pricing Section (Added for Compliance) --- */}
+                            <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300 mt-32">
+                                <div className="text-center mb-16">
+                                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6 tracking-tight">{t('pricing.title')}</h2>
+                                    <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                                        {t('pricing.subtitle')}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative group-hover:gap-12 transition-all duration-500">
+                                    {/* Free Plan */}
+                                    <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start">
+                                        <div className="mb-8 w-full">
+                                            <h3 className="text-xl font-bold text-white mb-2">{t('pricing.free_title')}</h3>
+                                            <div className="flex items-baseline gap-1 mb-4">
+                                                <span className="text-4xl font-black text-white">{t('pricing.free_price')}</span>
+                                            </div>
+                                            <p className="text-gray-400 text-sm">{t('pricing.free_desc')}</p>
+                                        </div>
+                                        <div className="border-t border-white/10 my-8 w-full"></div>
+                                        <ul className="space-y-4 mb-8 flex-1 w-full">
+                                            {Array.isArray(t('pricing.free_features')) && t('pricing.free_features').map((feature, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-gray-300">
+                                                    <Check className="w-5 h-5 text-gray-500 shrink-0" />
+                                                    <span className="text-sm">{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <button
+                                            onClick={() => {
+                                                if (user) {
+                                                    setActiveTab('new_trade');
+                                                    setExplicitLandingView(false);
+                                                } else {
+                                                    setIsRegisterMode(true);
+                                                    setShowLoginModal(true);
+                                                }
+                                            }}
+                                            className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all"
+                                        >
+                                            {user ? t('pricing.go_dashboard') : t('pricing.start_free')}
+                                        </button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative group-hover:gap-12 transition-all duration-500">
-                                        {/* Free Plan */}
-                                        <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start">
-                                            <div className="mb-8 w-full">
-                                                <h3 className="text-xl font-bold text-white mb-2">{t('pricing.free_title')}</h3>
-                                                <div className="flex items-baseline gap-1 mb-4">
-                                                    <span className="text-4xl font-black text-white">{t('pricing.free_price')}</span>
-                                                </div>
-                                                <p className="text-gray-400 text-sm">{t('pricing.free_desc')}</p>
-                                            </div>
-                                            <div className="border-t border-white/10 my-8 w-full"></div>
-                                            <ul className="space-y-4 mb-8 flex-1 w-full">
-                                                {Array.isArray(t('pricing.free_features')) && t('pricing.free_features').map((feature, i) => (
-                                                    <li key={i} className="flex items-center gap-3 text-gray-300">
-                                                        <Check className="w-5 h-5 text-gray-500 shrink-0" />
-                                                        <span className="text-sm">{feature}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                            <button
-                                                onClick={() => {
-                                                    if (user) {
-                                                        setExplicitLandingView(false);
-                                                    } else {
-                                                        setIsRegisterMode(true);
-                                                        setShowLoginModal(true);
-                                                    }
-                                                }}
-                                                className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all"
-                                            >
-                                                {user ? t('pricing.go_dashboard') : t('pricing.start_free')}
-                                            </button>
+                                    {/* Lifetime Plan */}
+                                    <div className="relative bg-gradient-to-br from-red-500/10 to-rose-500/5 backdrop-blur-md border-2 border-red-500/50 rounded-3xl p-6 sm:p-8 hover:border-red-400/70 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg border border-red-400/30">
+                                            <Crown className="w-3 h-3 text-white" /> {t('pricing.pro_badge')}
                                         </div>
-
-                                        {/* Lifetime Plan */}
-                                        <div className="relative bg-gradient-to-br from-red-500/10 to-rose-500/5 backdrop-blur-md border-2 border-red-500/50 rounded-3xl p-6 sm:p-8 hover:border-red-400/70 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start shadow-[0_0_40px_rgba(239,68,68,0.15)]">
-                                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg border border-red-400/30">
-                                                <Crown className="w-3 h-3 text-white" /> {t('pricing.pro_badge')}
-                                            </div>
-                                            <div className="mb-8 w-full">
-                                                <h3 className="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
-                                                    {t('pricing.pro_title')}
-                                                </h3>
-                                                <div className="mb-2">
-                                                    {/* Original Price (Strikethrough) */}
-                                                    <div className="text-xl font-bold text-gray-500 line-through">$39.00</div>
-
-                                                    {/* Discounted Price */}
-                                                    <div className="flex items-baseline gap-1">
-                                                        <span className="text-5xl font-black text-white">$19.50</span>
-                                                    </div>
-
-                                                    {/* Discount Badge */}
-                                                    <div className="text-xs text-white font-bold bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1.5 rounded-full inline-block mt-2 shadow-lg shadow-red-500/20">
-                                                        50% OFF · {t('pricing.pro_type')}
-                                                    </div>
+                                        <div className="mb-8 w-full">
+                                            <h3 className="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
+                                                {t('pricing.pro_title')}
+                                            </h3>
+                                            <div className="mb-2">
+                                                {/* Annual Price */}
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-5xl font-black text-white">$39.00</span>
                                                 </div>
-                                                <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
                                             </div>
-                                            <div className="border-t border-white/10 my-8 w-full"></div>
-                                            <ul className="space-y-4 mb-8 flex-1 w-full">
-                                                {Array.isArray(t('pricing.pro_features')) && t('pricing.pro_features').map((feature, i) => (
-                                                    <li key={i} className="flex items-center gap-3 text-white">
-                                                        <div className="bg-red-500/20 rounded-full p-0.5">
-                                                            <Check className="w-4 h-4 text-red-500 shrink-0" />
-                                                        </div>
-                                                        <span className="text-sm font-medium">{feature}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                            <button
-                                                disabled={membership.isPremium}
-                                                onClick={() => {
-                                                    if (membership.isPremium) return;
+                                            <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
+                                        </div>
+                                        <div className="border-t border-white/10 my-8 w-full"></div>
+                                        <ul className="space-y-4 mb-8 flex-1 w-full">
+                                            {Array.isArray(t('pricing.pro_features')) && t('pricing.pro_features').map((feature, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-white">
+                                                    <div className="bg-red-500/20 rounded-full p-0.5">
+                                                        <Check className="w-4 h-4 text-red-500 shrink-0" />
+                                                    </div>
+                                                    <span className="text-sm font-medium">{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <button
+                                            disabled={membership.isPremium}
+                                            onClick={() => {
+                                                if (membership.isPremium) return;
 
-                                                    if (user) {
-                                                        setShowPaymentModal(true);
-                                                        setPaymentMethod(null);
-                                                    } else {
-                                                        setIsRegisterMode(true);
-                                                        setShowLoginModal(true);
-                                                    }
-                                                }}
-                                                className={`group relative w-full py-4 ${membership.isPremium
-                                                    ? 'bg-neutral-800 text-gray-400 cursor-not-allowed'
-                                                    : 'bg-gradient-to-r from-red-600 to-rose-600 text-white hover:shadow-[0_0_60px_rgba(239,68,68,0.5)] hover:-translate-y-1'} 
+                                                if (user) {
+                                                    setShowPaymentModal(true);
+                                                    setPaymentMethod(null);
+                                                } else {
+                                                    setIsRegisterMode(true);
+                                                    setShowLoginModal(true);
+                                                }
+                                            }}
+                                            className={`group relative w-full py-4 ${membership.isPremium
+                                                ? 'bg-neutral-800 text-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-red-600 to-rose-600 text-white hover:shadow-[0_0_60px_rgba(239,68,68,0.5)] hover:-translate-y-1'} 
                                                 font-black text-lg rounded-xl shadow-[0_0_40px_rgba(239,68,68,0.3)] transition-all overflow-hidden`}
-                                            >
-                                                {membership.isPremium ? t('pricing.current_plan') : t('pricing.get_pro')}
-                                            </button>
-                                        </div>
+                                        >
+                                            {membership.isPremium ? t('pricing.current_plan') : t('pricing.get_pro')}
+                                        </button>
                                     </div>
                                 </div>
-                            </ChristmasBanner>
+                            </div>
 
                             {/* FAQ Section */}
                             <div className="max-w-4xl mx-auto mt-32 mb-20 px-4">
@@ -2184,6 +2215,8 @@ function GoldCatApp() {
                                         { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
                                         { id: 'journal', label: t('nav.journal'), icon: FileText },
                                         { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain },
+                                        { id: 'daily_alpha', label: t('nav.daily_alpha'), icon: Newspaper },
+                                        { id: 'quantum_terminal', label: t('nav.quantum_terminal'), icon: Cpu },
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
@@ -2195,7 +2228,7 @@ function GoldCatApp() {
                                                     : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'}
                             `}
                                         >
-                                            <tab.icon className="w-4 h-4" />
+                                            {tab.icon && <tab.icon className="w-4 h-4" />}
                                             <span className="hidden xs:inline sm:inline">{tab.label}</span>
                                         </button>
                                     ))}
@@ -2405,7 +2438,11 @@ function GoldCatApp() {
                                                 <div className="flex justify-between items-center mb-2">
                                                     <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
                                                     {!isEditingCapital && (
-                                                        <button onClick={() => setIsEditingCapital(true)} className="text-amber-500 hover:text-amber-400">
+                                                        <button onClick={() => {
+                                                            // Round to integer to avoid floating point display issues
+                                                            setTotalCapital(Math.round(totalCapital));
+                                                            setIsEditingCapital(true);
+                                                        }} className="text-amber-500 hover:text-amber-400">
                                                             <Edit3 className="w-3 h-3" />
                                                         </button>
                                                     )}
@@ -2414,20 +2451,21 @@ function GoldCatApp() {
                                                     <div className="flex items-center gap-2">
                                                         <input
                                                             type="number"
+                                                            step="1"
                                                             value={totalCapital}
                                                             onChange={(e) => {
                                                                 const val = e.target.value;
                                                                 if (val === '' || val === '-') {
                                                                     setTotalCapital('');
                                                                 } else {
-                                                                    const parsed = parseFloat(val);
+                                                                    const parsed = parseInt(val);
                                                                     setTotalCapital(isNaN(parsed) ? 0 : parsed);
                                                                 }
                                                             }}
                                                             className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
                                                             autoFocus
                                                         />
-                                                        <button onClick={() => setIsEditingCapital(false)} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
+                                                        <button onClick={handleSaveCapital} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
                                                     </div>
                                                 ) : (
                                                     <div className="text-xl font-black font-mono text-white tracking-wider">
@@ -2606,8 +2644,8 @@ function GoldCatApp() {
                                                 <p>{t('journal.empty_state')}</p>
                                             </div>
                                         ) : (
-                                            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                                                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                                            <div className="max-h-[calc(100vh-320px)] min-h-[300px] overflow-y-auto overflow-x-hidden">
+                                                <div className="overflow-x-auto -mx-4 sm:mx-0 pb-2">
                                                     <table className="w-full text-left text-sm whitespace-nowrap min-w-[640px]">
                                                         <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
                                                             <tr>
@@ -2852,14 +2890,36 @@ function GoldCatApp() {
                                     </div>
                                 )
                             }
+
+                            {/* --- 4. 每日内参 (Daily Alpha) --- */}
+                            {activeTab === 'daily_alpha' && (
+                                <div className="mt-6 animate-in fade-in slide-in-from-bottom-4">
+                                    <DailyAlphaTab lang={language} />
+                                </div>
+                            )}
+
+                            {/* --- 5. Quantum Observer Terminal (New Feature) --- */}
+                            {activeTab === 'quantum_terminal' && (
+                                <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 min-h-screen pb-32">
+                                    <TerminalApp
+                                        lang={language}
+                                        user={user}
+                                        membership={membership}
+                                        onRequireLogin={() => setShowLoginModal(true)}
+                                        onUpgrade={() => setShowPaymentModal(true)}
+                                    />
+                                </div>
+                            )}
                         </>
                     )
                 }
                 {/* Fixed Bottom Progress Bar - The Path to Discipline */}
-                {/* Fixed Bottom Alpha Asset Bar - Only show in Dashboard Mode */}
+                {/* Fixed Bottom Progress Bar - HIDDEN Only on Quantum Terminal */}
+                {/* Fixed Bottom Progress Bar - The Path to Discipline */}
+                {/* Fixed Bottom Progress Bar - HIDDEN on Quantum Terminal AND Daily Alpha */}
                 {
-                    ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
-                        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/80 backdrop-blur-xl border-t border-white/5 pb-8 pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+                    activeTab !== 'quantum_terminal' && activeTab !== 'daily_alpha' && ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
+                        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/95 backdrop-blur-xl border-t border-white/5 pb-8 pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
                             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
                                 {
                                     (() => {
@@ -2893,8 +2953,6 @@ function GoldCatApp() {
                                                         {t('home.footer_subtitle')}
                                                     </h3>
                                                 </div>
-
-                                                {/* CENTER: Segmented Energy Bar */}
 
                                                 {/* CENTER: Segmented Energy Bar */}
                                                 <div className="w-full md:w-1/2 flex flex-col justify-end pb-1 mt-4 md:mt-0">
@@ -3020,13 +3078,7 @@ function GoldCatApp() {
                             </div>
 
                             <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2 mt-4">{t('payment.title')}</h3>
-                            <p className="text-gray-400 mb-8 flex items-center gap-2">
-                                <span className="text-green-500">🎄</span>
-                                <span className="bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-transparent font-bold">
-                                    {language === 'zh' ? '圣诞特惠 50% OFF · 限时折扣' : 'Holiday Special 50% OFF · Limited Time'}
-                                </span>
-                                <span className="text-red-500">🎁</span>
-                            </p>
+
 
                             {!isPaymentSuccess && (
                                 <button onClick={() => { setShowPaymentModal(false); setPaymentMethod(null); }} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
@@ -3068,10 +3120,7 @@ function GoldCatApp() {
                                             disabled={isUpgrading}
                                             className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
                                         >
-                                            {/* 50% OFF Badge - Premium */}
-                                            <div className="absolute top-0 right-0 bg-gradient-to-bl from-amber-500 to-amber-700 text-black text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-lg z-10">
-                                                50% OFF
-                                            </div>
+
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <CreditCard className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
@@ -3087,7 +3136,7 @@ function GoldCatApp() {
                                                         <div className="w-5 h-5 border-3 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
                                                     ) : (
                                                         <>
-                                                            <div className="text-2xl font-black text-amber-500">$19.50</div>
+                                                            <div className="text-2xl font-black text-amber-500">$39.00</div>
                                                             <div className="text-xs text-gray-500">/year</div>
                                                         </>
                                                     )}
@@ -3100,10 +3149,7 @@ function GoldCatApp() {
                                             onClick={() => setPaymentMethod('usdt')}
                                             className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group relative overflow-hidden"
                                         >
-                                            {/* 50% OFF Badge - Premium */}
-                                            <div className="absolute top-0 right-0 bg-gradient-to-bl from-amber-500 to-amber-700 text-black text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-lg z-10">
-                                                50% OFF
-                                            </div>
+
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <Wallet className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
@@ -3113,7 +3159,7 @@ function GoldCatApp() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-2xl font-black text-amber-500">19.5 USDT</div>
+                                                    <div className="text-2xl font-black text-amber-500">39.00 USDT</div>
                                                     <div className="text-xs text-gray-500">/year</div>
                                                 </div>
                                             </div>
@@ -3169,7 +3215,7 @@ function GoldCatApp() {
 
                                         <div className="p-4 bg-neutral-800 rounded-xl">
                                             <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                            <div className="text-3xl font-black text-amber-500">19.50 USDT</div>
+                                            <div className="text-3xl font-black text-amber-500">39.00 USDT</div>
                                         </div>
 
                                         <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
@@ -3986,7 +4032,9 @@ function GoldCatApp() {
                                 <AlertCircle className="w-5 h-5 text-red-500" />
                             </div>
                             <div>
-                                <div className="font-bold text-sm tracking-wide text-red-400">{t('common.error')}</div>
+                                <div className="font-bold text-sm tracking-wide text-red-400">
+                                    {t('common.error') === 'common.error' ? (language === 'zh' ? '发生错误' : 'Error') : t('common.error')}
+                                </div>
                                 <div className="text-xs text-gray-400">{errorMessage}</div>
                             </div>
                             <button onClick={() => setShowErrorToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">

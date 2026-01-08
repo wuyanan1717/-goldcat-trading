@@ -3,14 +3,16 @@ export const translations = {
         app_title: "GoldCat Terminal",
         slogan: "THE MANUAL TRADING FORGE",
         nav: {
-            new_trade: "录入交易 (纪律)",
+            new_trade: "录入交易",
             journal: "交易日记",
             ai_analysis: "AI 行为诊断",
             login_register: "登录 / 注册",
             logout: "退出",
             recorded_trades: "已记录交易",
             upgrade: "升级会员",
-            pro_member: "PRO会员"
+            pro_member: "PRO会员",
+            daily_alpha: "情报聚合器",
+            quantum_terminal: "量子观测"
         },
         home: {
             title: "手动录入 即是修行",
@@ -24,7 +26,11 @@ export const translations = {
             feature_discipline_title: "主动拦截",
             feature_discipline_desc: "检测到 FOMO 信号？Agent 立即介入。我们不只是建议你冷静，我们通过强制熔断流程让你冷静，物理隔绝爆仓风险。",
             feature_ai_title: "持续进化",
-            feature_ai_desc: "从亏损中提取算法。Agent 持续扫描你的交易盲区，将你每一次昂贵的学费，转化为下一次盈利的护城河。",
+            feature_ai_desc: "从亏损中提取算法。Agent 持续扫描你的交易盲区,将你每一次昂贵的学费,转化为下一次盈利的护城河。",
+            feature_intel_title: "情报聚合器",
+            feature_intel_desc: "AI 实时聚合全球 KOL 洞察与突发新闻，将海量信息提炼为可执行的 Alpha 信号，让你永不错过市场关键转折点。",
+            feature_quantum_title: "量子观测",
+            feature_quantum_desc: "基于量子叠加态理论的 AI 预测终端。通过多维度市场数据观测，提供多空概率分布与最优策略建议，让你在不确定性中找到确定性。",
             ai_risk_title: "AI 风险阻断",
             ai_risk_subtitle: "立即停手。",
             ai_risk_desc: "当你的多巴胺接管大脑时，Goldcat Terminal 接管你的账户。它比你更了解你的亏损模式，在你犯错前直接\"骂醒你\"。",
@@ -88,21 +94,24 @@ export const translations = {
             free_features: [
                 "基础交易记录 (20条/月)",
                 "有限的 AI 分析点数",
+                "情报聚合器 (完整访问)",
+                "量子观测 (每日2次)",
                 "基础社区支持",
                 "标准风控计算"
             ],
             pro_title: "年度会员",
-            pro_price: "$15.00",
+            pro_price: "$39.00",
             pro_badge: "最受欢迎",
             pro_type: "年付费",
             pro_desc: "专业交易者的不二之选",
             pro_features: [
                 "无限交易记录",
                 "无限 AI 深度复盘",
+                "情报聚合器 (完整访问)",
+                "量子观测 (每日20次)",
                 "高级风控策略推荐",
                 "专属客服支持 (support@goldcat.trade)",
-                "优先体验新功能",
-                "无广告纯净体验"
+                "优先体验新功能"
             ],
             start_free: "免费开始",
             get_pro: "升级到年度版",
@@ -413,6 +422,18 @@ export const translations = {
             voucher: "圣诞礼券 (立减 50%)",
             click_claim: "点击领取",
             claimed: "已领取"
+        },
+        terminal: {
+            initializing: "正在初始化量子传感器...",
+            long_signal: "多头坍缩 (LONG)",
+            short_signal: "空头坍缩 (SHORT)",
+            superposition: "量子叠加态",
+            wave_function: "波函数概率 (WAVE FUNCTION)",
+            short: "空头 (SHORT)",
+            long: "多头 (LONG)",
+            confidence: "AI 确信度",
+            observer_instruction: "观察者指令 (OBSERVER)",
+            strategy: "策略:"
         }
     },
     en: {
@@ -426,7 +447,9 @@ export const translations = {
             logout: "Logout",
             recorded_trades: "Trades Recorded",
             upgrade: "Upgrade",
-            pro_member: "PRO Member"
+            pro_member: "PRO Member",
+            daily_alpha: "Daily Alpha",
+            quantum_terminal: "Quantum Observer"
         },
         home: {
             title: "Manual Entry is the Ultimate Discipline",
@@ -441,6 +464,10 @@ export const translations = {
             feature_discipline_desc: "FOMO signal detected? The Agent intervenes immediately. We don't just advise you to stay calm; we enforce a mandatory cool-down protocol to technically stop the bleed.",
             feature_ai_title: "Status: Evolving",
             feature_ai_desc: "Extracting algorithms from your losses. The Agent continuously scans your blind spots, turning every expensive tuition fee into a defensive moat for your next trade.",
+            feature_intel_title: "Intel Aggregator",
+            feature_intel_desc: "AI aggregates global KOL insights and breaking news in real-time, distilling massive information into actionable Alpha signals so you never miss critical market turning points.",
+            feature_quantum_title: "Quantum Observer",
+            feature_quantum_desc: "AI prediction terminal based on quantum superposition theory. Provides long/short probability distribution and optimal strategy recommendations, finding certainty in uncertainty.",
             ai_risk_title: "AI Risk Prevention",
             ai_risk_subtitle: "Stop Now.",
             ai_risk_desc: "When dopamine takes over your brain, GoldCat Terminal takes over your account. It knows your losing patterns better than you do, and 'shocks' you back to logic before you make a mistake.",
@@ -505,17 +532,21 @@ export const translations = {
             free_features: [
                 "Basic Trade Logging (20/month)",
                 "Limited AI Analysis Credits",
+                "Intel Aggregator (Full Access)",
+                "Quantum Observer (2/day)",
                 "Basic Community Support",
                 "Standard Risk Calculation"
             ],
             pro_title: "Annual",
-            pro_price: "$15.00",
+            pro_price: "$39.00",
             pro_badge: "Most Popular",
             pro_type: "Billed Annually",
             pro_desc: "The choice for professional traders",
             pro_features: [
                 "Unlimited Trade Logging",
                 "Unlimited AI Deep Review",
+                "Intel Aggregator (Full Access)",
+                "Quantum Observer (20/day)",
                 "Advanced Risk Strategy Recommendations",
                 "Priority 24/7 Support",
                 "Priority Access to New Features",
@@ -824,6 +855,18 @@ export const translations = {
             voucher: "Christmas Voucher (50% OFF)",
             click_claim: "Click to Claim",
             claimed: "Claimed"
+        },
+        terminal: {
+            initializing: "Initializing Quantum Sensor...",
+            long_signal: "Bull/Long Collapse",
+            short_signal: "Bear/Short Collapse",
+            superposition: "Quantum Superposition",
+            wave_function: "Wave Function Probability",
+            short: "Short",
+            long: "Long",
+            confidence: "AI Confidence",
+            observer_instruction: "Observer Instruction",
+            strategy: "Strategy:"
         }
     }
 };

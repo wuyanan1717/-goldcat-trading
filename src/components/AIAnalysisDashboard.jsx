@@ -496,9 +496,9 @@ const AIAnalysisDashboard = ({ trades = [], language = 'en', riskMode = 'balance
         const longWins = longTrades.filter(t => parseFloat(t.profitLoss || 0) > 0).length;
         const shortWins = shortTrades.filter(t => parseFloat(t.profitLoss || 0) > 0).length;
 
-        // Denominator is totalTrades, not direction specific trades as per user request
-        const longWinRate = totalTrades > 0 ? (longWins / totalTrades * 100) : 0;
-        const shortWinRate = totalTrades > 0 ? (shortWins / totalTrades * 100) : 0;
+        // Denominator is direction specific trades (STANDARD Win Rate)
+        const longWinRate = longTrades.length > 0 ? (longWins / longTrades.length * 100) : 0;
+        const shortWinRate = shortTrades.length > 0 ? (shortWins / shortTrades.length * 100) : 0;
 
         console.log('📊 Long/Short Win Rates:', {
             totalTrades,
