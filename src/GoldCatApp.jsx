@@ -1972,21 +1972,30 @@ function GoldCatApp() {
 
                             {/* Feature Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-                                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300">
+                                <div
+                                    onClick={() => { if (!user) { setShowLoginModal(true); } else { setExplicitLandingView(false); setActiveTab('new_trade'); } }}
+                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer"
+                                >
                                     <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20">
                                         <Edit3 className="w-7 h-7 text-amber-500" />
                                     </div>
                                     <h3 className="text-xl font-bold text-white mb-3 group-hover:text-amber-400 transition-colors">{t('home.feature_manual_title')}</h3>
                                     <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_manual_desc')}</p>
                                 </div>
-                                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300">
+                                <div
+                                    onClick={() => { if (!user) { setShowLoginModal(true); } else { setExplicitLandingView(false); setActiveTab('daily_alpha'); } }}
+                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer"
+                                >
                                     <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20">
                                         <Newspaper className="w-7 h-7 text-amber-500" />
                                     </div>
                                     <h3 className="text-xl font-bold text-white mb-3 group-hover:text-amber-400 transition-colors">{t('home.feature_intel_title')}</h3>
                                     <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_intel_desc')}</p>
                                 </div>
-                                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-purple-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300">
+                                <div
+                                    onClick={() => { if (!user) { setShowLoginModal(true); } else { setExplicitLandingView(false); setActiveTab('quantum_terminal'); } }}
+                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-purple-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer"
+                                >
                                     <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(168,85,247,0.1)] border border-purple-500/20">
                                         <Cpu className="w-7 h-7 text-purple-500" />
                                     </div>
