@@ -5,10 +5,10 @@ create extension if not exists pg_cron with schema extensions;
 grant usage on schema cron to postgres;
 grant all privileges on all tables in schema cron to postgres;
 
--- Create cron job to update daily briefs every 6 hours
+-- Create cron job to update daily briefs every 4 hours
 select cron.schedule(
   'update-daily-briefs',
-  '0 */6 * * *',  -- At minute 0 past every 6th hour (00:00, 06:00, 12:00, 18:00)
+  '0 */4 * * *',  -- At minute 0 past every 4th hour (00:00, 04:00, 08:00, 12:00, 16:00, 20:00)
   $$
   select
     net.http_post(

@@ -12,6 +12,20 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
     const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const NEWS_CATEGORY_ID = 'breaking_news';
 
+    // KOL账号配置 - 用于显示头像
+    const KOL_ACCOUNTS = {
+        zh: {
+            airdrop: ["0xSunNFT", "ai_9684xtpa", "EmberCN", "YSI_crypto", "Bitwux", "hexiecs", "BTCwukong", "BensonTWN", "Jackyi_ld", "Guilin_Chen_"],
+            kol: ["jason_chen998", "Loki_Zeng", "BTCdayu", "web3annie", "Guilin_Chen_", "Dp520888", "UnicornBitcoin", "roger9949", "shu8126"],
+            signals: ["Phyrex_Ni", "TechFlowPost", "wublockchain12", "RonanFury", "laofeiyyds"]
+        },
+        en: {
+            airdrop: ["DeFiIgnas", "milesdeutscher", "LarkDavis", "AltcoinDaily", "JamesWynnReal", "Mrcryptoxwhale", "TedPillows"],
+            kol: ["VitalikButerin", "cz_binance", "brian_armstrong", "ErikVoorhees", "SebastienGllmt", "hosseeb"],
+            signals: ["ITC_Crypto", "100trillionUSD", "CryptoHayes", "saylor", "APompliano"]
+        }
+    };
+
     // Categories mapping
     const CATEGORIES = {
         airdrop: 'airdrop_hunters',
@@ -391,6 +405,39 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                                     </li>
                                 )}
                             </ul>
+
+                            {/* KOL Avatar Row - 显示关注的KOL头像 */}
+                            {card.id !== NEWS_CATEGORY_ID && KOL_ACCOUNTS[safeLang]?.[card.id] && (
+                                <div className="mt-4 pt-3 border-t border-white/5">
+                                    <p className="text-[10px] text-slate-500 mb-2 uppercase tracking-wider">
+                                        {safeLang === 'zh' ? '关注中' : 'Following'}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {KOL_ACCOUNTS[safeLang][card.id].slice(0, 6).map((handle, idx) => (
+                                            <a
+                                                key={idx}
+                                                href={`https://x.com/${handle}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="group/avatar relative"
+                                                title={`@${handle}`}
+                                            >
+                                                <img
+                                                    src={`https://unavatar.io/twitter/${handle}`}
+                                                    alt={handle}
+                                                    className="w-7 h-7 rounded-full border border-white/10 hover:border-white/40 transition-all hover:scale-110 bg-slate-800"
+                                                    onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${handle}&background=1a1a1a&color=888`; }}
+                                                />
+                                            </a>
+                                        ))}
+                                        {KOL_ACCOUNTS[safeLang][card.id].length > 6 && (
+                                            <div className="w-7 h-7 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-[10px] text-slate-400">
+                                                +{KOL_ACCOUNTS[safeLang][card.id].length - 6}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Decorative Flash */}
                             <div className={`absolute -right-10 -bottom-10 w-32 h-32 ${card.color} opacity-5 blur-3xl rounded-full group-hover:opacity-10 transition-opacity`}></div>

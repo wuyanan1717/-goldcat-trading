@@ -16,19 +16,16 @@ interface KolDbStructure {
 const KOL_DB: KolDbStructure = {
     zh: {
         airdrop_hunters: [
-            "0xSunNFT", "ai_9684xtpa", "EmberCN", "YSI_crypto", "Bit wux", "hexiecs", "BTCwukong", "BensonTWN"
+            "0xSunNFT", "ai_9684xtpa", "EmberCN", "YSI_crypto", "Bitwux", "hexiecs", "BTCwukong", "BensonTWN", "Jackyi_ld", "Guilin_Chen_"
         ],
         treasure_hunters: [
-            "jason_chen998", "Loki_Zeng", "BTCdayu", "web3annie", "Guilin_Chen_", "Dp520888", "UnicornBitcoin", "roger9949"
+            "jason_chen998", "Loki_Zeng", "BTCdayu", "web3annie", "Guilin_Chen_", "Dp520888", "UnicornBitcoin", "roger9949", "shu8126"
         ],
         traders: [
             "Phyrex_Ni", "TechFlowPost", "wublockchain12", "RonanFury", "laofeiyyds"
         ],
-        onchain_alpha: [
-            "ai_9684xtpa", "EmberCN", "BlockBeatsAsia", "BitWu2025", "OdailyChina"
-        ],
         onchain_data: [
-            "okxchinese", "binance_zh", "Foresight_News", "BlockBeatsAsia", "OdailyChina"
+            "okxchinese", "binance_zh", "Foresight_News", "BlockBeatsAsia", "OdailyChina", "ai_9684xtpa", "EmberCN", "BitWu2025"
         ]
     },
     en: {
@@ -41,11 +38,8 @@ const KOL_DB: KolDbStructure = {
         traders: [
             "ITC_Crypto", "100trillionUSD", "CryptoHayes", "saylor", "APompliano", "CryptoTice_"
         ],
-        onchain_alpha: [
-            "zachxbt", "lookonchain", "laurashin", "Cointelegraph"
-        ],
         onchain_data: [
-            "glassnode", "santimentfeed", "whale_alert", "PeckShieldAlert", "DuneAnalytics"
+            "glassnode", "santimentfeed", "whale_alert", "PeckShieldAlert", "DuneAnalytics", "zachxbt", "lookonchain"
         ]
     }
 };
