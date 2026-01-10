@@ -1918,7 +1918,7 @@ function GoldCatApp() {
                                 <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v3
                             </div>
 
-                            <h1 className={`text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black text-white mb-6 sm:mb-8 tracking-tight leading-tight drop-shadow-2xl ${safeLang === 'zh' ? 'whitespace-nowrap' : ''}`}>
+                            <h1 className={`text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black text-white mb-6 sm:mb-8 tracking-tight leading-tight drop-shadow-2xl ${language === 'zh' ? 'whitespace-nowrap' : ''}`}>
                                 {t('home.title')}
                             </h1>
 
