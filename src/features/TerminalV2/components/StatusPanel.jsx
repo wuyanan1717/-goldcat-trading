@@ -26,20 +26,22 @@ export const StatusPanel = ({ score, result, lang = 'zh', showSearchHint = false
 
     // Quantum Signal Logic
     const renderSignal = () => {
+        // Priority 1: Show search hint if user just switched symbol
+        if (showSearchHint) {
+            return (
+                <div className="text-center py-4 px-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg animate-pulse">
+                    <p className="text-yellow-400 text-sm font-bold mb-2">
+                        {lang === 'zh' ? '👆 点击上方 "启动观测" 按钮开始分析' : '👆 Click "START SCAN" button above to analyze'}
+                    </p>
+                    <p className="text-yellow-600/60 text-xs">
+                        {lang === 'zh' ? '已切换币种，需要重新观测' : 'Symbol changed, scan required'}
+                    </p>
+                </div>
+            );
+        }
+
+        // Priority 2: Show result if exists
         if (!result) {
-            // Show search hint if user just searched
-            if (showSearchHint) {
-                return (
-                    <div className="text-center py-4 px-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg animate-pulse">
-                        <p className="text-yellow-400 text-sm font-bold mb-2">
-                            {lang === 'zh' ? '👆 点击上方 "启动观测" 按钮开始分析' : '👆 Click "START SCAN" button above to analyze'}
-                        </p>
-                        <p className="text-yellow-600/60 text-xs">
-                            {lang === 'zh' ? '已切换币种，需要重新观测' : 'Symbol changed, scan required'}
-                        </p>
-                    </div>
-                );
-            }
             return null; // Hide initializing state
         }
 

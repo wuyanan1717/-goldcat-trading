@@ -455,7 +455,7 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                                 {presetCoins.map(coin => (
                                     <button
                                         key={coin.value}
-                                        onClick={() => setActiveSymbol(coin.value)}
+                                        onClick={() => { setActiveSymbol(coin.value); setShowSearchHint(true); }}
                                         className={`text-[10px] font-mono px-3 py-1 rounded-sm border transition-all whitespace-nowrap ${activeSymbol === coin.value
                                             ? 'border-yellow-500 bg-yellow-500/20 text-yellow-400 font-bold shadow-[0_0_10px_rgba(234,179,8,0.3)]'
                                             : 'border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200'

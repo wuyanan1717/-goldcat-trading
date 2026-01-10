@@ -6,7 +6,7 @@ import { corsHeaders } from "../_shared/cors.ts"
 type KolCategory = "airdrop_hunters" | "treasure_hunters" | "traders" | "onchain_alpha" | "onchain_data";
 type LangCode = "zh" | "en";
 
-const CATEGORIES: KolCategory[] = ["airdrop_hunters", "traders", "onchain_alpha", "treasure_hunters", "onchain_data"];
+const CATEGORIES: KolCategory[] = ["airdrop_hunters", "traders", "treasure_hunters", "onchain_data"]; // Removed onchain_alpha
 const LANGUAGES: LangCode[] = ["zh", "en"];
 
 // --- HELPER: Call kol-proxy for one category/lang ---
@@ -63,9 +63,8 @@ serve(async (req: Request) => {
         const supabase = createClient(supabaseUrl, supabaseKey);
         const results: any[] = [];
 
-        // Only process first 4 categories to match frontend needs
-        // Frontend uses: airdrop_hunters, traders, onchain_alpha, treasure_hunters
-        const categoriesToProcess = CATEGORIES.slice(0, 4);
+        // Correctly process all valid categories
+        const categoriesToProcess = CATEGORIES;
 
         for (const lang of LANGUAGES) {
             const promises = categoriesToProcess.map(async (category) => {
