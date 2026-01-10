@@ -128,7 +128,8 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
             const checkAndRecord = (data, timeframe) => {
                 // 1. Check Flat Bottom Green (Bullish)
                 const fbgIndices = detectFlatBottomGreen(data);
-                const recentFbg = fbgIndices.reverse().find(i => i >= data.length - 3);
+                // Widen window to last 12 candles to show recent signals in radar that are visible on chart
+                const recentFbg = fbgIndices.reverse().find(i => i >= data.length - 12);
 
                 if (recentFbg !== undefined) {
                     const candle = data[recentFbg];
@@ -144,7 +145,8 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
 
                 // 2. Check Beheading Red (Bearish)
                 const brIndices = detectBeheadingRed(data);
-                const recentBr = brIndices.reverse().find(i => i >= data.length - 3);
+                // Widen window to last 12 candles
+                const recentBr = brIndices.reverse().find(i => i >= data.length - 12);
 
                 if (recentBr !== undefined) {
                     const candle = data[recentBr];
