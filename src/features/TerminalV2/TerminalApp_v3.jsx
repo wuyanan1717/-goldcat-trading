@@ -169,10 +169,11 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
         initCharts();
     }, [addLog, initCharts, lang, activeSymbol]);
 
-    // 【恢复】自动滚动日志 (无动画瞬间跳转)
+    // 【修复】自动滚动日志 (使用 scrollTop 避免整页跳动)
     useEffect(() => {
-        if (logsEndRef.current) {
-            logsEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+        if (logsEndRef.current && logsEndRef.current.parentElement) {
+            const container = logsEndRef.current.parentElement;
+            container.scrollTop = container.scrollHeight;
         }
     }, [logs]);
 
@@ -302,11 +303,12 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
                     {/* 左侧：图表区 - col-span-9 */}
                     <div className="lg:col-span-9 space-y-4">
                         {/* 资产选择器 */}
-                        <div className="bg-[#0a0a0c] border border-slate-800 p-2 rounded-sm flex flex-col md:flex-row gap-3 justify-between items-center backdrop-blur-sm shadow-xl">
-                            <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 md:pb-0 scrollbar-hide">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase px-2 whitespace-nowrap flex items-center gap-1">
+                        {/* 资产选择器 - 移动端单行优化版 */}
+                        <div className="bg-[#0a0a0c] border border-slate-800 p-2 rounded-sm flex flex-row gap-2 justify-between items-center backdrop-blur-sm shadow-xl mt-0">
+                            <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide mask-linear-fade">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase px-1 whitespace-nowrap flex items-center gap-1 shrink-0">
                                     <Coins className="w-3 h-3" />
-                                    {lang === 'en' ? 'Target Asset:' : '目标资产:'}
+                                    <span className="hidden sm:inline">{lang === 'en' ? 'Target Asset:' : '目标资产:'}</span>
                                 </span>
                                 {presetCoins.map(coin => (
                                     <button
@@ -315,7 +317,7 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
                                             setActiveSymbol(coin.value);
                                             localStorage.setItem('activeSymbol', coin.value);
                                         }}
-                                        className={`text-[10px] font-mono px-3 py-1 rounded-sm border transition-all whitespace-nowrap ${activeSymbol === coin.value
+                                        className={`text-[10px] font-mono px-2 py-0.5 md:px-3 md:py-1 rounded-sm border transition-all whitespace-nowrap shrink-0 ${activeSymbol === coin.value
                                             ? 'border-yellow-500 bg-yellow-500/20 text-yellow-400 font-bold shadow-[0_0_10px_rgba(234,179,8,0.3)]'
                                             : 'border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200'
                                             }`}
@@ -324,16 +326,16 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
                                     </button>
                                 ))}
                             </div>
-                            <form onSubmit={handleCustomSymbolSubmit} className="flex items-center gap-1 w-full md:w-auto">
+                            <form onSubmit={handleCustomSymbolSubmit} className="flex items-center gap-1 shrink-0">
                                 <div className="relative group">
                                     <input
                                         type="text"
                                         value={customSymbol}
                                         onChange={(e) => setCustomSymbol(e.target.value)}
-                                        placeholder={lang === 'en' ? "Symbol (e.g. BONK)" : "代码"}
-                                        className="bg-slate-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 w-32 md:w-40 rounded-sm focus:outline-none focus:border-yellow-600 font-mono uppercase placeholder:text-slate-600"
+                                        placeholder={lang === 'en' ? "SYMBOL" : "代码"}
+                                        className="bg-slate-900 border border-slate-700 text-slate-300 text-[10px] md:text-xs px-2 py-1 w-20 md:w-40 rounded-sm focus:outline-none focus:border-yellow-600 font-mono uppercase placeholder:text-slate-600 transition-all focus:w-28 md:focus:w-40"
                                     />
-                                    <button type="submit" className="absolute right-1 top-1 p-1 hover:bg-slate-800 rounded cursor-pointer text-slate-600 transition-all" title="加载数据">
+                                    <button type="submit" className="absolute right-0.5 top-0.5 p-0.5 md:p-1 hover:bg-slate-800 rounded cursor-pointer text-slate-600 transition-all" title="加载">
                                         <Search className="w-3 h-3" />
                                     </button>
                                 </div>
