@@ -1918,7 +1918,7 @@ function GoldCatApp() {
                                 <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v3
                             </div>
 
-                            <h1 className={`text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black text-white mb-6 sm:mb-8 tracking-tight leading-tight drop-shadow-2xl ${language === 'zh' ? 'whitespace-nowrap' : ''}`}>
+                            <h1 className={`text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black text-white mb-6 sm:mb-8 tracking-tight leading-tight drop-shadow-2xl ${language === 'zh' ? 'whitespace-normal md:whitespace-nowrap' : ''}`}>
                                 {t('home.title')}
                             </h1>
 
@@ -2379,13 +2379,48 @@ function GoldCatApp() {
                                                         className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
                                                     />
                                                     {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
-                                                    {formData.entryPrice && formData.stopLoss && formData.margin && (
-                                                        <div className="text-[10px] text-gray-500 mt-1">
-                                                            {t('form.predicted_loss')}: <span className="text-red-500">
-                                                                ${Math.abs(((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
-                                                            </span>
-                                                        </div>
-                                                    )}
+                                                    {formData.entryPrice && formData.stopLoss && formData.margin && (() => {
+                                                        const slPercent = Math.abs((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * 100);
+                                                        const predictedLoss = Math.abs((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage));
+
+                                                        // Determine level and color
+                                                        let levelText, levelColor, levelBg;
+                                                        if (slPercent < 1) {
+                                                            levelText = t('form.sl_level.too_tight');
+                                                            levelColor = 'text-yellow-500';
+                                                            levelBg = 'bg-yellow-500/10 border-yellow-500/30';
+                                                        } else if (slPercent <= 2) {
+                                                            levelText = t('form.sl_level.short_term');
+                                                            levelColor = 'text-cyan-400';
+                                                            levelBg = 'bg-cyan-500/10 border-cyan-500/30';
+                                                        } else if (slPercent <= 5) {
+                                                            levelText = t('form.sl_level.structure');
+                                                            levelColor = 'text-amber-400';
+                                                            levelBg = 'bg-amber-500/10 border-amber-500/30';
+                                                        } else if (slPercent <= 12) {
+                                                            levelText = t('form.sl_level.trend');
+                                                            levelColor = 'text-purple-400';
+                                                            levelBg = 'bg-purple-500/10 border-purple-500/30';
+                                                        } else {
+                                                            levelText = t('form.sl_level.too_wide');
+                                                            levelColor = 'text-red-500';
+                                                            levelBg = 'bg-red-500/10 border-red-500/30';
+                                                        }
+
+                                                        return (
+                                                            <div className="mt-1.5 space-y-1">
+                                                                <div className="text-[10px] text-gray-500">
+                                                                    {t('form.predicted_loss')}: <span className="text-red-500">${predictedLoss.toFixed(2)}</span>
+                                                                </div>
+                                                                <div className={`text-[10px] px-2 py-0.5 rounded border inline-flex items-center gap-1.5 ${levelBg}`}>
+                                                                    <span className="text-gray-400">{t('form.sl_level.current')}:</span>
+                                                                    <span className={`font-bold ${levelColor}`}>{slPercent.toFixed(1)}%</span>
+                                                                    <span className="text-gray-500">→</span>
+                                                                    <span className={`font-medium ${levelColor}`}>{levelText}</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
@@ -3491,7 +3526,21 @@ function GoldCatApp() {
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
                         <div className="bg-[#1A1D24] w-full max-w-2xl rounded-2xl border border-neutral-800 p-6 shadow-2xl">
                             <h3 className="text-lg font-bold text-white mb-4">{t('journal.review_title')}</h3>
-                            <p className="text-xs text-gray-400 mb-4">{t('journal.review_desc')}</p>
+                            <p className="text-xs text-gray-400 mb-3">{t('journal.review_desc')}</p>
+
+                            {/* Review Prompts */}
+                            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                                <p className="text-xs text-amber-400 font-bold mb-2">💡 思考引导：</p>
+                                <ul className="space-y-1">
+                                    {(t('journal.review_prompts') || []).map((prompt, idx) => (
+                                        <li key={idx} className="text-xs text-gray-300 flex items-start gap-2">
+                                            <span className="text-amber-500">•</span>
+                                            <span>{prompt}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
                             <textarea
                                 value={reviewNotes}
                                 onChange={e => setReviewNotes(e.target.value)}
