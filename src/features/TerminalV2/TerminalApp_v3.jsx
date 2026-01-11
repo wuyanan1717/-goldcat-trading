@@ -316,6 +316,7 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
                                         onClick={() => {
                                             setActiveSymbol(coin.value);
                                             localStorage.setItem('activeSymbol', coin.value);
+                                            setShowSearchHint(true);
                                         }}
                                         className={`text-[10px] font-mono px-2 py-0.5 md:px-3 md:py-1 rounded-sm border transition-all whitespace-nowrap shrink-0 ${activeSymbol === coin.value
                                             ? 'border-yellow-500 bg-yellow-500/20 text-yellow-400 font-bold shadow-[0_0_10px_rgba(234,179,8,0.3)]'
