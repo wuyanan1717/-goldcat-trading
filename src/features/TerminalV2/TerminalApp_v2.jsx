@@ -371,18 +371,18 @@ export default function TerminalAppV2({ lang, user, membership, onRequireLogin, 
                             onToggleTactical={() => setIsTacticalEnabled(!isTacticalEnabled)}
                         />
 
-                        {/* 【改进2】资产选择器集成到顶部 */}
-                        <div className="flex flex-col md:flex-row gap-2 md:gap-3 justify-between items-center mt-1 md:mt-2 pb-1 md:pb-2">
-                            <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 md:pb-0 scrollbar-hide w-full md:w-auto">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase px-2 whitespace-nowrap flex items-center gap-1">
+                        {/* 【改进2】资产选择器集成到顶部 - 单行布局 */}
+                        <div className="flex flex-row gap-2 justify-between items-center mt-1 pb-1">
+                            <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide mask-linear-fade">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase px-1 whitespace-nowrap flex items-center gap-1 shrink-0">
                                     <Coins className="w-3 h-3" />
-                                    {lang === 'en' ? 'Target Asset:' : '目标资产:'}
+                                    <span className="hidden sm:inline">{lang === 'en' ? 'Target:' : '资产:'}</span>
                                 </span>
                                 {presetCoins.map(coin => (
                                     <button
                                         key={coin.value}
                                         onClick={() => setActiveSymbol(coin.value)}
-                                        className={`text-[10px] font-mono px-3 py-1 rounded-sm border transition-all whitespace-nowrap ${activeSymbol === coin.value
+                                        className={`text-[10px] font-mono px-2 py-0.5 md:px-3 md:py-1 rounded-sm border transition-all whitespace-nowrap shrink-0 ${activeSymbol === coin.value
                                             ? 'border-yellow-500 bg-yellow-500/20 text-yellow-400 font-bold shadow-[0_0_10px_rgba(234,179,8,0.3)]'
                                             : 'border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200'
                                             }`}
@@ -392,19 +392,19 @@ export default function TerminalAppV2({ lang, user, membership, onRequireLogin, 
                                 ))}
                             </div>
 
-                            <form onSubmit={handleCustomSymbolSubmit} className="flex items-center gap-1 w-full md:w-auto">
+                            <form onSubmit={handleCustomSymbolSubmit} className="flex items-center gap-1 shrink-0">
                                 <div className="relative group">
                                     <input
                                         type="text"
                                         value={customSymbol}
                                         onChange={(e) => setCustomSymbol(e.target.value)}
-                                        placeholder={lang === 'en' ? "Symbol (e.g. BONK)" : "代码"}
-                                        className="bg-slate-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 w-32 md:w-40 rounded-sm focus:outline-none focus:border-yellow-600 font-mono uppercase placeholder:text-slate-600"
+                                        placeholder={lang === 'en' ? "SYMBOL" : "代码"}
+                                        className="bg-slate-900 border border-slate-700 text-slate-300 text-[10px] md:text-xs px-2 py-1 w-20 md:w-40 rounded-sm focus:outline-none focus:border-yellow-600 font-mono uppercase placeholder:text-slate-600 transition-all focus:w-28 md:focus:w-40"
                                     />
                                     <button
                                         type="submit"
-                                        className="absolute right-1 top-1 p-1 hover:bg-slate-800 rounded cursor-pointer group-focus-within:text-yellow-500 text-slate-600 transition-all"
-                                        title="加载数据"
+                                        className="absolute right-0.5 top-0.5 p-0.5 md:p-1 hover:bg-slate-800 rounded cursor-pointer group-focus-within:text-yellow-500 text-slate-600 transition-all"
+                                        title="加载"
                                     >
                                         <Search className="w-3 h-3" />
                                     </button>
