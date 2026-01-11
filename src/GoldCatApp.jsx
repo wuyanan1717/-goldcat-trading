@@ -529,6 +529,7 @@ function GoldCatApp() {
 
     const [btcMarket, setBtcMarket] = useState({ price: 0, change24h: 0, loading: true });
     const [totalCapital, setTotalCapital] = useState(0);
+    const [accountRiskLimit, setAccountRiskLimit] = useState(10); // Default 10%
     const [isEditingCapital, setIsEditingCapital] = useState(false);
 
     // 表单状态
@@ -629,9 +630,13 @@ function GoldCatApp() {
                     }
                 }
             } catch (err) {
-                console.error('Error loading profile capital:', err);
-                const savedCapitalStr = localStorage.getItem(`goldcat_total_capital_${userKey}`);
                 if (savedCapitalStr) setTotalCapital(parseFloat(savedCapitalStr));
+            }
+
+            // Load Risk Limit from LocalStorage
+            const savedRiskLimit = localStorage.getItem(`goldcat_risk_limit_${userKey}`);
+            if (savedRiskLimit) {
+                setAccountRiskLimit(parseFloat(savedRiskLimit));
             }
 
             // 2. Load Patterns from Database
@@ -1281,11 +1286,13 @@ function GoldCatApp() {
         }
     };
 
-    // Handle Save Total Capital
+    // Handle Save Total Capital & Risk Limit
     const handleSaveCapital = () => {
         setIsEditingCapital(false);
-        // The actual save happens automatically via useEffect
-        // Just close the editor
+        if (user && user.email) {
+            localStorage.setItem(`goldcat_risk_limit_${user.email}`, accountRiskLimit);
+        }
+        // The actual save for capital happens via other logic or just keeps in state/localstorage for now
     };
 
     // 模拟登录
@@ -2492,28 +2499,47 @@ function GoldCatApp() {
                                                     )}
                                                 </div>
                                                 {isEditingCapital ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="number"
-                                                            step="1"
-                                                            value={totalCapital}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value;
-                                                                if (val === '' || val === '-') {
-                                                                    setTotalCapital('');
-                                                                } else {
-                                                                    const parsed = parseInt(val);
-                                                                    setTotalCapital(isNaN(parsed) ? 0 : parsed);
-                                                                }
-                                                            }}
-                                                            className="w-full bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
-                                                            autoFocus
-                                                        />
-                                                        <button onClick={handleSaveCapital} className="bg-green-600 text-white px-2 py-1 rounded text-xs">OK</button>
+                                                    <div className="flex flex-col gap-2 w-full">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs text-gray-500 w-16">资金($):</span>
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                value={totalCapital}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    if (val === '' || val === '-') {
+                                                                        setTotalCapital('');
+                                                                    } else {
+                                                                        const parsed = parseInt(val);
+                                                                        setTotalCapital(isNaN(parsed) ? 0 : parsed);
+                                                                    }
+                                                                }}
+                                                                className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
+                                                                autoFocus
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs text-gray-500 w-16">风控(%):</span>
+                                                            <input
+                                                                type="number"
+                                                                step="0.1"
+                                                                value={accountRiskLimit}
+                                                                onChange={(e) => setAccountRiskLimit(e.target.value)}
+                                                                className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
+                                                            />
+                                                        </div>
+                                                        <button onClick={handleSaveCapital} className="w-full bg-green-600 hover:bg-green-500 text-white px-2 py-1.5 rounded text-xs font-bold mt-1">保存设置</button>
                                                     </div>
                                                 ) : (
-                                                    <div className="text-xl font-black font-mono text-white tracking-wider">
-                                                        ${(totalCapital || 0).toLocaleString()}
+                                                    <div className="flex flex-col">
+                                                        <div className="text-xl font-black font-mono text-white tracking-wider">
+                                                            ${(totalCapital || 0).toLocaleString()}
+                                                        </div>
+                                                        <div className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
+                                                            <AlertCircle className="w-3 h-3" />
+                                                            账户风控红线: <span className="text-amber-500 font-bold">{accountRiskLimit}%</span>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -2554,16 +2580,16 @@ function GoldCatApp() {
                                                     </div>
                                                 )}
 
-                                                {riskAnalysis.accountRiskPercent > 10 && (
-                                                    <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > 15 ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
-                                                        <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-500' : 'text-yellow-500'}`} />
+                                                {riskAnalysis.accountRiskPercent > accountRiskLimit && (
+                                                    <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
+                                                        <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'text-red-500' : 'text-yellow-500'}`} />
                                                         <div className="text-xs leading-relaxed">
-                                                            <p className={`font-bold ${riskAnalysis.accountRiskPercent > 15 ? 'text-red-400' : 'text-yellow-400'}`}>
-                                                                {riskAnalysis.accountRiskPercent > 15 ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
+                                                            <p className={`font-bold ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'text-red-400' : 'text-yellow-400'}`}>
+                                                                {riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
                                                             </p>
                                                             <p className="text-gray-400">
                                                                 当前账户风险为 {riskAnalysis.accountRiskPercent}%，
-                                                                {riskAnalysis.accountRiskPercent > 15 ? '严重超出安全范围 (>15%)！建议大幅降低仓位。' : '已超出建议值 (10%)，请谨慎操作。'}
+                                                                {riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? `严重超出设定阈值 (>${(accountRiskLimit * 1.5).toFixed(1)}%)！建议大幅降低仓位。` : `已超出设定阈值 (${accountRiskLimit}%)，请谨慎操作。`}
                                                             </p>
                                                         </div>
                                                     </div>
