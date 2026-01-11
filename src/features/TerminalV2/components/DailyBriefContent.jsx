@@ -339,10 +339,13 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                 >
                     <div className="flex items-center gap-3">
                         <img
-                            src={`https://unavatar.io/twitter/${safeLang === 'zh' ? 'GoldCatNews' : 'GoldCatTerminal'}`}
+                            src={`/assets/avatars/${safeLang === 'zh' ? 'GoldCatNews' : 'GoldCatTerminal'}.png`}
                             alt="Official"
                             className="w-10 h-10 rounded-full border-2 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
-                            onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=GC&background=f59e0b&color=000'; }}
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://ui-avatars.com/api/?name=GC&background=f59e0b&color=000&length=2';
+                            }}
                         />
                         <div>
                             <div className="text-amber-400 font-bold text-sm flex items-center gap-1">
@@ -456,10 +459,13 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                                                 title={`@${handle}`}
                                             >
                                                 <img
-                                                    src={`https://unavatar.io/twitter/${handle}`}
+                                                    src={`/assets/avatars/${handle}.png`}
                                                     alt={handle}
                                                     className="w-7 h-7 rounded-full border border-white/10 hover:border-white/40 transition-all hover:scale-110 bg-slate-800"
-                                                    onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${handle}&background=1a1a1a&color=888`; }}
+                                                    onError={(e) => {
+                                                        e.target.onerror = null; // Prevent infinite loop
+                                                        e.target.src = `https://ui-avatars.com/api/?name=${handle}&background=1a1a1a&color=888&font-size=0.5&length=2`;
+                                                    }}
                                                 />
                                             </a>
                                         ))}
