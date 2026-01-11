@@ -213,7 +213,15 @@ export const translations = {
             reset_default: "重置默认",
             save: "保存",
             predicted_loss: "预计亏损",
-            predicted_profit: "预计盈利"
+            predicted_profit: "预计盈利",
+            sl_level: {
+                current: "当前幅度",
+                short_term: "短线级别",
+                structure: "结构级别",
+                trend: "趋势级别",
+                too_tight: "止损过窄",
+                too_wide: "止损过宽"
+            }
         },
         risk: {
             title: "交易纪律预审",
@@ -232,9 +240,9 @@ export const translations = {
             high_loss_rate_warning: "⚠️ 历史胜率过低",
             high_loss_rate_detail: "该交易对历史亏损率 {rate}%（{total} 笔交易），不建议继续交易！",
             checklist: "交易检查清单：",
-            check_trend: "是否已确认大级别趋势？",
-            check_close: "是否已等待 K 线收盘确认？",
-            check_structure: "止损位是否设置在结构之外？",
+            check_trend: "❌ 止损后立刻反手",
+            check_close: "❌ 同一逻辑连续试错",
+            check_structure: "❌ 情绪回补亏损",
             excellent: "✅ 优秀",
             too_low: "⚠️ 过低",
             violation: "违反交易纪律",
@@ -276,6 +284,11 @@ export const translations = {
             review: "复盘",
             review_title: "交易复盘",
             review_desc: "记录这笔交易的心得、教训或改进点。",
+            review_prompts: [
+                "那一笔为什么没止损？",
+                "当时你在想什么？",
+                "有没有共性场景？"
+            ],
             review_placeholder: "在此输入复盘笔记...",
             entry_price: "入场价",
             stop_loss_price: "止损价",
@@ -633,7 +646,15 @@ export const translations = {
             reset_default: "Reset to Default",
             save: "Save",
             predicted_loss: "Est. Loss",
-            predicted_profit: "Est. Profit"
+            predicted_profit: "Est. Profit",
+            sl_level: {
+                current: "Current",
+                short_term: "Short-term",
+                structure: "Structure",
+                trend: "Trend",
+                too_tight: "Too Tight",
+                too_wide: "Too Wide"
+            }
         },
         risk: {
             title: "Risk Pre-check",
@@ -652,9 +673,9 @@ export const translations = {
             high_loss_rate_warning: "⚠️ Poor Historical Performance",
             high_loss_rate_detail: "This pair has {rate}% loss rate across {total} trades. Avoid trading!",
             checklist: "Checklist:",
-            check_trend: "Is the major trend confirmed?",
-            check_close: "Is the candle close confirmed?",
-            check_structure: "Is Stop Loss outside structure?",
+            check_trend: "❌ Immediate Reversal After Stop Loss",
+            check_close: "❌ Repeated Attempts on Same Logic",
+            check_structure: "❌ Emotional Revenge Trading",
             excellent: "✅ Excellent",
             too_low: "⚠️ Too Low",
             violation: "Violated Discipline",
@@ -695,6 +716,11 @@ export const translations = {
             review: "Review",
             review_title: "Trade Review",
             review_desc: "Record your insights, lessons, or improvements.",
+            review_prompts: [
+                "Why didn't you cut your loss?",
+                "What were you thinking at the time?",
+                "Is there a pattern you keep repeating?"
+            ],
             review_placeholder: "Enter review notes here...",
             entry_price: "Entry Price",
             stop_loss_price: "Stop Loss",

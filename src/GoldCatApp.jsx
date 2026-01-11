@@ -1770,7 +1770,7 @@ function GoldCatApp() {
 
     return (
         <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate flex flex-col" translate="no">
-            {((!user && !showGuestDashboard) || (user && explicitLandingView)) && <SnowfallOverlay />}
+
             {/* Background Animation (KuCoin Style) */}
             <BackgroundParticles />
 

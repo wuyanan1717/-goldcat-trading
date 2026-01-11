@@ -358,7 +358,7 @@ export default function TerminalAppV2({ lang, user, membership, onRequireLogin, 
             <div className="min-h-screen flex flex-col relative z-10 w-full text-slate-300">
                 {/* 【改进1】固定顶部区域 - Sticky Header */}
                 <div className="sticky top-0 z-50 bg-[#0a0a0c]/95 backdrop-blur-md border-b border-slate-800 shadow-lg">
-                    <div className="max-w-7xl mx-auto px-4 md:px-8 py-2">
+                    <div className="max-w-7xl mx-auto px-2 md:px-8 py-1 md:py-2">
                         <Header
                             lang={lang}
                             onReset={initCharts}
@@ -372,8 +372,8 @@ export default function TerminalAppV2({ lang, user, membership, onRequireLogin, 
                         />
 
                         {/* 【改进2】资产选择器集成到顶部 */}
-                        <div className="flex flex-col md:flex-row gap-3 justify-between items-center mt-2 pb-2">
-                            <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 md:pb-0 scrollbar-hide">
+                        <div className="flex flex-col md:flex-row gap-2 md:gap-3 justify-between items-center mt-1 md:mt-2 pb-1 md:pb-2">
+                            <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 md:pb-0 scrollbar-hide w-full md:w-auto">
                                 <span className="text-[10px] font-bold text-slate-500 uppercase px-2 whitespace-nowrap flex items-center gap-1">
                                     <Coins className="w-3 h-3" />
                                     {lang === 'en' ? 'Target Asset:' : '目标资产:'}
