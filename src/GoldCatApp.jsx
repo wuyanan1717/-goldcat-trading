@@ -1981,7 +1981,7 @@ function GoldCatApp() {
                             {/* Feature Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
                                 <div
-                                    onClick={() => { if (!user) { setShowLoginModal(true); } else { setExplicitLandingView(false); setActiveTab('new_trade'); } }}
+                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('new_trade'); }}
                                     className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer"
                                 >
                                     <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20">
@@ -1991,7 +1991,7 @@ function GoldCatApp() {
                                     <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_manual_desc')}</p>
                                 </div>
                                 <div
-                                    onClick={() => { if (!user) { setShowLoginModal(true); } else { setExplicitLandingView(false); setActiveTab('daily_alpha'); } }}
+                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('daily_alpha'); }}
                                     className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer"
                                 >
                                     <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20">
@@ -2001,7 +2001,7 @@ function GoldCatApp() {
                                     <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_intel_desc')}</p>
                                 </div>
                                 <div
-                                    onClick={() => { if (!user) { setShowLoginModal(true); } else { setExplicitLandingView(false); setActiveTab('quantum_terminal'); } }}
+                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('quantum_terminal'); }}
                                     className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-purple-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer"
                                 >
                                     <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(168,85,247,0.1)] border border-purple-500/20">
@@ -2241,8 +2241,13 @@ function GoldCatApp() {
                                             className={`
                                 flex items-center justify-center gap-2 px-3 sm:px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap
                                 ${activeTab === tab.id
-                                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                                                    : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'}
+                                                    ? (tab.id === 'quantum_terminal'
+                                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/40 ring-1 ring-purple-400'
+                                                        : 'bg-amber-500 text-black shadow-lg shadow-amber-500/20')
+                                                    : (tab.id === 'quantum_terminal'
+                                                        ? 'bg-purple-900/20 text-purple-400 border border-purple-500/30 hover:bg-purple-900/40 hover:text-purple-300'
+                                                        : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600')
+                                                }
                             `}
                                         >
                                             {tab.icon && <tab.icon className="w-4 h-4" />}
