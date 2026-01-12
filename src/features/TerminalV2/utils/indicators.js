@@ -83,13 +83,35 @@ export function detectFlatBottomGreen(data) {
         // 3. Must have Upper Shadow
         const strictUpperShadow = curr.h > curr.v;
 
-        // 4. Previous was Red (Context: Reversal or Continuation after pullback)
-        const prevWasRed = prev.v < prev.o;
+        // 4. Uptrend Context (Price > SMA7) - "上升趋势"
+        // Replace strict "prev was red" with "general uptrend or higher low"
+        // If we don't have enough data for SMA, we fallback to simple Higher Low check
+        let isUptrend = false;
+        if (i >= 7) {
+            let sum = 0;
+            for (let k = 0; k < 7; k++) {
+                sum += data[i - k].v;
+            }
+            const sma7 = sum / 7;
+            // Current price above 7-period average implies short-term uptrend
+            isUptrend = curr.v > sma7;
+        } else {
+            // Fallback for beginning of array: Current Low >= Previous Low
+            isUptrend = curr.l >= prev.l;
+        }
 
         // 5. Volume Check (Volume > Prev Volume) - "配合交易量"
-        const volumeIncrease = curr.vol > prev.vol;
+        // Relaxed volume check: Volume is above average OR greater than previous
+        // Strict volume check might filter too many valid signals in crypto.
+        // Let's keep the user's original implicit requirement (Volume Increase) or maybe refined:
+        // Original: const volumeIncrease = curr.vol > prev.vol;
+        // Let's stick to the existing volume logic for now unless requested, but the prompt focused on #4.
+        const volumeIncrease = curr.vol > (prev.vol * 0.8); // Slightly relaxed: at least 80% of prev vol (avoid tiny vol) or strictly > prev? 
+        // User didn't ask to change volume, so let's keep original strictly but maybe strict volume check excludes too many?
+        // Let's keep strict > prev.vol as per original code, to ensure quality.
+        const strictVolumeIncrease = curr.vol > prev.vol;
 
-        if (isGreen && isFlatBottom && strictUpperShadow && prevWasRed && volumeIncrease) {
+        if (isGreen && isFlatBottom && strictUpperShadow && isUptrend && strictVolumeIncrease) {
             indices.push(i);
         }
     }
