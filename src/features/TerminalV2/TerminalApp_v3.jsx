@@ -125,13 +125,20 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
             const newSignals = [];
             const checkAndRecord = (data, timeframe) => {
                 const fbgIndices = detectFlatBottomGreen(data);
-                const recentFbg = fbgIndices.reverse().find(i => i >= data.length - 3);
+                // Fix: Only trigger on CONFIRMED (Closed) candles.
+                // Exclude data.length - 1 (current open candle).
+                // Check last 2 closed candles (length-2, length-3) for recent signals.
+                const recentFbg = fbgIndices.reverse().find(i => i < data.length - 1 && i >= data.length - 3);
+
                 if (recentFbg !== undefined) {
                     const candle = data[recentFbg];
                     newSignals.push({ id: `FBG-${timeframe}-${candle.time}`, timeframe, type: 'FLAT_BOTTOM_GREEN', price: candle.l, timestamp: candle.time || Date.now(), strength: 'HIGH' });
                 }
+
                 const brIndices = detectBeheadingRed(data);
-                const recentBr = brIndices.reverse().find(i => i >= data.length - 3);
+                // Fix: Same for Beheading Red - Confirmed candles only.
+                const recentBr = brIndices.reverse().find(i => i < data.length - 1 && i >= data.length - 3);
+
                 if (recentBr !== undefined) {
                     const candle = data[recentBr];
                     newSignals.push({ id: `BR-${timeframe}-${candle.time}`, timeframe, type: 'BEHEADING_RED', price: candle.v, timestamp: candle.time || Date.now(), strength: 'HIGH' });

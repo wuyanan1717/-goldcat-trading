@@ -38,18 +38,20 @@ export async function consultObserver(
     const dim5m = analyzeDimension(data5m);
     const dim1m = analyzeDimension(data1m);
 
-    // Parse Tactical Signals
+    // Parse Tactical Signals (Check 15m, 1h, 4h ONLY)
+    const validTimeframes = ['15m', '1h', '4h'];
+
     const fbgSignals = extraMetrics.tacticalSignals
-        .filter(s => s.type === 'FLAT_BOTTOM_GREEN')
+        .filter(s => s.type === 'FLAT_BOTTOM_GREEN' && validTimeframes.includes(s.timeframe))
         .map(s => s.timeframe);
 
     const brSignals = extraMetrics.tacticalSignals
-        .filter(s => s.type === 'BEHEADING_RED')
+        .filter(s => s.type === 'BEHEADING_RED' && validTimeframes.includes(s.timeframe))
         .map(s => s.timeframe);
 
     const tacticalReport = [];
-    if (fbgSignals.length > 0) tacticalReport.push(`[${isEn ? 'Flat Bottom Green' : '平底绿'} (LONG) FOUND ON: ${fbgSignals.join(', ')}]`);
-    if (brSignals.length > 0) tacticalReport.push(`[${isEn ? 'Beheading Red' : '砍头红'} (SHORT) FOUND ON: ${brSignals.join(', ')}]`);
+    if (fbgSignals.length > 0) tacticalReport.push(`[STRONG BULLISH SIGNAL DETECTED ON: ${fbgSignals.join(', ')}]`);
+    if (brSignals.length > 0) tacticalReport.push(`[STRONG BEARISH SIGNAL DETECTED ON: ${brSignals.join(', ')}]`);
 
     const tacticalContext = tacticalReport.length > 0 ? tacticalReport.join(' AND ') : "NO SPECIAL PATTERNS";
 
@@ -58,11 +60,7 @@ export async function consultObserver(
 
     你有两套独立的观测系统：
     1. **量子共振系统 (Resonance)**: 基于 1H/5M/1M 的趋势和指标共振。
-    2. **战术形态系统 (Tactical)**: 监测特定的高胜率K线组合。
-
-    【核心形态定义】
-    - **平底绿 (Flat Bottom Green)**: 看涨形态 (LONG)。
-    - **砍头红 (Beheading Red)**: 看空形态 (SHORT)。十字星后紧接大阴线，无上影线，跌破支撑。
+    2. **战术形态系统 (Tactical)**: 监测核心大级别周期 (15M/1H/4H) 的高胜率K线组合。
 
     【输入数据】
     Target: ${symbol}
@@ -73,10 +71,13 @@ export async function consultObserver(
 
     【任务】
     综合分析。
-    - 如果“战术警报”显示 **平底绿**，请给予极高的做多权重，输出信号 LONG。
-    - 如果“战术警报”显示 **砍头红**，请给予极高的做空权重，输出信号 SHORT。
-    - 如果同时存在（罕见），或都不存在，则依赖共振系统分析。
+    - 如果“战术警报”显示 **STRONG BULLISH SIGNAL**，请给予极高的做多权重，输出信号 LONG。
+    - 如果“战术警报”显示 **STRONG BEARISH SIGNAL**，请给予极高的做空权重，输出信号 SHORT。
+    - 如果同时存在，或都不存在，则依赖共振系统分析。
     
+    【重要】
+    不要提及具体的形态名称（如“平底绿”、“砍头红”等），直接给出操作建议。
+
     必须返回标准 JSON 格式，不包含 markdown 代码块：
     {
       "probability_up": number (0-100),
@@ -84,7 +85,7 @@ export async function consultObserver(
       "conclusion": string (简短结论，中文),
       "quantum_phrase": string (中文或双语科幻术语),
       "signal": "LONG" | "SHORT" | "WAIT",
-      "action_advice": string (操作建议，中文)
+      "action_advice": string (操作建议，中文，直接给出具体的进场或观望建议)
     }
   `;
 
@@ -93,11 +94,7 @@ export async function consultObserver(
 
     You have two independent observation systems:
     1. **Resonance System**: Based on 1H/5M/1M trend and indicator resonance.
-    2. **Tactical System**: Monitors specific high-win-rate candlestick patterns.
-
-    [Core Pattern Definitions]
-    - **Flat Bottom Green**: Bullish pattern (LONG).
-    - **Beheading Red**: Bearish pattern (SHORT). Doji followed by a big bearish candle, no upper shadow, breaking support.
+    2. **Tactical System**: Monitors core timeframe (15M/1H/4H) high-win-rate candlestick patterns.
 
     [Input Data]
     Target: ${symbol}
@@ -108,10 +105,13 @@ export async function consultObserver(
 
     [Task]
     Analyze comprehensively.
-    - If "Tactical Alerts" show **Flat Bottom Green**, give extremely high weight to LONG.
-    - If "Tactical Alerts" show **Beheading Red**, give extremely high weight to SHORT.
+    - If "Tactical Alerts" show **STRONG BULLISH SIGNAL**, give extremely high weight to LONG.
+    - If "Tactical Alerts" show **STRONG BEARISH SIGNAL**, give extremely high weight to SHORT.
     - Otherwise, rely on resonance analysis.
-    
+
+    [Important]
+    Do not mention specific pattern names. Directly give actionable advice.
+
     Must return standard JSON format, no markdown code blocks:
     {
       "probability_up": number (0-100),
@@ -119,7 +119,7 @@ export async function consultObserver(
       "conclusion": string (Short conclusion in English),
       "quantum_phrase": string (Sci-fi term in English),
       "signal": "LONG" | "SHORT" | "WAIT",
-      "action_advice": string (Action advice in English)
+      "action_advice": string (Action advice in English, specific entry or wait advice)
     }
   `;
 

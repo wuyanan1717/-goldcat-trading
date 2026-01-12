@@ -14,7 +14,7 @@ import {
     Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, ChevronDown, Lock, Unlock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
     PlusCircle, Check, RotateCcw, Info, Loader2, Trophy, Clock, Snowflake, BarChart2,
-    Send, Star, Gift, Newspaper, Terminal
+    Send, Star, Gift, Newspaper, Terminal, Search
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -306,6 +306,7 @@ const SnowfallOverlay = () => {
 };
 
 function GoldCatApp() {
+    const [showSuggestions, setShowSuggestions] = useState(false);
     // Dynamic challenge count logic (Deterministic & Time-based)
     // 逻辑：基于固定锚点时间的纯数学计算，确保刷新、不同设备、长期挂机保持严格一致
     // 用户指定：起始数 340，固定增长逻辑
@@ -2286,11 +2287,62 @@ function GoldCatApp() {
                                                 </div>
                                                 <div className="col-span-2 md:col-span-1">
                                                     <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
-                                                    <input
-                                                        type="text" placeholder="BTC/USDT" value={formData.symbol}
-                                                        onChange={e => handleInputChange('symbol', e.target.value.toUpperCase())}
-                                                        className="w-full min-h-[44px] bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
-                                                    />
+                                                    <div className="relative group">
+                                                        {/* Visual Hint Icon - Moved to LEFT to avoid overlap with datalist arrow */}
+                                                        <div className="absolute left-3 top-3 pointer-events-none text-gray-500 z-10">
+                                                            <Search className="w-4 h-4" />
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            // IME Optimization: Hint browser to use English/Latin
+                                                            lang="en"
+                                                            spellCheck="false"
+                                                            autoComplete="off"
+                                                            autoCorrect="off"
+                                                            autoCapitalize="characters"
+                                                            placeholder="BTC"
+                                                            value={formData.symbol}
+                                                            onChange={e => {
+                                                                const val = e.target.value.toUpperCase();
+                                                                handleInputChange('symbol', val);
+                                                                setShowSuggestions(true);
+                                                            }}
+                                                            onFocus={() => setShowSuggestions(true)}
+                                                            onBlur={() => {
+                                                                // Smart append logic
+                                                                let val = formData.symbol.trim();
+                                                                if (val && !val.includes('/') && val.length < 10) {
+                                                                    const common = ['USDT', 'USD', 'BTC', 'ETH'];
+                                                                    if (!common.some(c => val.endsWith(c))) {
+                                                                        val = val + '/USDT';
+                                                                        handleInputChange('symbol', val);
+                                                                    }
+                                                                }
+                                                                // Delay hide to allow click
+                                                                setTimeout(() => setShowSuggestions(false), 200);
+                                                            }}
+                                                            // Removed list="crypto-suggestions" to disable native datalist
+                                                            className="w-full min-h-[44px] bg-neutral-800 border border-neutral-700 rounded-lg pl-10 pr-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
+                                                        />
+                                                        {showSuggestions && (
+                                                            <div className="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
+                                                                {['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'DOGE/USDT', 'PEPE/USDT', 'SUI/USDT', 'XRP/USDT', 'BNB/USDT', 'ADA/USDT', 'LINK/USDT', 'AVAX/USDT', 'DOT/USDT', 'MATIC/USDT', 'LTC/USDT', 'UNI/USDT']
+                                                                    .filter(pair => !formData.symbol || pair.includes(formData.symbol))
+                                                                    .map(pair => (
+                                                                        <div
+                                                                            key={pair}
+                                                                            className="px-4 py-3 hover:bg-neutral-800 cursor-pointer text-sm font-mono text-gray-300 hover:text-white transition-colors border-b border-neutral-800/50 last:border-0"
+                                                                            onClick={() => {
+                                                                                handleInputChange('symbol', pair);
+                                                                                setShowSuggestions(false);
+                                                                            }}
+                                                                        >
+                                                                            {pair}
+                                                                        </div>
+                                                                    ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <div className="col-span-1">
                                                     <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>

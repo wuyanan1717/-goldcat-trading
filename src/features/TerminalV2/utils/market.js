@@ -6,22 +6,37 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const BASE_URL = `${SUPABASE_URL}/functions/v1/market-proxy`;
 
 export async function fetchBinanceKlines(symbol, interval, limit = 50) {
-    try {
-        // We fetch limit + 15 to allow RSI to "warm up"
+    // Internal helper to fetch from proxy
+    const fetchFromProxy = async (marketType) => {
         const fetchLimit = limit + 15;
-        // Proxy expects 'endpoint', 'symbol', 'interval', 'limit'
-        const url = `${BASE_URL}?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}`;
-        const response = await fetch(url, {
-            headers: {
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-            }
+        const url = `${BASE_URL}?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=${marketType}`;
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
+        if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+        return json;
+    };
 
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.statusText}`);
+    try {
+        let rawData;
+        let usedMarket = 'spot';
+
+        try {
+            // 1. Try SPOT first
+            rawData = await fetchFromProxy('spot');
+        } catch (spotError) {
+            console.warn(`[Market] Spot API failed for ${symbol}, trying FUTURES...`, spotError);
+            // 2. Fallback to FUTURES
+            try {
+                rawData = await fetchFromProxy('futures');
+                usedMarket = 'futures';
+            } catch (futuresError) {
+                console.error(`[Market] Futures API also failed for ${symbol}`, futuresError);
+                throw spotError; // Throw original error if both fail
+            }
         }
-
-        const rawData = await response.json();
 
         // Transform Binance format [time, open, high, low, close, volume...]
         let charts = rawData.map((k, index) => ({

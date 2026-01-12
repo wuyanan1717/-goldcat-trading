@@ -135,13 +135,15 @@ export function detectBeheadingRed(data) {
         const isRed = curr.v < curr.o;
         if (!isRed) continue;
 
-        // 2. Previous was a Doji (Small body relative to total range)
+        // 2. Previous was a Doji (Indecision) OR Green Candle (Bullish attempt)
+        // Original: const isPrevDoji = prevRange > 0 && (prevBody / prevRange) < 0.35;
+        // New: Previous can be a small body (Doji) OR a Green candle (Price was trying to go up)
         const prevBody = Math.abs(prev.o - prev.v);
         const prevRange = prev.h - prev.l;
-        // Body is less than 30% of the total range, implies indecision/Doji-like
         const isPrevDoji = prevRange > 0 && (prevBody / prevRange) < 0.35;
+        const isPrevGreen = prev.v > prev.o;
 
-        if (!isPrevDoji) continue;
+        if (!isPrevDoji && !isPrevGreen) continue;
 
         // 3. "Beheading" - No Upper Shadow on the Red Candle
         // The high should be very close to the open.

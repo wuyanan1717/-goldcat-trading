@@ -37,9 +37,6 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
     const DATA_MOCK = {
         zh: {
             date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
-            sentiment: {
-                summary: "随着 ETH/SOL 生态系统的轮动，BTC 主导地位略有下降，市场正在升温。情绪表明市场在期待“山寨季”。"
-            },
             cards: [
                 {
                     id: NEWS_CATEGORY_ID,
@@ -81,9 +78,6 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
         },
         en: {
             date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-            sentiment: {
-                summary: "Institutional accumulation detected on-chain. BTC dominance waning as capital rotates into high-beta L1s. Sentiment leans bullish."
-            },
             cards: [
                 {
                     id: NEWS_CATEGORY_ID,
@@ -162,13 +156,13 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                     const dbCategory = categoryMap[uiId];
                     const { data } = await supabase
                         .from('daily_briefs')
-                        .select('content')
+                        .select('content, created_at')
                         .eq('category', dbCategory)
                         .eq('lang', currentLang)
                         .order('created_at', { ascending: false })
                         .limit(1)
                         .maybeSingle();
-                    return { uiId, content: data?.content || [] };
+                    return { uiId, record: data };
                 })
             ]);
 
@@ -189,10 +183,41 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
             }
 
             // 4. Set Briefs
-            briefResps.forEach(({ uiId, content }) => {
-                dbResults[uiId] = content;
+            let latestBriefTime = 0;
+            briefResps.forEach(({ uiId, record }) => {
+                dbResults[uiId] = record?.content || [];
+                if (record?.created_at) {
+                    const t = new Date(record.created_at).getTime();
+                    if (t > latestBriefTime) latestBriefTime = t;
+                }
             });
             setKolData(dbResults);
+
+            // --- STALE DATA CHECK (6 HOURS) ---
+            const SIX_HOURS = 6 * 60 * 60 * 1000;
+            const isStale = (Date.now() - latestBriefTime) > SIX_HOURS;
+
+            if (latestBriefTime > 0 && isStale) {
+                console.log(`[Auto-Refresh] Data is stale (Last update: ${new Date(latestBriefTime).toLocaleString()}). Triggering background refresh...`);
+                // Fire and forget background update
+                Promise.all([
+                    supabase.functions.invoke(`cryptopanic-proxy?lang=${currentLang}`),
+                    ...Object.values(CATEGORIES).map(cat =>
+                        supabase.functions.invoke('kol-proxy', { body: { category: cat, lang: currentLang } })
+                    )
+                ]).then(() => {
+                    console.log("[Auto-Refresh] Triggered.");
+                });
+            } else if (latestBriefTime === 0) {
+                // No data at all? Trigger initial load
+                console.log("[Auto-Refresh] No DB data found. Triggering initial fetch...");
+                Promise.all([
+                    supabase.functions.invoke(`cryptopanic-proxy?lang=${currentLang}`),
+                    ...Object.values(CATEGORIES).map(cat =>
+                        supabase.functions.invoke('kol-proxy', { body: { category: cat, lang: currentLang } })
+                    )
+                ]);
+            }
 
         } catch (e) {
             console.error("Failed to fetch brief data", e);
@@ -306,7 +331,24 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                         {safeLang === 'zh' ? '市场情绪' : 'Market Sentiment'}
                     </h2>
                     <p className="text-slate-400 mt-2 max-w-2xl leading-relaxed">
-                        {currentMock.sentiment.summary}
+                        {/* Dynamic Sentiment Analysis */}
+                        {(() => {
+                            if (!fngData) return safeLang === 'zh' ? "正在分析链上数据..." : "Analyzing on-chain data...";
+                            const val = parseInt(fngData.value);
+
+                            // Dynamic Text Generation
+                            if (safeLang === 'zh') {
+                                if (val >= 75) return `当前市场极度贪婪 (指数 ${val})。FOMO 情绪高涨，资金正加速流入山寨板块，由于短期过热，建议分批止盈或收紧止损，警惕大幅回调风险。`;
+                                if (val >= 50) return `市场情绪偏向乐观 (指数 ${val})。多头趋势保持健康，主流币种表现稳健。建议顺势而为，关注补涨板块，持有核心仓位。`;
+                                if (val >= 25) return `市场处于恐慌状态 (指数 ${val})。投资者情绪低迷，抛压逐渐衰竭。对于长期持有者，当前可能是左侧建仓或定投的优质区间。`;
+                                return `市场极度恐慌 (指数 ${val})，由于暴跌导致流动性枯竭。正如巴菲特所言“别人恐惧我贪婪”，这是历史性的抄底机会，但需注意风险控制。`;
+                            } else {
+                                if (val >= 75) return `Extreme Greed (${val}). Market is overheating with high FOMO. Capital is rotating into alts. Risk of correction is elevated; tighten stop-losses.`;
+                                if (val >= 50) return `Greed (${val}). Sentiment is positive and trend is healthy. Major assets are stable. Good time to follow the trend but avoid chasing logic-less pumps.`;
+                                if (val >= 25) return `Fear (${val}). Sentiment is bearish. Selling pressure is fading. Considered a potential accumulation zone for long-term holders.`;
+                                return `Extreme Fear (${val}). Liquidity is drying up due to panic selling. Historically a 'buy the dip' opportunity for contrarians ("Be greedy when others are fearful").`;
+                            }
+                        })()}
                     </p>
                 </div>
 
@@ -344,7 +386,8 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                             className="w-10 h-10 rounded-full border-2 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
                             onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = 'https://ui-avatars.com/api/?name=GC&background=f59e0b&color=000&length=2';
+                                // Fallback to Unavatar (Real Twitter Avatar)
+                                e.target.src = `https://unavatar.io/twitter/${safeLang === 'zh' ? 'GoldCatNews' : 'GoldCatTerminal'}`;
                             }}
                         />
                         <div>
@@ -464,7 +507,8 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                                                     className="w-7 h-7 rounded-full border border-white/10 hover:border-white/40 transition-all hover:scale-110 bg-slate-800"
                                                     onError={(e) => {
                                                         e.target.onerror = null; // Prevent infinite loop
-                                                        e.target.src = `https://ui-avatars.com/api/?name=${handle}&background=1a1a1a&color=888&font-size=0.5&length=2`;
+                                                        // Fallback to Unavatar (Real Twitter Avatar)
+                                                        e.target.src = `https://unavatar.io/twitter/${handle}`;
                                                     }}
                                                 />
                                             </a>
