@@ -22,9 +22,7 @@ export const Header = ({
                         OBSERVER_NODE_2060
                     </span>
                 </h1>
-                <p className="text-[9px] md:text-[10px] mt-1 md:mt-2 tracking-[0.2em] md:tracking-[0.3em] text-slate-500 uppercase font-mono truncate max-w-[300px] md:max-w-none">
-                    {lang === 'en' ? 'Access Block Universe // Confirm Causality' : '接入块状宇宙 (Block Universe) // 确认因果律'}
-                </p>
+
             </div>
             <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
                 {/* Tactical Toggle */}

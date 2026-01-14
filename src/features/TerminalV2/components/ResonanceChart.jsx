@@ -54,7 +54,7 @@ export const ResonanceChart = ({
                 </div>
             </div>
 
-            <div className="relative h-32 rounded-lg border border-slate-800 overflow-hidden chart-grid bg-slate-900/20">
+            <div className="relative h-[110px] rounded-lg border border-slate-800 overflow-hidden chart-grid bg-slate-900/20">
 
                 {/* Recharts Implementation */}
                 <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={100}>

@@ -2226,7 +2226,7 @@ function GoldCatApp() {
                     ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
                         <>
                             {/* 功能 Tab */}
-                            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-6">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-[18px]">
                                 <div className="flex flex-wrap gap-2">
                                     {[
                                         { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
@@ -2242,10 +2242,10 @@ function GoldCatApp() {
                                 flex items-center justify-center gap-2 px-3 sm:px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap
                                 ${activeTab === tab.id
                                                     ? (tab.id === 'quantum_terminal'
-                                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/40 ring-1 ring-purple-400'
+                                                        ? 'bg-purple-600/30 backdrop-blur-md text-purple-100 shadow-[0_0_15px_rgba(147,51,234,0.3)] border border-purple-400'
                                                         : 'bg-amber-500 text-black shadow-lg shadow-amber-500/20')
                                                     : (tab.id === 'quantum_terminal'
-                                                        ? 'bg-purple-900/20 text-purple-400 border border-purple-500/30 hover:bg-purple-900/40 hover:text-purple-300'
+                                                        ? 'bg-purple-900/10 text-purple-400 border border-purple-500/60 hover:bg-purple-900/30 hover:text-purple-300'
                                                         : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600')
                                                 }
                             `}

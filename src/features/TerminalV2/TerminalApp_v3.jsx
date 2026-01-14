@@ -13,6 +13,7 @@ import { ResonanceChart } from './components/ResonanceChart';
 import { BacktestModal } from './components/BacktestModal';
 import { GuideModal } from './components/GuideModal';
 import { DailyBriefModalBilingual } from './components/DailyBriefModalBilingual';
+import { QuotaLimitModal } from './components/QuotaLimitModal';
 import { fetchBinanceKlines, fetchBacktestData } from './utils/market';
 import { consultObserver } from './utils/observer';
 import { runBacktestSimulation } from './utils/backtest';
@@ -70,6 +71,7 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
 
     const [data15m, setData15m] = useState([]);
     const [data4h, setData4h] = useState([]);
+    const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
 
     const logsEndRef = useRef(null);
 
@@ -205,12 +207,7 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
         try {
             const analysis = await consultObserver(activeSymbol, data1m, data5m, data1h, { tacticalSignals }, lang);
             if (analysis.quantum_phrase === 'LIMIT_EXCEEDED' || analysis.quantum_phrase === 'DAILY_LIMIT_REACHED') {
-                const isPremium = membership?.isPremium;
-                const message = isPremium
-                    ? (lang === 'en' ? "Daily Limit Reached (20/20).\nPlease come back tomorrow." : "今日观测次数已达上限 (20/20)。\n请明日再来。")
-                    : (lang === 'en' ? "Free Limit Reached (2/2).\nUpgrade to PRO!" : "免费观测次数已耗尽 (2/2)。\n升级 PRO！");
-                if (!isPremium && window.confirm(message)) onUpgrade();
-                else if (isPremium) alert(message);
+                setIsQuotaModalOpen(true);
                 addLog(analysis.conclusion, 'alert');
                 return;
             }
@@ -257,18 +254,24 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
             const existingIndex = presetCoins.findIndex(c => c.value === sym);
 
             if (existingIndex === -1) {
-                // New coin - replace the last replaceable coin (not BTC/ETH)
-                const newPresetCoins = [...presetCoins];
+                // Feature: LIFO/FIFO Queue for Dynamic Slots
+                // 1. Separate Fixed and Dynamic coins
+                const fixedCoins = presetCoins.filter(c => c.fixed);
+                const dynamicCoins = presetCoins.filter(c => !c.fixed);
 
-                // Find the last replaceable coin (from the end, excluding fixed ones)
-                for (let i = newPresetCoins.length - 1; i >= 0; i--) {
-                    if (!newPresetCoins[i].fixed) {
-                        // Extract label from symbol (remove USDT suffix)
-                        const label = sym.replace(/USDT$|BUSD$|USDC$|BTC$|ETH$|DAI$/, '');
-                        newPresetCoins[i] = { label, value: sym, fixed: false };
-                        break;
-                    }
+                // 2. Add new coin to the FRONT of dynamic list (Most Recent)
+                // Remove USDT suffix for display label
+                const label = sym.replace(/USDT$|BUSD$|USDC$|BTC$|ETH$|DAI$/, '');
+                dynamicCoins.unshift({ label, value: sym, fixed: false });
+
+                // 3. Trim to maintain total slots (default 6: 2 Fixed + 4 Dynamic)
+                const maxDynamicCount = 4;
+                if (dynamicCoins.length > maxDynamicCount) {
+                    dynamicCoins.pop(); // Remove the oldest (last one)
                 }
+
+                // 4. Recombine
+                const newPresetCoins = [...fixedCoins, ...dynamicCoins];
 
                 setPresetCoins(newPresetCoins);
                 localStorage.setItem('presetCoins', JSON.stringify(newPresetCoins));
@@ -283,7 +286,7 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
 
     return (
         <>
-            <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto flex flex-col relative z-10 w-full text-slate-300">
+            <div className="min-h-screen p-2 md:p-4 max-w-7xl mx-auto flex flex-col relative z-10 w-full text-slate-300">
                 <Header
                     lang={lang}
                     onReset={initCharts}
@@ -303,6 +306,13 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
                 <BacktestModal isOpen={isBacktestOpen} onClose={() => setIsBacktestOpen(false)} isRunning={isBacktesting} result={backtestResult} />
                 <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} lang={lang} />
                 <DailyBriefModalBilingual isOpen={isBriefOpen} onClose={() => setIsBriefOpen(false)} lang={lang} />
+                <QuotaLimitModal
+                    isOpen={isQuotaModalOpen}
+                    onClose={() => setIsQuotaModalOpen(false)}
+                    onUpgrade={onUpgrade}
+                    isPremium={membership?.isPremium}
+                    lang={lang}
+                />
 
                 {/* 【核心改变】左右调换：图表在左(col-span-9)，日志在右(col-span-3) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-2 flex-grow">

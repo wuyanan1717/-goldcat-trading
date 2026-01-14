@@ -33,8 +33,33 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
                 rawData = await fetchFromProxy('futures');
                 usedMarket = 'futures';
             } catch (futuresError) {
-                console.error(`[Market] Futures API also failed for ${symbol}`, futuresError);
-                throw spotError; // Throw original error if both fail
+                // 3. Last Resort: Try adding "1000" prefix for Futures (common for meme coins/low price assets)
+                // e.g. PEPE -> 1000PEPE, DOGS -> 1000DOGS
+                if (!symbol.startsWith('1000')) {
+                    try {
+                        console.warn(`[Market] Futures failed for ${symbol}, trying 1000${symbol}...`);
+                        // Temporarily change symbol to 1000 prefix for this call
+                        const fetchLimit = limit + 15;
+                        const prefixSymbol = `1000${symbol}`;
+                        const url = `${BASE_URL}?endpoint=klines&symbol=${prefixSymbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=futures`;
+
+                        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
+                        if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+                        const json = await res.json();
+                        if (json.error) throw new Error(json.error);
+
+                        rawData = json;
+                        usedMarket = 'futures';
+                        // Note: We don't update the 'symbol' variable itself, so the chart title remains what user typed,
+                        // but the data comes from the 1000-prefix contract.
+                    } catch (prefixError) {
+                        console.error(`[Market] 1000-prefix fallback also failed for ${symbol}`, prefixError);
+                        throw spotError; // Throw original error if everything fails
+                    }
+                } else {
+                    console.error(`[Market] Futures API also failed for ${symbol}`, futuresError);
+                    throw spotError;
+                }
             }
         }
 
