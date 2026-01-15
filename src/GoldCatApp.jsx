@@ -1359,6 +1359,8 @@ function GoldCatApp() {
             options: {
                 data: {
                     username: registerForm.username,
+                    email: registerForm.email, // 👈 Fix: Include email in metadata
+                    full_name: registerForm.username, // Default: use username as full_name
                 },
             },
         });
@@ -1368,13 +1370,10 @@ function GoldCatApp() {
             setShowErrorToast(true);
             setTimeout(() => setShowErrorToast(false), 3000);
         } else {
-            // Check if email confirmation is required (Supabase default)
-            if (data?.user && !data.session) {
-                alert('注册成功！请查收邮件并点击确认链接完成注册。');
-            } else {
-                setShowLoginModal(false);
-                setShowSuccessToast(true);
-            }
+            // Email verification is disabled, so registration = auto-login
+            setShowLoginModal(false);
+            setToastMessage(language === 'zh' ? '注册成功！' : 'Registration successful!');
+            setShowSuccessToast(true);
         }
     };
 
