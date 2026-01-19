@@ -4,8 +4,8 @@
 const ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
-    // Add your production domain here when deploying
-    // 'https://yourdomain.com',
+    'https://goldcat.trade',
+    'https://www.goldcat.trade',
 ];
 
 export const getCorsHeaders = (requestOrigin: string | null) => {

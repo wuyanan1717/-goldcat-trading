@@ -239,6 +239,31 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
         addLog(lang === 'en' ? 'Measuring Market Entanglement...' : '测量市场纠缠态 (Entanglement Check)...', 'info');
         await new Promise(r => setTimeout(r, 600));
 
+        // 1.5. FORCE DATA REFRESH (Fix for Latency)
+        addLog(lang === 'en' ? 'Synchronizing Real-time Quantum State...' : '同步实时量子场态数据...', 'info');
+        let freshData1m = data1m;
+        let freshData5m = data5m;
+        let freshData1h = data1h;
+
+        try {
+            const [d1m, d5m, d1h] = await Promise.all([
+                fetchBinanceKlines(activeSymbol, '1m', 60),
+                fetchBinanceKlines(activeSymbol, '5m', 60),
+                fetchBinanceKlines(activeSymbol, '1h', 60)
+            ]);
+            freshData1m = d1m;
+            freshData5m = d5m;
+            freshData1h = d1h;
+
+            // Update UI State as well so charts jump to latest
+            setData1m(d1m);
+            setData5m(d5m);
+            setData1h(d1h);
+        } catch (fetchErr) {
+            console.error("Fresh data fetch failed, using cached state", fetchErr);
+            addLog(lang === 'en' ? 'Warning: Using cached data (Network Lag)' : '警报：网络延迟，使用缓存数据', 'alert');
+        }
+
         // 2. Refresh tactical signals immediately on manual scan too
         if (isTacticalEnabled) {
             await runSilentTacticalScan();
@@ -251,9 +276,9 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
         try {
             const analysis = await consultObserver(
                 activeSymbol,
-                data1m,
-                data5m,
-                data1h,
+                freshData1m,
+                freshData5m,
+                freshData1h,
                 { tacticalSignals: tacticalSignals }, // Pass full signal objects
                 lang // Pass language for consistent AI response
             );
@@ -262,8 +287,8 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
             if (analysis.quantum_phrase === 'LIMIT_EXCEEDED' || analysis.quantum_phrase === 'DAILY_LIMIT_REACHED') {
                 const isPremium = membership?.isPremium;
                 const message = isPremium
-                    ? (lang === 'en' ? "Daily Limit Reached (20/20).\nPlease come back tomorrow." : "今日观测次数已达上限 (20/20)。\n请明日再来。")
-                    : (lang === 'en' ? "Free Limit Reached (2/2).\nUpgrade to PRO for 20 daily scans + more features!" : "免费观测次数已耗尽 (2/2)。\n升级 PRO 会员解锁每日 20 次观测 + 更多特权！");
+                    ? (lang === 'en' ? "Daily Limit Reached (30/30).\nPlease come back tomorrow." : "今日观测次数已达上限 (30/30)。\n请明日再来。")
+                    : (lang === 'en' ? "Free Limit Reached (2/2).\nUpgrade to PRO for 30 daily scans + more features!" : "免费观测次数已耗尽 (2/2)。\n升级 PRO 会员解锁每日 30 次观测 + 更多特权！");
 
                 if (!isPremium) {
                     if (window.confirm(message)) {

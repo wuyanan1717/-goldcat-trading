@@ -6,13 +6,13 @@ export const QuotaLimitModal = ({ isOpen, onClose, onUpgrade, isPremium, lang })
 
     const content = isPremium ? {
         title: lang === 'en' ? 'Daily Limit Reached' : '今日观测上限',
-        desc: lang === 'en' ? 'You have used all 20 quantum observations for today. Please come back tomorrow for renewed energy.' : '您已使用完今日的 20 次量子观测机会。请明日等待能量重置后再来。',
+        desc: lang === 'en' ? 'You have used all 30 quantum observations for today. Please come back tomorrow for renewed energy.' : '您已使用完今日的 30 次量子观测机会。请明日等待能量重置后再来。',
         icon: <Zap className="w-8 h-8 text-yellow-500" />,
         buttonText: lang === 'en' ? 'Close' : '关闭',
         action: onClose
     } : {
         title: lang === 'en' ? 'Free Limit Reached' : '免费额度已耗尽',
-        desc: lang === 'en' ? 'You have used your 2 free observations. Upgrade to PRO to unlock 20 daily observations and AI deep analysis.' : '您已使用完 2 次免费观测机会。升级为 PRO 会员即可解锁每日 20 次观测及 AI 深度分析权限。',
+        desc: lang === 'en' ? 'You have used your 2 free observations. Upgrade to PRO to unlock 30 daily observations and AI deep analysis.' : '您已使用完 2 次免费观测机会。升级为 PRO 会员即可解锁每日 30 次观测及 AI 深度分析权限。',
         icon: <Lock className="w-8 h-8 text-yellow-500" />,
         buttonText: lang === 'en' ? 'Upgrade to PRO' : '立即升级 PRO',
         action: onUpgrade

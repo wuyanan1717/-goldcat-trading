@@ -51,10 +51,12 @@ serve(async (req) => {
         }
 
         const isPremium = profile?.is_premium === true;
-        // User Business Logic: Free=2, Premium=20
-        const DAILY_LIMIT = isPremium ? 20 : 2;
+        // User Business Logic: Free=2, Premium=30
+        const DAILY_LIMIT = isPremium ? 30 : 2;
 
-        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+        const today = beijingTime.toISOString().split('T')[0];
 
         // Fetch current count (Admin)
         const { data: usageData } = await adminClient

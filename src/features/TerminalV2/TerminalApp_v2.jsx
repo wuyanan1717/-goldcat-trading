@@ -255,8 +255,8 @@ export default function TerminalAppV2({ lang, user, membership, onRequireLogin, 
             if (analysis.quantum_phrase === 'LIMIT_EXCEEDED' || analysis.quantum_phrase === 'DAILY_LIMIT_REACHED') {
                 const isPremium = membership?.isPremium;
                 const message = isPremium
-                    ? (lang === 'en' ? "Daily Limit Reached (20/20).\nPlease come back tomorrow." : "今日观测次数已达上限 (20/20)。\n请明日再来。")
-                    : (lang === 'en' ? "Free Limit Reached (2/2).\nUpgrade to PRO for 20 daily scans + more features!" : "免费观测次数已耗尽 (2/2)。\n升级 PRO 会员解锁每日 20 次观测 + 更多特权！");
+                    ? (lang === 'en' ? "Daily Limit Reached (30/30).\nPlease come back tomorrow." : "今日观测次数已达上限 (30/30)。\n请明日再来。")
+                    : (lang === 'en' ? "Free Limit Reached (2/2).\nUpgrade to PRO for 30 daily scans + more features!" : "免费观测次数已耗尽 (2/2)。\n升级 PRO 会员解锁每日 30 次观测 + 更多特权！");
 
                 if (!isPremium) {
                     if (window.confirm(message)) {
