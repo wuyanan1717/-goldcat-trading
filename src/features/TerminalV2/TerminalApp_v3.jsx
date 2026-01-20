@@ -199,13 +199,41 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
 
         addLog(lang === 'en' ? 'Measuring Market Entanglement...' : '测量市场纠缠态 (Entanglement Check)...', 'info');
         await new Promise(r => setTimeout(r, 600));
+
+        // --- 1. FORCE DATA REFRESH (Fix for Latency) ---
+        addLog(lang === 'en' ? 'Synchronizing Real-time Quantum State...' : '同步实时量子场态数据...', 'info');
+        let freshData1m = data1m;
+        let freshData5m = data5m;
+        let freshData1h = data1h;
+
+        try {
+            const [d1m, d5m, d1h] = await Promise.all([
+                fetchBinanceKlines(activeSymbol, '1m', 60),
+                fetchBinanceKlines(activeSymbol, '5m', 60),
+                fetchBinanceKlines(activeSymbol, '1h', 60)
+            ]);
+            freshData1m = d1m;
+            freshData5m = d5m;
+            freshData1h = d1h;
+
+            // Update UI State as well so charts jump to latest
+            setData1m(d1m);
+            setData5m(d5m);
+            setData1h(d1h);
+        } catch (fetchErr) {
+            console.error("Fresh data fetch failed, using cached state", fetchErr);
+            addLog(lang === 'en' ? 'Warning: Using cached data (Network Lag)' : '警报：网络延迟，使用缓存数据', 'alert');
+        }
+
         if (isTacticalEnabled) await runSilentTacticalScan();
         addLog(lang === 'en' ? 'Calculating Wave Function Collapse...' : '计算波函数坍缩概率...', 'info');
         await new Promise(r => setTimeout(r, 800));
         addLog(lang === 'en' ? `Observing Schrödinger's Cat [${activeSymbol}]...` : `正在观测薛定谔的猫 [${activeSymbol}]...`, 'info');
 
         try {
-            const analysis = await consultObserver(activeSymbol, data1m, data5m, data1h, { tacticalSignals }, lang);
+            // Use freshData variables instead of state
+            const analysis = await consultObserver(activeSymbol, freshData1m, freshData5m, freshData1h, { tacticalSignals }, lang);
+
             if (analysis.quantum_phrase === 'LIMIT_EXCEEDED' || analysis.quantum_phrase === 'DAILY_LIMIT_REACHED') {
                 setIsQuotaModalOpen(true);
                 addLog(analysis.conclusion, 'alert');
