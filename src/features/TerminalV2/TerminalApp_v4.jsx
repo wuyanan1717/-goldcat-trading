@@ -8,11 +8,12 @@
  * Baseline: Copied from V3 - Ready for enhancements
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Terminal, Coins, Search, Trash2 } from 'lucide-react';
+import { Terminal, Coins, Search, Trash2, Loader2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatusPanel } from './components/StatusPanel';
 import { TacticalPanel } from './components/v4/TacticalPanel';
-import { ResonanceChart } from './components/ResonanceChart';
+// Lazy load ResonanceChart to split Recharts library from main bundle
+const ResonanceChart = React.lazy(() => import('./components/ResonanceChart').then(module => ({ default: module.ResonanceChart })));
 import { BacktestModal } from './components/BacktestModal';
 import { GuideModal } from './components/GuideModal';
 import { DailyBriefModalBilingual } from './components/DailyBriefModalBilingual';
@@ -434,21 +435,30 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
                         </div>
 
                         {/* Charts Area - Adaptive Layout */}
-                        <div className="space-y-4">
-                            {/* 1M Chart */}
-                            <div className={`${mobileActiveChart === '1M' ? 'block' : 'hidden'} lg:block`}>
-                                <ResonanceChart title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`} meta="AI_NOISE" data={data1m} color="#22d3ee" isScanning={isScanning} showHit={showHit} enableTactical={false} />
-                            </div>
+                        <div className="space-y-4 min-h-[300px]">
+                            <React.Suspense fallback={
+                                <div className="h-64 flex items-center justify-center border border-slate-800 rounded bg-slate-900/50">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Loader2 className="w-6 h-6 text-yellow-500 animate-spin" />
+                                        <span className="text-xs text-slate-500 font-mono">LOADING CHARTS...</span>
+                                    </div>
+                                </div>
+                            }>
+                                {/* 1M Chart */}
+                                <div className={`${mobileActiveChart === '1M' ? 'block' : 'hidden'} lg:block`}>
+                                    <ResonanceChart title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`} meta="AI_NOISE" data={data1m} color="#22d3ee" isScanning={isScanning} showHit={showHit} enableTactical={false} />
+                                </div>
 
-                            {/* 5M Chart */}
-                            <div className={`${mobileActiveChart === '5M' ? 'block' : 'hidden'} lg:block`}>
-                                <ResonanceChart title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`} meta="WAVE_PATTERN" data={data5m} color="#a78bfa" isScanning={isScanning} showHit={showHit} enableTactical={false} />
-                            </div>
+                                {/* 5M Chart */}
+                                <div className={`${mobileActiveChart === '5M' ? 'block' : 'hidden'} lg:block`}>
+                                    <ResonanceChart title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`} meta="WAVE_PATTERN" data={data5m} color="#a78bfa" isScanning={isScanning} showHit={showHit} enableTactical={false} />
+                                </div>
 
-                            {/* 1H Chart */}
-                            <div className={`${mobileActiveChart === '1H' ? 'block' : 'hidden'} lg:block`}>
-                                <ResonanceChart title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`} meta="GRAVITY_WELL" data={data1h} color="#fbbf24" isScanning={isScanning} showHit={showHit} enableTactical={isTacticalEnabled} />
-                            </div>
+                                {/* 1H Chart */}
+                                <div className={`${mobileActiveChart === '1H' ? 'block' : 'hidden'} lg:block`}>
+                                    <ResonanceChart title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`} meta="GRAVITY_WELL" data={data1h} color="#fbbf24" isScanning={isScanning} showHit={showHit} enableTactical={isTacticalEnabled} />
+                                </div>
+                            </React.Suspense>
                         </div>
                     </div>
 
