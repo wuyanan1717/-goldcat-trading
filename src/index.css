@@ -113,6 +113,7 @@ body {
 
 .animate-scan {
   animation: scan 2s linear infinite;
+  will-change: left, opacity;
 }
 
 @keyframes scan-beam {
@@ -120,14 +121,22 @@ body {
     left: 0%;
     opacity: 0;
   }
+
   5% {
     opacity: 1;
   }
+
   95% {
     opacity: 1;
   }
+
   100% {
     left: 100%;
+    /* Ensure it goes across the container */
     opacity: 0;
   }
+}
+
+.animate-scan-beam {
+  will-change: left, opacity;
 }
