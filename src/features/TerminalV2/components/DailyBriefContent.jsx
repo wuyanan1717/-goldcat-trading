@@ -536,7 +536,7 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
 
             {/* Loading Overlay */}
             {loading && (
-                <div className="absolute inset-0 bg-[#0a0a0c]/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center">
+                <div className="fixed inset-0 bg-[#0a0a0c]/90 backdrop-blur-md z-[9999] flex flex-col items-center justify-center p-4 text-center">
                     <div className="w-12 h-12 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin mb-6 shadow-[0_0_20px_rgba(234,179,8,0.3)]"></div>
                     <h3 className="text-xl font-bold text-white mb-2 animate-pulse">
                         {safeLang === 'zh' ? '正在同步全球情报...' : 'Syncing Global Intel...'}

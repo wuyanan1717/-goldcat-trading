@@ -597,6 +597,11 @@ function GoldCatApp() {
     const [paymentTxId, setPaymentTxId] = useState(''); // Payment Transaction ID
     const [orderNumber, setOrderNumber] = useState(''); // USDT Order Number
 
+    // Auto-scroll to top when tab changes
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [activeTab]);
+
     // Pattern Management
     const [patterns, setPatterns] = useState(getInitialPatterns(language));
     const [showPatternModal, setShowPatternModal] = useState(false);
@@ -1951,7 +1956,7 @@ function GoldCatApp() {
                                 <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v4
                             </div>
 
-                            <h1 className={`text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 mb-6 sm:mb-8 tracking-tighter leading-[1.1] drop-shadow-2xl whitespace-pre-line`}>
+                            <h1 className={`text-3xl xs:text-4xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 mb-6 sm:mb-8 tracking-tighter leading-[1.1] drop-shadow-2xl whitespace-pre-line break-words max-w-[95vw]`}>
                                 {t('home.quantum_hero_title')}
                             </h1>
 
@@ -2343,14 +2348,14 @@ function GoldCatApp() {
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
                                             className={`
-                                flex items-center justify-center gap-2 px-3 sm:px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap
+                                flex items-center justify-center gap-2 px-5 py-4 sm:px-6 sm:py-3 rounded-2xl text-sm sm:text-base font-bold transition-all whitespace-nowrap
                                 ${activeTab === tab.id
-                                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105'
                                                     : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'
                                                 }
                             `}
                                         >
-                                            {tab.icon && <tab.icon className="w-4 h-4" />}
+                                            {tab.icon && <tab.icon className="w-6 h-6 sm:w-5 sm:h-5" />}
                                             <span className="hidden xs:inline sm:inline">{tab.label}</span>
                                         </button>
                                     ))}
@@ -3146,7 +3151,7 @@ function GoldCatApp() {
                 {/* Fixed Bottom Progress Bar - HIDDEN on Quantum Terminal AND Daily Alpha */}
                 {
                     activeTab !== 'quantum_terminal' && activeTab !== 'daily_alpha' && ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
-                        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/95 backdrop-blur-xl border-t border-white/5 pb-8 pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+                        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/95 backdrop-blur-xl border-t border-white/5 pb-4 md:pb-8 pt-3 md:pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
                             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
                                 {
                                     (() => {
