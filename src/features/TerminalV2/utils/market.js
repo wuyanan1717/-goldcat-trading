@@ -10,9 +10,9 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
         const fetchLimit = limit + 15;
         const url = `${BASE_URL}?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=${marketType}`;
 
-        // Add timeout for mobile networks (15s)
+        // Add timeout for mobile networks (Aggressive 3s timeout to fail fast / switch to proxy)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
 
         try {
             // Import logger dynamically to avoid circular deps if any (though strict checking is better, dynamic is safer for quick patch)
