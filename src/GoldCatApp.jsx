@@ -16,17 +16,13 @@ import {
     PlusCircle, Check, RotateCcw, Info, Loader2, Trophy, Clock, Snowflake, BarChart2,
     Send, Star, Gift, Newspaper, Terminal, Search, Radar
 } from 'lucide-react';
-import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    AreaChart, Area, ReferenceLine, Bar, Cell, Pie
-} from 'recharts';
-import { translations } from './translations';
-import AIAnalysisDashboard from './components/AIAnalysisDashboard';
 // Version-aware imports for Quantum Observer
 import { lazy, Suspense } from 'react';
 // Lazy load heavy components to improve initial paint time (fix white screen)
 const TerminalAppV3 = lazy(() => import('./features/TerminalV2/TerminalApp_v3'));
 const TerminalAppV4 = lazy(() => import('./features/TerminalV2/TerminalApp_v4'));
+const AIAnalysisDashboard = lazy(() => import('./components/AIAnalysisDashboard'));
+
 import { getFeatureVersion } from './config/versionConfig';
 import { MobileDebugOverlay } from './features/TerminalV2/components/MobileDebugOverlay';
 
@@ -2314,11 +2310,11 @@ function GoldCatApp() {
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-[18px]">
                                 <div className="flex flex-wrap gap-2">
                                     {[
-                                        { id: 'quantum_terminal', label: t('nav.quantum_terminal'), icon: Cpu },
-                                        { id: 'daily_alpha', label: t('nav.daily_alpha'), icon: Newspaper },
-                                        { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
-                                        { id: 'journal', label: t('nav.journal'), icon: FileText },
-                                        { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain },
+                                        // Only show AI Analysis on Desktop as requested
+                                        { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain, className: 'hidden md:flex' },
+                                        { id: 'ai_observer', label: t('nav.quantum_terminal'), icon: Eye, highlight: true },
+                                        { id: 'daily_alpha', label: t('nav.daily_alpha'), icon: Zap },
+                                        { id: 'journal', label: t('nav.journal'), icon: BookOpen },
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
@@ -2329,6 +2325,7 @@ function GoldCatApp() {
                                                     ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105'
                                                     : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'
                                                 }
+                                ${tab.className || ''}
                             `}
                                         >
                                             {tab.icon && <tab.icon className="w-5 h-5 sm:w-4 sm:h-4" />}
@@ -3086,13 +3083,15 @@ function GoldCatApp() {
 
                                         {membership.isPremium && (
                                             <div className="lg:col-span-3">
-                                                <AIAnalysisDashboard
-                                                    trades={trades}
-                                                    language={language}
-                                                    riskMode={riskMode}
-                                                    onRiskModeChange={handleRiskModeChange}
-                                                    totalCapital={totalCapital}
-                                                />
+                                                <Suspense fallback={<div className="h-screen flex items-center justify-center text-amber-500">Loading AI Core...</div>}>
+                                                    <AIAnalysisDashboard
+                                                        trades={trades}
+                                                        language={language}
+                                                        riskMode={riskMode}
+                                                        onRiskModeChange={setRiskMode}
+                                                        totalCapital={totalCapital}
+                                                    />
+                                                </Suspense>
                                             </div>
                                         )}
                                     </div>
@@ -4280,7 +4279,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             <MobileDebugOverlay />
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.0-PWA-BOOST
+                v1.2.1-LAZY-LOAD
             </div>
 
         </div >
