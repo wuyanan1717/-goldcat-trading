@@ -40,6 +40,5 @@ if (window.location.search.includes('reset=true')) {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
-    <Analytics />
   </StrictMode>,
 )

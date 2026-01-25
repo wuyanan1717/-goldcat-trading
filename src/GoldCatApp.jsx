@@ -407,43 +407,16 @@ function GoldCatApp() {
         return 'en';
     });
 
-    // IP-based language detection on mount
+    // IP Detection Removed for Performance (GFW Blocking Risk)
+    // Defaulting to user preference or 'en'
     useEffect(() => {
-        const detectLanguageByIP = async () => {
-            // Skip if user has manually set language
-            const saved = localStorage.getItem('goldcat_language');
-            if (saved) return;
-
-            try {
-                // Use ipapi.co free API to detect country
-                const response = await fetch('https://ipapi.co/json/');
-                const data = await response.json();
-
-                // If user is from China, set to Chinese
-                if (data.country_code === 'CN') {
-                    setLanguage('zh');
-                    localStorage.setItem('goldcat_language', 'zh');
-                }
-                // Otherwise keep English (already default)
-            } catch (error) {
-                console.log('IP detection failed, using default:', error);
-                // Keep English as default if detection fails
-            }
-        };
-
-        detectLanguageByIP();
+        // No-op
     }, []);
 
     // Initialize Google Analytics 4
+    // GA4 Initialization Removed for China Performance
     useEffect(() => {
-        // Initialize Google Analytics 4
-        // ID Provided by user: G-7Q56V8W9DX
-        const GA4_MEASUREMENT_ID = 'G-7Q56V8W9DX';
-
-        if (GA4_MEASUREMENT_ID) {
-            ReactGA.initialize(GA4_MEASUREMENT_ID);
-            console.log('GA4 initialized');
-        }
+        console.log('GA4 Skipped for Performance');
     }, []);
 
     // 监听语言变化并保存
@@ -4307,7 +4280,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             <MobileDebugOverlay />
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.0.8-LAZY-LOAD
+                v1.0.9-GFW-BYPASS
             </div>
 
         </div >
