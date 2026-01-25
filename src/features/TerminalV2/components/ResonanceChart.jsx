@@ -31,6 +31,9 @@ export const ResonanceChart = ({
 
     const hasSignals = flatBottomIndices.length > 0 || beheadingRedIndices.length > 0;
 
+    // Check for mobile state
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     return (
         <div className="chart-wrapper group relative">
             <div className="flex justify-between items-center mb-2 px-1">
@@ -56,64 +59,91 @@ export const ResonanceChart = ({
 
             <div className="relative h-[110px] rounded-lg border border-slate-800 overflow-hidden chart-grid bg-slate-900/20">
 
-                {/* Recharts Implementation */}
-                {/* Mobile Optimization: Disable Animation */}
-                <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={100}>
-                    <LineChart data={data}>
-                        <YAxis domain={['auto', 'auto']} hide />
-
-                        <Line
-                            type="monotone"
-                            dataKey="v"
-                            stroke={color}
-                            strokeWidth={2}
-                            dot={false}
-                            isAnimationActive={window.innerWidth > 768} // Disable chart animation on mobile
-                            animationDuration={1500}
-                            strokeOpacity={0.8}
-                        />
-                        {showHit && (
-                            <ReferenceArea
-                                x1={data.length - 15}
-                                x2={data.length - 1}
-                                fill="#eab308"
-                                fillOpacity={0.15}
-                                stroke="#eab308"
-                                strokeOpacity={0.5}
-                                strokeDasharray="3 3"
+                {/* Mobile Optimization: Lightweight SVG vs Heavy Recharts */}
+                {isMobile ? (
+                    // LIGHTWEIGHT MOBILE VIEW (Static SVG)
+                    <div className="w-full h-full flex items-center justify-center relative opacity-80">
+                        {/* Simple Static Wave Path */}
+                        <svg width="100%" height="100%" viewBox="0 0 300 100" preserveAspectRatio="none" className="absolute inset-0">
+                            <path
+                                d="M0,50 C50,45 100,55 150,50 C200,45 250,55 300,50"
+                                fill="none"
+                                stroke={color}
+                                strokeWidth="2"
+                                vectorEffect="non-scaling-stroke"
+                                opacity="0.6"
                             />
-                        )}
-
-                        {/* Flat Bottom Markers (Green) */}
-                        {enableTactical && flatBottomIndices.map(idx => (
-                            <ReferenceDot
-                                key={`fbg-${idx}`}
-                                x={idx}
-                                y={data[idx].l}
-                                r={3}
-                                fill="#4ade80"
-                                stroke="#000"
-                                strokeWidth={1}
-                                ifOverflow="extendDomain"
+                            {/* Fill Gradient */}
+                            <path
+                                d="M0,50 C50,45 100,55 150,50 C200,45 250,55 300,50 V100 H0 Z"
+                                fill={color}
+                                fillOpacity="0.1"
                             />
-                        ))}
+                        </svg>
+                        {/* Mobile Status Text */}
+                        <span className="text-[9px] text-slate-600 font-mono z-10 bg-black/50 px-2 py-1 rounded border border-slate-800/50">
+                            MOBILE_OPTIMIZED_VIEW
+                        </span>
+                    </div>
+                ) : (
+                    // DESKTOP VIEW (Full Recharts)
+                    <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={100}>
+                        <LineChart data={data}>
+                            <YAxis domain={['auto', 'auto']} hide />
 
-                        {/* Beheading Red Markers (Red) */}
-                        {enableTactical && beheadingRedIndices.map(idx => (
-                            <ReferenceDot
-                                key={`br-${idx}`}
-                                x={idx}
-                                y={data[idx].v}
-                                r={3}
-                                fill="#ef4444"
-                                stroke="#000"
-                                strokeWidth={1}
-                                ifOverflow="extendDomain"
+                            <Line
+                                type="monotone"
+                                dataKey="v"
+                                stroke={color}
+                                strokeWidth={2}
+                                dot={false}
+                                isAnimationActive={true}
+                                animationDuration={1500}
+                                strokeOpacity={0.8}
                             />
-                        ))}
+                            {showHit && (
+                                <ReferenceArea
+                                    x1={data.length - 15}
+                                    x2={data.length - 1}
+                                    fill="#eab308"
+                                    fillOpacity={0.15}
+                                    stroke="#eab308"
+                                    strokeOpacity={0.5}
+                                    strokeDasharray="3 3"
+                                />
+                            )}
 
-                    </LineChart>
-                </ResponsiveContainer>
+                            {/* Flat Bottom Markers (Green) */}
+                            {enableTactical && flatBottomIndices.map(idx => (
+                                <ReferenceDot
+                                    key={`fbg-${idx}`}
+                                    x={idx}
+                                    y={data[idx].l}
+                                    r={3}
+                                    fill="#4ade80"
+                                    stroke="#000"
+                                    strokeWidth={1}
+                                    ifOverflow="extendDomain"
+                                />
+                            ))}
+
+                            {/* Beheading Red Markers (Red) */}
+                            {enableTactical && beheadingRedIndices.map(idx => (
+                                <ReferenceDot
+                                    key={`br-${idx}`}
+                                    x={idx}
+                                    y={data[idx].v}
+                                    r={3}
+                                    fill="#ef4444"
+                                    stroke="#000"
+                                    strokeWidth={1}
+                                    ifOverflow="extendDomain"
+                                />
+                            ))}
+
+                        </LineChart>
+                    </ResponsiveContainer>
+                )}
 
                 {/* Visual Overlays - Hidden on Mobile via CSS */}
                 {isScanning && (
