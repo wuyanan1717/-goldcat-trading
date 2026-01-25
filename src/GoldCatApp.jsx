@@ -1772,10 +1772,7 @@ function GoldCatApp() {
         <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate flex flex-col" translate="no">
 
             {/* Background Animation (KuCoin Style) */}
-            {/* Background Particles - Hidden on Mobile to reduce distraction */}
-            <div className="hidden md:block">
-                <BackgroundParticles />
-            </div>
+            {/* Background Particles - REMOVED to improve load speed */}
 
             {/* 顶部导航栏 (Header) */}
             <header className="border-b border-neutral-800 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-50">
@@ -1910,9 +1907,9 @@ function GoldCatApp() {
                             {/* Vignette for seamless blending */}
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
 
-                            {/* Particle Logo Effect - Hidden on mobile for performance */}
-                            <div className="hidden sm:block absolute inset-0 z-[5] opacity-60" style={{ transform: 'translateY(-1480px)' }}>
-                                <ParticleLogo />
+                            {/* Logo - Static image instead of particle animation */}
+                            <div className="hidden sm:block absolute inset-0 z-[5] opacity-60 flex items-center justify-center" style={{ transform: 'translateY(-80px)' }}>
+                                <img src="/goldcat_logo_transparent.png" alt="GoldCat Logo" className="w-64 h-64 object-contain" />
                             </div>
                         </div>
 
@@ -4219,7 +4216,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.16-TRUE-LAZY
+                v1.2.17-NO-ANIM
             </div>
 
         </div >
