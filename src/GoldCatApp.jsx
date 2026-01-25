@@ -23,8 +23,10 @@ import {
 import { translations } from './translations';
 import AIAnalysisDashboard from './components/AIAnalysisDashboard';
 // Version-aware imports for Quantum Observer
-import TerminalAppV3 from './features/TerminalV2/TerminalApp_v3'; // V3 - Stable
-import TerminalAppV4 from './features/TerminalV2/TerminalApp_v4'; // V4 - Development
+import { lazy, Suspense } from 'react';
+// Lazy load heavy components to improve initial paint time (fix white screen)
+const TerminalAppV3 = lazy(() => import('./features/TerminalV2/TerminalApp_v3'));
+const TerminalAppV4 = lazy(() => import('./features/TerminalV2/TerminalApp_v4'));
 import { getFeatureVersion } from './config/versionConfig';
 import { MobileDebugOverlay } from './features/TerminalV2/components/MobileDebugOverlay';
 
@@ -2060,7 +2062,7 @@ function GoldCatApp() {
 
                             {/* --- New Feature Showcase Cards (Added per user request) --- */}
                             {/* --- Tactical Radar System (Full Width, Dynamic Visualization) --- */}
-                            <div className="mt-32 max-w-6xl mx-auto px-4">
+                            <div className="hidden md:block mt-32 max-w-6xl mx-auto px-4">
                                 <div className="bg-[#0a0a0c] border border-slate-800 rounded-3xl p-6 relative overflow-hidden group">
                                     {/* Radar Scan Overlay */}
                                     <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
@@ -3134,13 +3136,20 @@ function GoldCatApp() {
                             {/* --- 5. Quantum Observer Terminal (New Feature) --- */}
                             {activeTab === 'quantum_terminal' && (
                                 <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 min-h-screen pb-32">
-                                    <TerminalApp
-                                        lang={language}
-                                        user={user}
-                                        membership={membership}
-                                        onRequireLogin={() => setShowLoginModal(true)}
-                                        onUpgrade={() => setShowPaymentModal(true)}
-                                    />
+                                    <Suspense fallback={
+                                        <div className="flex flex-col items-center justify-center min-h-[50vh] text-amber-500 gap-4">
+                                            <Loader2 className="w-8 h-8 animate-spin" />
+                                            <span className="text-xs font-mono opacity-70">INITIALIZING QUANTUM CORE...</span>
+                                        </div>
+                                    }>
+                                        <TerminalApp
+                                            lang={language}
+                                            user={user}
+                                            membership={membership}
+                                            onRequireLogin={() => setShowLoginModal(true)}
+                                            onUpgrade={() => setShowPaymentModal(true)}
+                                        />
+                                    </Suspense>
                                 </div>
                             )}
                         </>
@@ -4298,7 +4307,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             <MobileDebugOverlay />
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.0.6-UI-OPT
+                v1.0.8-LAZY-LOAD
             </div>
 
         </div >
