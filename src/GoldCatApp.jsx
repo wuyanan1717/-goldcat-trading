@@ -524,8 +524,7 @@ function GoldCatApp() {
     // 表单状态
     const [activeTab, setActiveTab] = useState(() => {
         const saved = localStorage.getItem('goldcat_active_tab');
-        // Default to AI Observer (Quantum Terminal) as requested, fallback to new_trade only if explicit
-        return saved || 'quantum_terminal';
+        return saved || 'new_trade'; // Default to Trade Entry (Standard Dashboard)
     });
 
     // Persist active tab
@@ -2303,11 +2302,11 @@ function GoldCatApp() {
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-[18px]">
                                 <div className="flex flex-wrap gap-2">
                                     {[
-                                        // Only show AI Analysis on Desktop as requested
-                                        { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain, className: 'hidden md:flex' },
-                                        { id: 'ai_observer', label: t('nav.quantum_terminal'), icon: Eye, highlight: true },
-                                        { id: 'daily_alpha', label: t('nav.daily_alpha'), icon: Zap },
-                                        { id: 'journal', label: t('nav.journal'), icon: BookOpen },
+                                        { id: 'quantum_terminal', label: t('nav.quantum_terminal'), icon: Cpu },
+                                        { id: 'daily_alpha', label: t('nav.daily_alpha'), icon: Newspaper },
+                                        { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
+                                        { id: 'journal', label: t('nav.journal'), icon: FileText },
+                                        { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain },
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
@@ -4272,7 +4271,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.5-ICON-FIX
+                v1.2.6-ROLLBACK-FIX
             </div>
 
         </div >
