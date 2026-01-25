@@ -66,7 +66,13 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
     const [data4h, setData4h] = useState([]);
 
     // Screen size detection for conditional chart loading
-    const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' && window.innerWidth >= 768);
+    // Use matchMedia for more reliable mobile detection
+    const [isDesktop, setIsDesktop] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        const matches = window.matchMedia('(min-width: 768px)').matches;
+        console.log('[TerminalApp] Initial screen detection. Width:', window.innerWidth, 'isDesktop:', matches);
+        return matches;
+    });
 
     const logsEndRef = useRef(null);
 
@@ -193,11 +199,21 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
 
     // Screen size detection for responsive chart loading
     useEffect(() => {
-        const handleResize = () => {
-            setIsDesktop(window.innerWidth >= 768);
+        const mediaQuery = window.matchMedia('(min-width: 768px)');
+        const handleChange = (e) => {
+            console.log('[TerminalApp] Screen size changed. isDesktop:', e.matches);
+            setIsDesktop(e.matches);
         };
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+
+        // Modern API (preferred)
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
+        } else {
+            // Fallback for older browsers
+            mediaQuery.addListener(handleChange);
+            return () => mediaQuery.removeListener(handleChange);
+        }
     }, []);
 
     // --- Auto-Refresh Effect ---
