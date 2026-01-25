@@ -7,7 +7,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt', // Force SW update prompt
+      workboxPwaManifestOptions: {
+        cacheName: 'goldcat-v2', // New cache version to force refresh
+      },
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'GoldCat Terminal',
