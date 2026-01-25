@@ -673,7 +673,7 @@ const AIAnalysisDashboard = ({ trades = [], language = 'en', riskMode = 'balance
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 grid-rows-[auto_auto]">
 
                 {/* Card A: Equity Curve (Large - 2 cols) */}
-                <BentoCard title={t.equityCurve} className="md:col-span-2 lg:col-span-2 min-h-[300px]" icon={TrendingUp}>
+                <BentoCard title={t.equityCurve} className="hidden md:block md:col-span-2 lg:col-span-2 min-h-[300px]" icon={TrendingUp}>
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={stats.equityCurve}>
                             <defs>
@@ -696,7 +696,7 @@ const AIAnalysisDashboard = ({ trades = [], language = 'en', riskMode = 'balance
                 </BentoCard>
 
                 {/* Card B: Radar Chart (Medium) */}
-                <BentoCard title={t.traderDNA} className="md:col-span-1 min-h-[300px]" icon={Fingerprint}>
+                <BentoCard title={t.traderDNA} className="hidden md:block md:col-span-1 min-h-[300px]" icon={Fingerprint}>
                     <ResponsiveContainer width="100%" height="100%">
                         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={stats.traderDNA}>
                             <PolarGrid stroke="#3f3f46" strokeDasharray="3 3" />
@@ -715,7 +715,7 @@ const AIAnalysisDashboard = ({ trades = [], language = 'en', riskMode = 'balance
                 </BentoCard>
 
                 {/* Card E: Directional Bias */}
-                <BentoCard title={t.directionalBias} className="md:col-span-1 min-h-[420px]" icon={Zap}>
+                <BentoCard title={t.directionalBias} className="hidden md:block md:col-span-1 min-h-[420px]" icon={Zap}>
                     <div className="relative flex items-center justify-center mt-[-20px]">
                         <ResponsiveContainer width="100%" height={220}>
                             <PieChart>

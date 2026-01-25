@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Terminal, Coins, Search, Trash2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatusPanel } from './components/StatusPanel';
 import { TacticalPanel } from './components/TacticalPanel';
-import { ResonanceChart } from './components/ResonanceChart';
+// Lazy load ResonanceChart only on desktop
+const ResonanceChart = lazy(() => import('./components/ResonanceChart').then(module => ({ default: module.ResonanceChart })));
 import { BacktestModal } from './components/BacktestModal';
 import { GuideModal } from './components/GuideModal';
 import { DailyBriefModalBilingual } from './components/DailyBriefModalBilingual';
@@ -59,6 +60,9 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
     // Background Monitoring Data (Strategic)
     const [data15m, setData15m] = useState([]);
     const [data4h, setData4h] = useState([]);
+
+    // Screen size detection for conditional chart loading
+    const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' && window.innerWidth >= 768);
 
     const logsEndRef = useRef(null);
 
@@ -178,6 +182,15 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
         const handleOpenGuide = () => setIsGuideOpen(true);
         document.addEventListener('OPEN_GUIDE', handleOpenGuide);
         return () => document.removeEventListener('OPEN_GUIDE', handleOpenGuide);
+    }, []);
+
+    // Screen size detection for responsive chart loading
+    useEffect(() => {
+        const handleResize = () => {
+            setIsDesktop(window.innerWidth >= 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     // --- Auto-Refresh Effect ---
@@ -517,37 +530,49 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                         <StatusPanel score={score} result={aiResult} lang={lang} showSearchHint={showSearchHint} />
 
                         {/* Middle: 1M Micro Field */}
-                        <ResonanceChart
-                            title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`}
-                            meta="QUANTUM_NOISE"
-                            data={data1m}
-                            color="#22d3ee"
-                            isScanning={isScanning}
-                            showHit={showHit}
-                            enableTactical={false}
-                        />
+                        {isDesktop && (
+                            <Suspense fallback={<div className="h-[110px] bg-slate-900/20 border border-slate-800 rounded-lg animate-pulse" />}>
+                                <ResonanceChart
+                                    title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`}
+                                    meta="QUANTUM_NOISE"
+                                    data={data1m}
+                                    color="#22d3ee"
+                                    isScanning={isScanning}
+                                    showHit={showHit}
+                                    enableTactical={false}
+                                />
+                            </Suspense>
+                        )}
 
                         {/* Middle: 5M Structure */}
-                        <ResonanceChart
-                            title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`}
-                            meta="WAVE_PATTERN"
-                            data={data5m}
-                            color="#a78bfa"
-                            isScanning={isScanning}
-                            showHit={showHit}
-                            enableTactical={false}
-                        />
+                        {isDesktop && (
+                            <Suspense fallback={<div className="h-[110px] bg-slate-900/20 border border-slate-800 rounded-lg animate-pulse" />}>
+                                <ResonanceChart
+                                    title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`}
+                                    meta="WAVE_PATTERN"
+                                    data={data5m}
+                                    color="#a78bfa"
+                                    isScanning={isScanning}
+                                    showHit={showHit}
+                                    enableTactical={false}
+                                />
+                            </Suspense>
+                        )}
 
                         {/* Bottom: 1H Macro */}
-                        <ResonanceChart
-                            title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`}
-                            meta="GRAVITY_WELL"
-                            data={data1h}
-                            color="#fbbf24"
-                            isScanning={isScanning}
-                            showHit={showHit}
-                            enableTactical={isTacticalEnabled}
-                        />
+                        {isDesktop && (
+                            <Suspense fallback={<div className="h-[110px] bg-slate-900/20 border border-slate-800 rounded-lg animate-pulse" />}>
+                                <ResonanceChart
+                                    title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`}
+                                    meta="GRAVITY_WELL"
+                                    data={data1h}
+                                    color="#fbbf24"
+                                    isScanning={isScanning}
+                                    showHit={showHit}
+                                    enableTactical={isTacticalEnabled}
+                                />
+                            </Suspense>
+                        )}
                     </div>
                 </div>
             </div>
