@@ -423,6 +423,12 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                 {/* Debug Overlay for Mobile Issues */}
                 <MobileDebugOverlay />
 
+                {/* Version Indicator */}
+                <div className="fixed top-1 right-1 z-[9999] text-[9px] text-white/30 font-mono pointer-events-none">
+                    v1.0.1 (Debug)
+                </div>
+
+                {/* Guide Modal */}
                 <GuideModal
                     isOpen={isGuideOpen}
                     onClose={() => setIsGuideOpen(false)}
