@@ -1,18 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    visualizer({
-      filename: './dist/stats.html',
-      open: false,
-      gzipSize: true,
-      brotliSize: true,
-    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
@@ -45,13 +38,6 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
-        // Don't cache API requests - let them go directly to network
-        navigateFallbackDenylist: [
-          /^\/api\//,
-          /supabase\.co/,
-          /binance\.com/,
-          /coingecko\.com/
-        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -85,19 +71,7 @@ export default defineConfig({
       }
     })
   ],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'recharts': ['recharts'],
-          'vendor-react': ['react', 'react-dom'],
-        }
-      }
-    }
-  },
   server: {
-    host: '0.0.0.0', // 允许局域网访问
-    port: 5173,
     proxy: {
       '/api/gemini': {
         target: 'https://generativelanguage.googleapis.com',

@@ -6,43 +6,17 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const BASE_URL = `${SUPABASE_URL}/functions/v1/market-proxy`;
 
 export async function fetchBinanceKlines(symbol, interval, limit = 50) {
-    // Internal helper to fetch from proxy with timeout
+    // Internal helper to fetch from proxy
     const fetchFromProxy = async (marketType) => {
         const fetchLimit = limit + 15;
         const url = `${BASE_URL}?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=${marketType}`;
-
-        console.log(`[Market] Fetching ${marketType} for ${symbol}:`, url);
-
-        // Add timeout for mobile networks
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-        try {
-            const res = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (!res.ok) {
-                const errorText = await res.text();
-                console.error(`[Market] HTTP ${res.status}:`, errorText);
-                throw new Error(`API Error: ${res.statusText} (${res.status})`);
-            }
-            const json = await res.json();
-            if (json.error) {
-                console.error(`[Market] API returned error:`, json.error);
-                throw new Error(json.error);
-            }
-            return json;
-        } catch (err) {
-            clearTimeout(timeoutId);
-            if (err.name === 'AbortError') {
-                console.error(`[Market] Request timeout after 10s for ${marketType}`);
-                throw new Error('Request timeout - mobile network too slow');
-            }
-            throw err;
-        }
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+        return json;
     };
 
     try {

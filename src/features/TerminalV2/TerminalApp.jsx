@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Terminal, Coins, Search, Trash2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatusPanel } from './components/StatusPanel';
 import { TacticalPanel } from './components/TacticalPanel';
-// Lazy load ResonanceChart only on desktop
-const ResonanceChart = lazy(() => import('./components/ResonanceChart').then(module => ({ default: module.ResonanceChart })));
+import { ResonanceChart } from './components/ResonanceChart';
 import { BacktestModal } from './components/BacktestModal';
 import { GuideModal } from './components/GuideModal';
 import { DailyBriefModalBilingual } from './components/DailyBriefModalBilingual';
@@ -12,10 +11,6 @@ import { fetchBinanceKlines, fetchBacktestData } from './utils/market';
 import { consultObserver } from './utils/observer';
 import { runBacktestSimulation } from './utils/backtest';
 import { detectFlatBottomGreen, detectBeheadingRed } from './utils/indicators';
-
-// For debugging
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const BASE_URL = `${SUPABASE_URL}/functions/v1/market-proxy`;
 
 const INITIAL_LOGS = [
     { id: 1, timestamp: new Date(), message: '量子观察者终端已就绪 (Quantum Observer Ready)', type: 'info' },
@@ -65,15 +60,6 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
     const [data15m, setData15m] = useState([]);
     const [data4h, setData4h] = useState([]);
 
-    // Screen size detection for conditional chart loading
-    // Use matchMedia for more reliable mobile detection
-    const [isDesktop, setIsDesktop] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        const matches = window.matchMedia('(min-width: 768px)').matches;
-        console.log('[TerminalApp] Initial screen detection. Width:', window.innerWidth, 'isDesktop:', matches);
-        return matches;
-    });
-
     const logsEndRef = useRef(null);
 
     const addLog = useCallback((message, type = 'info') => {
@@ -118,10 +104,7 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
             // Reset tactical signals on symbol change to avoid confusion
             setTacticalSignals([]);
         } catch (e) {
-            console.error('[initCharts] Error:', e);
-            console.error('[initCharts] BASE_URL:', BASE_URL);
-            console.error('[initCharts] SUPABASE_URL:', SUPABASE_URL);
-            console.error('[initCharts] Symbol:', activeSymbol);
+            console.error(e);
             addLog(lang === 'en' ? `Error: Connection Failed for ${activeSymbol}` : `错误：无法连接到 ${activeSymbol} 数据源。`, 'alert');
         }
     }, [addLog, activeSymbol, lang]);
@@ -195,25 +178,6 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
         const handleOpenGuide = () => setIsGuideOpen(true);
         document.addEventListener('OPEN_GUIDE', handleOpenGuide);
         return () => document.removeEventListener('OPEN_GUIDE', handleOpenGuide);
-    }, []);
-
-    // Screen size detection for responsive chart loading
-    useEffect(() => {
-        const mediaQuery = window.matchMedia('(min-width: 768px)');
-        const handleChange = (e) => {
-            console.log('[TerminalApp] Screen size changed. isDesktop:', e.matches);
-            setIsDesktop(e.matches);
-        };
-
-        // Modern API (preferred)
-        if (mediaQuery.addEventListener) {
-            mediaQuery.addEventListener('change', handleChange);
-            return () => mediaQuery.removeEventListener('change', handleChange);
-        } else {
-            // Fallback for older browsers
-            mediaQuery.addListener(handleChange);
-            return () => mediaQuery.removeListener(handleChange);
-        }
     }, []);
 
     // --- Auto-Refresh Effect ---
@@ -553,49 +517,37 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                         <StatusPanel score={score} result={aiResult} lang={lang} showSearchHint={showSearchHint} />
 
                         {/* Middle: 1M Micro Field */}
-                        <div className={isDesktop ? "block" : "hidden"}>
-                            <Suspense fallback={<div className="h-[110px] bg-slate-900/20 border border-slate-800 rounded-lg animate-pulse" />}>
-                                <ResonanceChart
-                                    title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`}
-                                    meta="QUANTUM_NOISE"
-                                    data={data1m}
-                                    color="#22d3ee"
-                                    isScanning={isScanning}
-                                    showHit={showHit}
-                                    enableTactical={false}
-                                />
-                            </Suspense>
-                        </div>
+                        <ResonanceChart
+                            title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`}
+                            meta="QUANTUM_NOISE"
+                            data={data1m}
+                            color="#22d3ee"
+                            isScanning={isScanning}
+                            showHit={showHit}
+                            enableTactical={false}
+                        />
 
                         {/* Middle: 5M Structure */}
-                        <div className={isDesktop ? "block" : "hidden"}>
-                            <Suspense fallback={<div className="h-[110px] bg-slate-900/20 border border-slate-800 rounded-lg animate-pulse" />}>
-                                <ResonanceChart
-                                    title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`}
-                                    meta="WAVE_PATTERN"
-                                    data={data5m}
-                                    color="#a78bfa"
-                                    isScanning={isScanning}
-                                    showHit={showHit}
-                                    enableTactical={false}
-                                />
-                            </Suspense>
-                        </div>
+                        <ResonanceChart
+                            title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`}
+                            meta="WAVE_PATTERN"
+                            data={data5m}
+                            color="#a78bfa"
+                            isScanning={isScanning}
+                            showHit={showHit}
+                            enableTactical={false}
+                        />
 
                         {/* Bottom: 1H Macro */}
-                        <div className={isDesktop ? "block" : "hidden"}>
-                            <Suspense fallback={<div className="h-[110px] bg-slate-900/20 border border-slate-800 rounded-lg animate-pulse" />}>
-                                <ResonanceChart
-                                    title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`}
-                                    meta="GRAVITY_WELL"
-                                    data={data1h}
-                                    color="#fbbf24"
-                                    isScanning={isScanning}
-                                    showHit={showHit}
-                                    enableTactical={isTacticalEnabled}
-                                />
-                            </Suspense>
-                        </div>
+                        <ResonanceChart
+                            title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`}
+                            meta="GRAVITY_WELL"
+                            data={data1h}
+                            color="#fbbf24"
+                            isScanning={isScanning}
+                            showHit={showHit}
+                            enableTactical={isTacticalEnabled}
+                        />
                     </div>
                 </div>
             </div>
