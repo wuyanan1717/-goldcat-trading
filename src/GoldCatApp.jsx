@@ -550,8 +550,8 @@ function GoldCatApp() {
     // 表单状态
     const [activeTab, setActiveTab] = useState(() => {
         const saved = localStorage.getItem('goldcat_active_tab');
-        return saved || 'new_trade';
-    }); // 默认进入上次的界面
+        return saved || 'quantum_terminal'; // Default to AI Observer instead of trade entry
+    });
 
     // Persist active tab
     useEffect(() => {
