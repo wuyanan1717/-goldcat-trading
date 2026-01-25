@@ -524,7 +524,9 @@ function GoldCatApp() {
     // 表单状态
     const [activeTab, setActiveTab] = useState(() => {
         const saved = localStorage.getItem('goldcat_active_tab');
-        return saved || 'new_trade'; // Default to Trade Entry (Back to v1.2.6 behavior)
+        // FORCE RESET: If user was last on Observer (which caused lag), force them back to New Trade
+        if (saved === 'quantum_terminal') return 'new_trade';
+        return saved || 'new_trade';
     });
 
     // Persist active tab
@@ -4218,7 +4220,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.11-NET-OPT
+                v1.2.12-FORCE-RESET
             </div>
 
         </div >
