@@ -1,17 +1,12 @@
-import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ReactGA from 'react-ga4';
 import { supabase } from './supabaseClient';
 import { getCheckoutUrl, CREEM_CONFIG } from './creemConfig';
+import PrivacyPolicyPage from './PrivacyPolicyPage';
+import TermsOfServicePage from './TermsOfServicePage';
 import ParticleLogo from './ParticleLogo';
 import BackgroundParticles from './BackgroundParticles';
-// Lazy load heavy components
-const PrivacyPolicyPage = lazy(() => import('./PrivacyPolicyPage'));
-const TermsOfServicePage = lazy(() => import('./TermsOfServicePage'));
-const DailyAlphaTab = lazy(() => import('./components/DailyAlphaTab'));
-const AIAnalysisDashboard = lazy(() => import('./components/AIAnalysisDashboard'));
-const TerminalAppV3 = lazy(() => import('./features/TerminalV2/TerminalApp_v3'));
-const TerminalAppV4 = lazy(() => import('./features/TerminalV2/TerminalApp_v4'));
-
+import DailyAlphaTab from './components/DailyAlphaTab';
 import {
     TrendingUp, TrendingDown, DollarSign, Package, AlertCircle, BarChart3, Target,
     Award, Plus, X, Crown, Calendar, CreditCard, Wallet, User, LogOut, Trash2,
@@ -26,17 +21,11 @@ import {
     AreaChart, Area, ReferenceLine, Bar, Cell, Pie
 } from 'recharts';
 import { translations } from './translations';
+import AIAnalysisDashboard from './components/AIAnalysisDashboard';
 // Version-aware imports for Quantum Observer
+import TerminalAppV3 from './features/TerminalV2/TerminalApp_v3'; // V3 - Stable
+import TerminalAppV4 from './features/TerminalV2/TerminalApp_v4'; // V4 - Development
 import { getFeatureVersion } from './config/versionConfig';
-
-
-// Loading Fallback Component
-const PageLoader = () => (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-amber-500">
-        <Loader2 className="w-8 h-8 animate-spin mb-4" />
-        <span className="text-sm font-mono tracking-wider opacity-70">LOADING_MODULE...</span>
-    </div>
-);
 
 
 // Data Sync Status Indicator Component (Icon Only)
@@ -1815,79 +1804,78 @@ function GoldCatApp() {
     // --- 4. 界面渲染 ---
 
     return (
-        <Suspense fallback={<PageLoader />}>
-            <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate flex flex-col" translate="no">
+        <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate flex flex-col" translate="no">
 
-                {/* Background Animation (KuCoin Style) */}
-                {/* Background Particles - Hidden on Mobile to reduce distraction */}
-                <div className="hidden md:block">
-                    <BackgroundParticles />
-                </div>
+            {/* Background Animation (KuCoin Style) */}
+            {/* Background Particles - Hidden on Mobile to reduce distraction */}
+            <div className="hidden md:block">
+                <BackgroundParticles />
+            </div>
 
-                {/* 顶部导航栏 (Header) */}
-                <header className="border-b border-neutral-800 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-50">
-                    <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                        <div
-                            className="flex items-center gap-3 cursor-pointer"
-                            onClick={() => {
-                                if (!user) {
-                                    setShowGuestDashboard(false);
-                                } else {
-                                    setExplicitLandingView(true);
-                                }
-                            }}
-                        >
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
-                                <img src="/goldcat_logo_neon.png" alt="GoldCat Logo" className="w-full h-full object-contain" />
-                            </div>
-                            <div>
-                                <h1 className="text-sm sm:text-base md:text-lg font-black text-white tracking-tighter leading-none">
-                                    {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v4</span>
-                                </h1>
-
-                            </div>
+            {/* 顶部导航栏 (Header) */}
+            <header className="border-b border-neutral-800 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                    <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => {
+                            if (!user) {
+                                setShowGuestDashboard(false);
+                            } else {
+                                setExplicitLandingView(true);
+                            }
+                        }}
+                    >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
+                            <img src="/goldcat_logo_neon.png" alt="GoldCat Logo" className="w-full h-full object-contain" />
                         </div>
+                        <div>
+                            <h1 className="text-sm sm:text-base md:text-lg font-black text-white tracking-tighter leading-none">
+                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v4</span>
+                            </h1>
 
-                        <div className="flex items-center gap-4">
-                            {user ? (
-                                <div className="flex items-center gap-3">
-                                    <SyncStatusIndicator status={syncStatus} language={language} />
-                                    <div className="hidden md:flex items-center gap-2 mr-4">
-                                        <span className="text-xs text-gray-400">{t('nav.recorded_trades')}</span>
-                                        <span className={`text-sm font-bold font-mono ${trades.length >= membership.maxTrades && !membership.isPremium ? 'text-red-500' : 'text-white'}`}>
-                                            {trades.length} <span className="text-gray-600 text-xs">/ {membership.isPremium ? '∞' : membership.maxTrades}</span>
-                                        </span>
-                                    </div>
-                                    {!membership.isPremium && (
-                                        <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="bg-amber-600 hover:bg-amber-500 text-black text-xs font-bold px-3 py-1.5 rounded-full animate-pulse flex items-center gap-1">
-                                            <Lock className="w-3 h-3" /> {t('nav.upgrade')}
-                                        </button>
-                                    )}
-                                    <button onClick={() => setShowSettingsModal(true)} className={`h-9 px-3 rounded-full flex items-center justify-center border transition-colors group relative gap-2 ${membership.isPremium ? 'bg-neutral-800 border-amber-500/50' : 'bg-neutral-800 border-neutral-700 hover:border-amber-500'}`}>
-                                        {membership.isPremium && <Crown className="w-3 h-3 text-amber-500" />}
-                                        <div className="flex flex-col items-start leading-none">
-                                            <span className={`text-sm font-bold ${membership.isPremium ? 'text-amber-500' : 'text-gray-300'}`}>{user.user_metadata?.username || user.email?.split('@')[0]}</span>
-                                            <span className="text-[10px] text-gray-500">{user.email}</span>
-                                        </div>
-                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                    </button>
-                                </div>
-                            ) : (
-                                <button onClick={() => setShowLoginModal(true)} className="text-sm font-bold text-amber-500 hover:text-amber-400">{t('nav.login_register')}</button>
-                            )}
-                            <button
-                                onClick={() => setLanguage(l => l === 'zh' ? 'en' : 'zh')}
-                                className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 text-xs font-bold text-gray-400 hover:text-white flex items-center justify-center transition-colors"
-                            >
-                                <Globe className="w-4 h-4" />
-                            </button>
                         </div>
                     </div>
-                </header>
+
+                    <div className="flex items-center gap-4">
+                        {user ? (
+                            <div className="flex items-center gap-3">
+                                <SyncStatusIndicator status={syncStatus} language={language} />
+                                <div className="hidden md:flex items-center gap-2 mr-4">
+                                    <span className="text-xs text-gray-400">{t('nav.recorded_trades')}</span>
+                                    <span className={`text-sm font-bold font-mono ${trades.length >= membership.maxTrades && !membership.isPremium ? 'text-red-500' : 'text-white'}`}>
+                                        {trades.length} <span className="text-gray-600 text-xs">/ {membership.isPremium ? '∞' : membership.maxTrades}</span>
+                                    </span>
+                                </div>
+                                {!membership.isPremium && (
+                                    <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="bg-amber-600 hover:bg-amber-500 text-black text-xs font-bold px-3 py-1.5 rounded-full animate-pulse flex items-center gap-1">
+                                        <Lock className="w-3 h-3" /> {t('nav.upgrade')}
+                                    </button>
+                                )}
+                                <button onClick={() => setShowSettingsModal(true)} className={`h-9 px-3 rounded-full flex items-center justify-center border transition-colors group relative gap-2 ${membership.isPremium ? 'bg-neutral-800 border-amber-500/50' : 'bg-neutral-800 border-neutral-700 hover:border-amber-500'}`}>
+                                    {membership.isPremium && <Crown className="w-3 h-3 text-amber-500" />}
+                                    <div className="flex flex-col items-start leading-none">
+                                        <span className={`text-sm font-bold ${membership.isPremium ? 'text-amber-500' : 'text-gray-300'}`}>{user.user_metadata?.username || user.email?.split('@')[0]}</span>
+                                        <span className="text-[10px] text-gray-500">{user.email}</span>
+                                    </div>
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                </button>
+                            </div>
+                        ) : (
+                            <button onClick={() => setShowLoginModal(true)} className="text-sm font-bold text-amber-500 hover:text-amber-400">{t('nav.login_register')}</button>
+                        )}
+                        <button
+                            onClick={() => setLanguage(l => l === 'zh' ? 'en' : 'zh')}
+                            className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 text-xs font-bold text-gray-400 hover:text-white flex items-center justify-center transition-colors"
+                        >
+                            <Globe className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            </header>
 
 
-                {/* Fortune Compass Widget - Moved below per user request */}
-                {/*
+            {/* Fortune Compass Widget - Moved below per user request */}
+            {/*
             {
                 user && activeTab === 'new_trade' && (
                     <div className="max-w-7xl mx-auto px-4 mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -1904,15 +1892,15 @@ function GoldCatApp() {
             }
             */}
 
-                <main className="w-full max-w-7xl mx-auto px-4 py-6 pb-20 relative flex-1 overflow-y-auto">
+            <main className="w-full max-w-7xl mx-auto px-4 py-6 pb-20 relative flex-1 overflow-y-auto">
 
-                    {/* 登录引导 */}
-                    {/* 登录引导 (Landing Page Redesign) */}
-                    {((!user && !showGuestDashboard) || (user && explicitLandingView)) && (
-                        <div className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 overflow-hidden bg-black">
+                {/* 登录引导 */}
+                {/* 登录引导 (Landing Page Redesign) */}
+                {((!user && !showGuestDashboard) || (user && explicitLandingView)) && (
+                    <div className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 overflow-hidden bg-black">
 
 
-                            <style>{`
+                        <style>{`
                             @keyframes grid-move {
                                 0% { transform: perspective(500px) rotateX(60deg) translateY(0px); }
                                 100% { transform: perspective(500px) rotateX(60deg) translateY(40px); }
@@ -1944,2032 +1932,2032 @@ function GoldCatApp() {
                             }
                         `}</style>
 
-                            {/* Dynamic Background */}
-                            <div className="absolute inset-0 bg-black overflow-hidden">
-                                {/* Aurora Top Glow */}
-                                <div className="absolute inset-0 bg-aurora opacity-40"></div>
+                        {/* Dynamic Background */}
+                        <div className="absolute inset-0 bg-black overflow-hidden">
+                            {/* Aurora Top Glow */}
+                            <div className="absolute inset-0 bg-aurora opacity-40"></div>
 
-                                {/* Perspective Grid with Fade Mask */}
-                                <div className="absolute inset-0 flex items-end justify-center opacity-30 pointer-events-none" style={{ maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)' }}>
-                                    <div className="w-[200%] h-[100%] -mb-[20%] bg-[linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:40px_40px] animate-grid origin-bottom"></div>
+                            {/* Perspective Grid with Fade Mask */}
+                            <div className="absolute inset-0 flex items-end justify-center opacity-30 pointer-events-none" style={{ maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)' }}>
+                                <div className="w-[200%] h-[100%] -mb-[20%] bg-[linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:40px_40px] animate-grid origin-bottom"></div>
+                            </div>
+
+                            {/* Vignette for seamless blending */}
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
+
+                            {/* Particle Logo Effect - Hidden on mobile for performance */}
+                            <div className="hidden sm:block absolute inset-0 z-[5] opacity-60" style={{ transform: 'translateY(-1480px)' }}>
+                                <ParticleLogo />
+                            </div>
+                        </div>
+
+                        <div className="relative z-10 max-w-5xl mx-auto animate-in fade-in zoom-in duration-1000 slide-in-from-bottom-8 py-20">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-400 text-xs font-bold mb-8 tracking-wider uppercase backdrop-blur-md shadow-lg">
+                                <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v4
+                            </div>
+
+                            <h1 className={`text-3xl xs:text-4xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 mb-6 sm:mb-8 tracking-tighter leading-[1.1] drop-shadow-2xl whitespace-pre-line break-words max-w-[95vw]`}>
+                                {t('home.quantum_hero_title')}
+                            </h1>
+
+                            {/* Simplified Subtitle */}
+                            {/* Quantum Observer Subtitle */}
+                            <p className="text-gray-300 text-sm sm:text-base md:text-lg lg:text-xl mb-8 sm:mb-10 md:mb-12 max-w-3xl mx-auto leading-[2] drop-shadow-md px-4">
+                                {t('home.quantum_hero_subtitle')}
+                            </p>
+
+
+                            <div className="flex flex-col md:flex-row items-start justify-center gap-6 mb-20">
+                                <div className="flex flex-col items-center gap-3 w-full md:w-auto">
+                                    <button
+                                        onClick={() => {
+                                            if (user) {
+                                                setActiveTab('quantum_terminal');
+                                                setExplicitLandingView(false);
+                                            } else {
+                                                setShowGuestDashboard(true);
+                                                setActiveTab('quantum_terminal');
+                                            }
+                                        }}
+                                        className="group relative w-full md:w-auto bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-[0_0_40px_rgba(168,85,247,0.5)] hover:shadow-[0_0_60px_rgba(168,85,247,0.7)] hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                        <span className="relative flex items-center gap-2">{t('home.quantum_hero_cta')} <ChevronRight className="w-6 h-6" /></span>
+                                    </button>
+
+                                    {/* System Status Badge */}
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-1000 mt-3 md:mt-4 flex justify-center w-full">
+                                        <div className="flex items-center gap-2 text-[#A1A1AA] text-xs sm:text-[13px] font-mono tracking-wider">
+                                            <span className="relative flex h-1.5 w-1.5 mr-0.5">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75 duration-2000"></span>
+                                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#22C55E]"></span>
+                                            </span>
+                                            <span>
+                                                {t('home.quantum_hero_stats', { count: challengeCount })}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Vignette for seamless blending */}
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
+                                <button
+                                    onClick={() => {
+                                        setIsRegisterMode(false);
+                                        setShowLoginModal(true);
+                                    }}
+                                    className="w-full md:w-auto bg-white/5 hover:bg-white/10 text-white font-bold text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-2xl border border-white/10 hover:border-white/20 transition-all backdrop-blur-sm self-start md:self-auto"
+                                >
+                                    {t('auth.login_btn')}
+                                </button>
+                            </div>
 
-                                {/* Particle Logo Effect - Hidden on mobile for performance */}
-                                <div className="hidden sm:block absolute inset-0 z-[5] opacity-60" style={{ transform: 'translateY(-1480px)' }}>
-                                    <ParticleLogo />
+                            {/* Feature Grid - Reordered for Quantum First */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                                {/* 1. Quantum Observer (Promoted) */}
+                                <div
+                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('quantum_terminal'); }}
+                                    className="bg-black/40 backdrop-blur-md border border-purple-500/30 p-8 rounded-3xl hover:border-purple-500/70 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer relative overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.15)] order-1"
+                                >
+                                    <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-transparent text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-lg">
+                                        {t('home.feature_quantum_badge')}
+                                    </div>
+                                    <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(168,85,247,0.2)] border border-purple-500/30">
+                                        <Cpu className="w-7 h-7 text-purple-400" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors flex items-center gap-2">
+                                        {t('home.feature_quantum_title')}
+                                    </h3>
+                                    <p className="text-sm text-gray-400 leading-relaxed mb-4">{t('home.feature_quantum_desc')}</p>
+                                    <div className="flex items-center gap-2 text-xs text-purple-400 font-mono bg-purple-900/20 px-2 py-1 rounded border border-purple-500/20 w-fit">
+                                        <Sparkles className="w-3 h-3" /> {t('home.feature_quantum_accuracy')}
+                                    </div>
+                                </div>
+
+                                {/* 2. Daily Alpha */}
+                                <div
+                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('daily_alpha'); }}
+                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer order-2"
+                                >
+                                    <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20">
+                                        <Newspaper className="w-7 h-7 text-amber-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-amber-400 transition-colors">{t('home.feature_intel_title')}</h3>
+                                    <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_intel_desc')}</p>
+                                </div>
+
+                                {/* 3. Manual Entry (Demoted) */}
+                                <div
+                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('new_trade'); }}
+                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-gray-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer order-3"
+                                >
+                                    <div className="w-14 h-14 bg-gray-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(107,114,128,0.1)] border border-gray-500/20">
+                                        <Edit3 className="w-7 h-7 text-gray-400 group-hover:text-white transition-colors" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-300 mb-3 group-hover:text-white transition-colors">{t('home.feature_manual_title')}</h3>
+                                    <p className="text-sm text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors">{t('home.feature_manual_desc')}</p>
                                 </div>
                             </div>
 
-                            <div className="relative z-10 max-w-5xl mx-auto animate-in fade-in zoom-in duration-1000 slide-in-from-bottom-8 py-20">
-                                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-400 text-xs font-bold mb-8 tracking-wider uppercase backdrop-blur-md shadow-lg">
-                                    <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v4
-                                </div>
+                            {/* --- New Feature Showcase Cards (Added per user request) --- */}
+                            {/* --- Tactical Radar System (Full Width, Dynamic Visualization) --- */}
+                            <div className="mt-32 max-w-6xl mx-auto px-4">
+                                <div className="bg-[#0a0a0c] border border-slate-800 rounded-3xl p-6 relative overflow-hidden group">
+                                    {/* Radar Scan Overlay */}
+                                    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+                                        <div className="w-[200%] h-full absolute top-0 left-[-50%] bg-gradient-to-r from-transparent via-amber-500/5 to-transparent skew-x-12 animate-[scan_4s_linear_infinite]"></div>
+                                    </div>
 
-                                <h1 className={`text-3xl xs:text-4xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 mb-6 sm:mb-8 tracking-tighter leading-[1.1] drop-shadow-2xl whitespace-pre-line break-words max-w-[95vw]`}>
-                                    {t('home.quantum_hero_title')}
-                                </h1>
+                                    {/* Header */}
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-30">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20">
+                                                <Radar className="w-6 h-6 text-amber-500 animate-[spin_4s_linear_infinite]" />
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] font-bold text-amber-500 uppercase tracking-[0.2em] mb-1">{t('home.tactical_radar_subtitle')}</div>
+                                                <h3 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter">
+                                                    {t('home.tactical_radar_title')}
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 md:mt-0 flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg">
+                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                            <span className="text-xs text-slate-400 font-mono">SYSTEM ONLINE</span>
+                                        </div>
+                                    </div>
 
-                                {/* Simplified Subtitle */}
-                                {/* Quantum Observer Subtitle */}
-                                <p className="text-gray-300 text-sm sm:text-base md:text-lg lg:text-xl mb-8 sm:mb-10 md:mb-12 max-w-3xl mx-auto leading-[2] drop-shadow-md px-4">
-                                    {t('home.quantum_hero_subtitle')}
-                                </p>
+                                    {/* Dynamic Wave Visualization (Simulated K-Lines) */}
+                                    <div className="grid grid-cols-1 gap-4 relative z-10">
+                                        {/* 1M: Micro Field */}
+                                        <div className="bg-black/40 border border-slate-800/50 rounded-xl p-4 relative overflow-hidden h-32 group/chart">
+                                            {/* Scanner Beam */}
+                                            <div className="absolute top-0 bottom-0 w-[2px] bg-cyan-500/50 shadow-[0_0_15px_rgba(34,211,238,0.8)] z-20 animate-[scan-beam_3s_linear_infinite]" style={{ left: '0%' }}>
+                                                <div className="absolute top-0 bottom-0 left-[-20px] w-[40px] bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent"></div>
+                                            </div>
 
+                                            <div className="flex justify-between items-center mb-2 relative z-30">
+                                                <span className="text-[10px] text-cyan-400 font-mono font-bold tracking-wider">1M: {language === 'zh' ? '微观场' : 'MICRO'} (ZENUSDT)</span>
+                                                <div className="flex gap-2">
+                                                    <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">RSI: 33.2</span>
+                                                    <span className="text-[9px] text-slate-500">AI_NOISE</span>
+                                                </div>
+                                            </div>
+                                            {/* Cyan Line (Smooth Organic Trend) */}
+                                            <svg className="absolute bottom-0 left-0 w-full h-20 opacity-90" preserveAspectRatio="none" viewBox="0 0 1200 100">
+                                                <defs>
+                                                    <linearGradient id="cyanGradient" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <path d="M0,80 C50,75 100,85 150,70 C200,55 250,75 300,65 C350,55 400,30 450,40 C500,50 550,20 600,15 C650,10 700,35 750,25 C800,15 850,40 900,45 C950,50 1000,10 1050,15 C1100,20 1150,30 1200,25 V100 H0 Z" fill="url(#cyanGradient)" stroke="none" />
+                                                <path d="M0,80 C50,75 100,85 150,70 C200,55 250,75 300,65 C350,55 400,30 450,40 C500,50 550,20 600,15 C650,10 700,35 750,25 C800,15 850,40 900,45 C950,50 1000,10 1050,15 C1100,20 1150,30 1200,25" fill="none" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round" />
+                                            </svg>
+                                        </div>
 
-                                <div className="flex flex-col md:flex-row items-start justify-center gap-6 mb-20">
-                                    <div className="flex flex-col items-center gap-3 w-full md:w-auto">
+                                        {/* 5M: Structure Field */}
+                                        <div className="bg-black/40 border border-slate-800/50 rounded-xl p-4 relative overflow-hidden h-32 group/chart">
+                                            {/* Scanner Beam */}
+                                            <div className="absolute top-0 bottom-0 w-[2px] bg-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.8)] z-20 animate-[scan-beam_4s_linear_infinite_1s]" style={{ left: '0%' }}>
+                                                <div className="absolute top-0 bottom-0 left-[-20px] w-[40px] bg-gradient-to-r from-transparent via-purple-500/10 to-transparent"></div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center mb-2 relative z-30">
+                                                <span className="text-[10px] text-purple-400 font-mono font-bold tracking-wider">5M: {language === 'zh' ? '结构场' : 'STRUCTURE'} (ZENUSDT)</span>
+                                                <div className="flex gap-2">
+                                                    <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">RSI: 35.0</span>
+                                                    <span className="text-[9px] text-slate-500">WAVE_PATTERN</span>
+                                                </div>
+                                            </div>
+                                            {/* Purple Line (Smooth Organic Trend) */}
+                                            <svg className="absolute bottom-0 left-0 w-full h-20 opacity-90" preserveAspectRatio="none" viewBox="0 0 1200 100">
+                                                <defs>
+                                                    <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <path d="M0,50 C60,55 120,45 180,52 C240,58 300,70 360,65 C420,60 480,45 540,50 C600,55 660,40 720,35 C780,30 840,45 900,38 C960,30 1020,15 1080,20 C1140,25 1170,18 1200,15 V100 H0 Z" fill="url(#purpleGradient)" stroke="none" />
+                                                <path d="M0,50 C60,55 120,45 180,52 C240,58 300,70 360,65 C420,60 480,45 540,50 C600,55 660,40 720,35 C780,30 840,45 900,38 C960,30 1020,15 1080,20 C1140,25 1170,18 1200,15" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" />
+                                            </svg>
+                                        </div>
+
+                                        {/* 1H: Macro Field */}
+                                        <div className="bg-black/40 border border-slate-800/50 rounded-xl p-4 relative overflow-hidden h-32 group/chart">
+                                            {/* Scanner Beam */}
+                                            <div className="absolute top-0 bottom-0 w-[2px] bg-amber-500/50 shadow-[0_0_15px_rgba(251,191,36,0.8)] z-20 animate-[scan-beam_5s_linear_infinite_0.5s]" style={{ left: '0%' }}>
+                                                <div className="absolute top-0 bottom-0 left-[-20px] w-[40px] bg-gradient-to-r from-transparent via-amber-500/10 to-transparent"></div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center mb-2 relative z-30">
+                                                <span className="text-[10px] text-amber-400 font-mono font-bold tracking-wider">1H: {language === 'zh' ? '宏观场' : 'MACRO'} (ZENUSDT)</span>
+                                                <div className="flex gap-2">
+                                                    <span className="text-[9px] text-green-500 font-bold tracking-wider pr-2">LONG_SIG[1]</span>
+                                                    <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">RSI: 39.5</span>
+                                                    <span className="text-[9px] text-slate-500">GRAVITY_WELL</span>
+                                                </div>
+                                            </div>
+                                            {/* Yellow Line (Smooth Organic Trend) */}
+                                            <div className="absolute top-1/2 left-[60%] w-2 h-2 bg-green-500 rounded-full animate-ping z-20"></div>
+                                            <svg className="absolute bottom-0 left-0 w-full h-20 opacity-90" preserveAspectRatio="none" viewBox="0 0 1200 100">
+                                                <defs>
+                                                    <linearGradient id="amberGradient" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <path d="M0,70 C50,72 100,75 150,65 C200,55 250,50 300,30 C350,10 400,25 450,45 C500,65 550,70 600,60 C650,50 700,55 750,65 C800,75 850,45 900,40 C950,35 1000,45 1050,40 C1100,35 1150,50 1200,55 V100 H0 Z" fill="url(#amberGradient)" stroke="none" />
+                                                <path d="M0,70 C50,72 100,75 150,65 C200,55 250,50 300,30 C350,10 400,25 450,45 C500,65 550,70 600,60 C650,50 700,55 750,65 C800,75 850,45 900,40 C950,35 1000,45 1050,40 C1100,35 1150,50 1200,55" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer Info */}
+                                    <div className="mt-6 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 border-t border-slate-800/50 pt-4">
+                                        <p className="max-w-2xl text-center md:text-left leading-relaxed">
+                                            {t('home.tactical_radar_desc')}
+                                        </p>
                                         <button
                                             onClick={() => {
+                                                setActiveTab('quantum_terminal');
+                                                window.scrollTo(0, 0);
                                                 if (user) {
-                                                    setActiveTab('quantum_terminal');
                                                     setExplicitLandingView(false);
                                                 } else {
                                                     setShowGuestDashboard(true);
-                                                    setActiveTab('quantum_terminal');
                                                 }
                                             }}
-                                            className="group relative w-full md:w-auto bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-[0_0_40px_rgba(168,85,247,0.5)] hover:shadow-[0_0_60px_rgba(168,85,247,0.7)] hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden"
+                                            className="mt-4 md:mt-0 px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition-colors flex items-center gap-2"
                                         >
-                                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                            <span className="relative flex items-center gap-2">{t('home.quantum_hero_cta')} <ChevronRight className="w-6 h-6" /></span>
+                                            <Activity className="w-4 h-4" />
+                                            {t('home.tactical_radar_button')}
                                         </button>
-
-                                        {/* System Status Badge */}
-                                        <div className="animate-in fade-in slide-in-from-top-2 duration-1000 mt-3 md:mt-4 flex justify-center w-full">
-                                            <div className="flex items-center gap-2 text-[#A1A1AA] text-xs sm:text-[13px] font-mono tracking-wider">
-                                                <span className="relative flex h-1.5 w-1.5 mr-0.5">
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75 duration-2000"></span>
-                                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#22C55E]"></span>
-                                                </span>
-                                                <span>
-                                                    {t('home.quantum_hero_stats', { count: challengeCount })}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => {
-                                            setIsRegisterMode(false);
-                                            setShowLoginModal(true);
-                                        }}
-                                        className="w-full md:w-auto bg-white/5 hover:bg-white/10 text-white font-bold text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-2xl border border-white/10 hover:border-white/20 transition-all backdrop-blur-sm self-start md:self-auto"
-                                    >
-                                        {t('auth.login_btn')}
-                                    </button>
-                                </div>
-
-                                {/* Feature Grid - Reordered for Quantum First */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-                                    {/* 1. Quantum Observer (Promoted) */}
-                                    <div
-                                        onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('quantum_terminal'); }}
-                                        className="bg-black/40 backdrop-blur-md border border-purple-500/30 p-8 rounded-3xl hover:border-purple-500/70 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer relative overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.15)] order-1"
-                                    >
-                                        <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-transparent text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-lg">
-                                            {t('home.feature_quantum_badge')}
-                                        </div>
-                                        <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(168,85,247,0.2)] border border-purple-500/30">
-                                            <Cpu className="w-7 h-7 text-purple-400" />
-                                        </div>
-                                        <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors flex items-center gap-2">
-                                            {t('home.feature_quantum_title')}
-                                        </h3>
-                                        <p className="text-sm text-gray-400 leading-relaxed mb-4">{t('home.feature_quantum_desc')}</p>
-                                        <div className="flex items-center gap-2 text-xs text-purple-400 font-mono bg-purple-900/20 px-2 py-1 rounded border border-purple-500/20 w-fit">
-                                            <Sparkles className="w-3 h-3" /> {t('home.feature_quantum_accuracy')}
-                                        </div>
-                                    </div>
-
-                                    {/* 2. Daily Alpha */}
-                                    <div
-                                        onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('daily_alpha'); }}
-                                        className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer order-2"
-                                    >
-                                        <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20">
-                                            <Newspaper className="w-7 h-7 text-amber-500" />
-                                        </div>
-                                        <h3 className="text-xl font-bold text-white mb-3 group-hover:text-amber-400 transition-colors">{t('home.feature_intel_title')}</h3>
-                                        <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_intel_desc')}</p>
-                                    </div>
-
-                                    {/* 3. Manual Entry (Demoted) */}
-                                    <div
-                                        onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('new_trade'); }}
-                                        className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-gray-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer order-3"
-                                    >
-                                        <div className="w-14 h-14 bg-gray-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(107,114,128,0.1)] border border-gray-500/20">
-                                            <Edit3 className="w-7 h-7 text-gray-400 group-hover:text-white transition-colors" />
-                                        </div>
-                                        <h3 className="text-xl font-bold text-gray-300 mb-3 group-hover:text-white transition-colors">{t('home.feature_manual_title')}</h3>
-                                        <p className="text-sm text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors">{t('home.feature_manual_desc')}</p>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* --- New Feature Showcase Cards (Added per user request) --- */}
-                                {/* --- Tactical Radar System (Full Width, Dynamic Visualization) --- */}
-                                <div className="mt-32 max-w-6xl mx-auto px-4">
-                                    <div className="bg-[#0a0a0c] border border-slate-800 rounded-3xl p-6 relative overflow-hidden group">
-                                        {/* Radar Scan Overlay */}
-                                        <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
-                                            <div className="w-[200%] h-full absolute top-0 left-[-50%] bg-gradient-to-r from-transparent via-amber-500/5 to-transparent skew-x-12 animate-[scan_4s_linear_infinite]"></div>
-                                        </div>
 
-                                        {/* Header */}
-                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-30">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20">
-                                                    <Radar className="w-6 h-6 text-amber-500 animate-[spin_4s_linear_infinite]" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-[10px] font-bold text-amber-500 uppercase tracking-[0.2em] mb-1">{t('home.tactical_radar_subtitle')}</div>
-                                                    <h3 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter">
-                                                        {t('home.tactical_radar_title')}
-                                                    </h3>
-                                                </div>
-                                            </div>
-                                            <div className="mt-4 md:mt-0 flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg">
-                                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                                <span className="text-xs text-slate-400 font-mono">SYSTEM ONLINE</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Dynamic Wave Visualization (Simulated K-Lines) */}
-                                        <div className="grid grid-cols-1 gap-4 relative z-10">
-                                            {/* 1M: Micro Field */}
-                                            <div className="bg-black/40 border border-slate-800/50 rounded-xl p-4 relative overflow-hidden h-32 group/chart">
-                                                {/* Scanner Beam */}
-                                                <div className="absolute top-0 bottom-0 w-[2px] bg-cyan-500/50 shadow-[0_0_15px_rgba(34,211,238,0.8)] z-20 animate-[scan-beam_3s_linear_infinite]" style={{ left: '0%' }}>
-                                                    <div className="absolute top-0 bottom-0 left-[-20px] w-[40px] bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent"></div>
-                                                </div>
-
-                                                <div className="flex justify-between items-center mb-2 relative z-30">
-                                                    <span className="text-[10px] text-cyan-400 font-mono font-bold tracking-wider">1M: {language === 'zh' ? '微观场' : 'MICRO'} (ZENUSDT)</span>
-                                                    <div className="flex gap-2">
-                                                        <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">RSI: 33.2</span>
-                                                        <span className="text-[9px] text-slate-500">AI_NOISE</span>
-                                                    </div>
-                                                </div>
-                                                {/* Cyan Line (Smooth Organic Trend) */}
-                                                <svg className="absolute bottom-0 left-0 w-full h-20 opacity-90" preserveAspectRatio="none" viewBox="0 0 1200 100">
-                                                    <defs>
-                                                        <linearGradient id="cyanGradient" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
-                                                            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <path d="M0,80 C50,75 100,85 150,70 C200,55 250,75 300,65 C350,55 400,30 450,40 C500,50 550,20 600,15 C650,10 700,35 750,25 C800,15 850,40 900,45 C950,50 1000,10 1050,15 C1100,20 1150,30 1200,25 V100 H0 Z" fill="url(#cyanGradient)" stroke="none" />
-                                                    <path d="M0,80 C50,75 100,85 150,70 C200,55 250,75 300,65 C350,55 400,30 450,40 C500,50 550,20 600,15 C650,10 700,35 750,25 C800,15 850,40 900,45 C950,50 1000,10 1050,15 C1100,20 1150,30 1200,25" fill="none" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round" />
-                                                </svg>
-                                            </div>
-
-                                            {/* 5M: Structure Field */}
-                                            <div className="bg-black/40 border border-slate-800/50 rounded-xl p-4 relative overflow-hidden h-32 group/chart">
-                                                {/* Scanner Beam */}
-                                                <div className="absolute top-0 bottom-0 w-[2px] bg-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.8)] z-20 animate-[scan-beam_4s_linear_infinite_1s]" style={{ left: '0%' }}>
-                                                    <div className="absolute top-0 bottom-0 left-[-20px] w-[40px] bg-gradient-to-r from-transparent via-purple-500/10 to-transparent"></div>
-                                                </div>
-
-                                                <div className="flex justify-between items-center mb-2 relative z-30">
-                                                    <span className="text-[10px] text-purple-400 font-mono font-bold tracking-wider">5M: {language === 'zh' ? '结构场' : 'STRUCTURE'} (ZENUSDT)</span>
-                                                    <div className="flex gap-2">
-                                                        <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">RSI: 35.0</span>
-                                                        <span className="text-[9px] text-slate-500">WAVE_PATTERN</span>
-                                                    </div>
-                                                </div>
-                                                {/* Purple Line (Smooth Organic Trend) */}
-                                                <svg className="absolute bottom-0 left-0 w-full h-20 opacity-90" preserveAspectRatio="none" viewBox="0 0 1200 100">
-                                                    <defs>
-                                                        <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.3" />
-                                                            <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <path d="M0,50 C60,55 120,45 180,52 C240,58 300,70 360,65 C420,60 480,45 540,50 C600,55 660,40 720,35 C780,30 840,45 900,38 C960,30 1020,15 1080,20 C1140,25 1170,18 1200,15 V100 H0 Z" fill="url(#purpleGradient)" stroke="none" />
-                                                    <path d="M0,50 C60,55 120,45 180,52 C240,58 300,70 360,65 C420,60 480,45 540,50 C600,55 660,40 720,35 C780,30 840,45 900,38 C960,30 1020,15 1080,20 C1140,25 1170,18 1200,15" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" />
-                                                </svg>
-                                            </div>
-
-                                            {/* 1H: Macro Field */}
-                                            <div className="bg-black/40 border border-slate-800/50 rounded-xl p-4 relative overflow-hidden h-32 group/chart">
-                                                {/* Scanner Beam */}
-                                                <div className="absolute top-0 bottom-0 w-[2px] bg-amber-500/50 shadow-[0_0_15px_rgba(251,191,36,0.8)] z-20 animate-[scan-beam_5s_linear_infinite_0.5s]" style={{ left: '0%' }}>
-                                                    <div className="absolute top-0 bottom-0 left-[-20px] w-[40px] bg-gradient-to-r from-transparent via-amber-500/10 to-transparent"></div>
-                                                </div>
-
-                                                <div className="flex justify-between items-center mb-2 relative z-30">
-                                                    <span className="text-[10px] text-amber-400 font-mono font-bold tracking-wider">1H: {language === 'zh' ? '宏观场' : 'MACRO'} (ZENUSDT)</span>
-                                                    <div className="flex gap-2">
-                                                        <span className="text-[9px] text-green-500 font-bold tracking-wider pr-2">LONG_SIG[1]</span>
-                                                        <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">RSI: 39.5</span>
-                                                        <span className="text-[9px] text-slate-500">GRAVITY_WELL</span>
-                                                    </div>
-                                                </div>
-                                                {/* Yellow Line (Smooth Organic Trend) */}
-                                                <div className="absolute top-1/2 left-[60%] w-2 h-2 bg-green-500 rounded-full animate-ping z-20"></div>
-                                                <svg className="absolute bottom-0 left-0 w-full h-20 opacity-90" preserveAspectRatio="none" viewBox="0 0 1200 100">
-                                                    <defs>
-                                                        <linearGradient id="amberGradient" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
-                                                            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <path d="M0,70 C50,72 100,75 150,65 C200,55 250,50 300,30 C350,10 400,25 450,45 C500,65 550,70 600,60 C650,50 700,55 750,65 C800,75 850,45 900,40 C950,35 1000,45 1050,40 C1100,35 1150,50 1200,55 V100 H0 Z" fill="url(#amberGradient)" stroke="none" />
-                                                    <path d="M0,70 C50,72 100,75 150,65 C200,55 250,50 300,30 C350,10 400,25 450,45 C500,65 550,70 600,60 C650,50 700,55 750,65 C800,75 850,45 900,40 C950,35 1000,45 1050,40 C1100,35 1150,50 1200,55" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
-                                                </svg>
-                                            </div>
-                                        </div>
-
-                                        {/* Footer Info */}
-                                        <div className="mt-6 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 border-t border-slate-800/50 pt-4">
-                                            <p className="max-w-2xl text-center md:text-left leading-relaxed">
-                                                {t('home.tactical_radar_desc')}
-                                            </p>
-                                            <button
-                                                onClick={() => {
-                                                    setActiveTab('quantum_terminal');
-                                                    window.scrollTo(0, 0);
-                                                    if (user) {
-                                                        setExplicitLandingView(false);
-                                                    } else {
-                                                        setShowGuestDashboard(true);
-                                                    }
-                                                }}
-                                                className="mt-4 md:mt-0 px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition-colors flex items-center gap-2"
-                                            >
-                                                <Activity className="w-4 h-4" />
-                                                {t('home.tactical_radar_button')}
-                                            </button>
-                                        </div>
-                                    </div>
+                            {/* --- Pricing Section (Added for Compliance) --- */}
+                            <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300 mt-32">
+                                <div className="text-center mb-16">
+                                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6 tracking-tight">{t('pricing.title')}</h2>
+                                    <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                                        {t('pricing.subtitle')}
+                                    </p>
                                 </div>
 
-
-                                {/* --- Pricing Section (Added for Compliance) --- */}
-                                <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300 mt-32">
-                                    <div className="text-center mb-16">
-                                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6 tracking-tight">{t('pricing.title')}</h2>
-                                        <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-                                            {t('pricing.subtitle')}
-                                        </p>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative group-hover:gap-12 transition-all duration-500">
-                                        {/* Free Plan */}
-                                        <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start">
-                                            <div className="mb-8 w-full">
-                                                <h3 className="text-xl font-bold text-white mb-2">{t('pricing.free_title')}</h3>
-                                                <div className="flex items-baseline gap-1 mb-4">
-                                                    <span className="text-4xl font-black text-white">{t('pricing.free_price')}</span>
-                                                </div>
-                                                <p className="text-gray-400 text-sm">{t('pricing.free_desc')}</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative group-hover:gap-12 transition-all duration-500">
+                                    {/* Free Plan */}
+                                    <div className="relative bg-neutral-900/50 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 hover:border-white/20 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start">
+                                        <div className="mb-8 w-full">
+                                            <h3 className="text-xl font-bold text-white mb-2">{t('pricing.free_title')}</h3>
+                                            <div className="flex items-baseline gap-1 mb-4">
+                                                <span className="text-4xl font-black text-white">{t('pricing.free_price')}</span>
                                             </div>
-                                            <div className="border-t border-white/10 my-8 w-full"></div>
-                                            <ul className="space-y-4 mb-8 flex-1 w-full">
-                                                {Array.isArray(t('pricing.free_features')) && t('pricing.free_features').map((feature, i) => (
-                                                    <li key={i} className="flex items-center gap-3 text-gray-300">
-                                                        <Check className="w-5 h-5 text-gray-500 shrink-0" />
-                                                        <span className="text-sm">{feature}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                            <button
-                                                onClick={() => {
-                                                    if (user) {
-                                                        setActiveTab('new_trade');
-                                                        setExplicitLandingView(false);
-                                                    } else {
-                                                        setIsRegisterMode(true);
-                                                        setShowLoginModal(true);
-                                                    }
-                                                }}
-                                                className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all"
-                                            >
-                                                {user ? t('pricing.go_dashboard') : t('pricing.start_free')}
-                                            </button>
+                                            <p className="text-gray-400 text-sm">{t('pricing.free_desc')}</p>
                                         </div>
-
-                                        {/* Lifetime Plan */}
-                                        <div className="relative bg-gradient-to-br from-red-500/10 to-rose-500/5 backdrop-blur-md border-2 border-red-500/50 rounded-3xl p-6 sm:p-8 hover:border-red-400/70 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start shadow-[0_0_40px_rgba(239,68,68,0.15)]">
-                                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg border border-red-400/30">
-                                                <Crown className="w-3 h-3 text-white" /> {t('pricing.pro_badge')}
-                                            </div>
-                                            <div className="mb-8 w-full">
-                                                <h3 className="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
-                                                    {t('pricing.pro_title')}
-                                                </h3>
-                                                <div className="mb-2">
-                                                    {/* Annual Price */}
-                                                    <div className="flex items-baseline gap-1">
-                                                        <span className="text-5xl font-black text-white">$39.00</span>
-                                                    </div>
-                                                </div>
-                                                <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
-                                            </div>
-                                            <div className="border-t border-white/10 my-8 w-full"></div>
-                                            <ul className="space-y-4 mb-8 flex-1 w-full">
-                                                {Array.isArray(t('pricing.pro_features')) && t('pricing.pro_features').map((feature, i) => (
-                                                    <li key={i} className="flex items-center gap-3 text-white">
-                                                        <div className="bg-red-500/20 rounded-full p-0.5">
-                                                            <Check className="w-4 h-4 text-red-500 shrink-0" />
-                                                        </div>
-                                                        <span className="text-sm font-medium">{feature}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                            <button
-                                                disabled={membership.isPremium}
-                                                onClick={() => {
-                                                    if (membership.isPremium) return;
-
-                                                    if (user) {
-                                                        setShowPaymentModal(true);
-                                                        setPaymentMethod(null);
-                                                    } else {
-                                                        setIsRegisterMode(true);
-                                                        setShowLoginModal(true);
-                                                    }
-                                                }}
-                                                className={`group relative w-full py-4 ${membership.isPremium
-                                                    ? 'bg-neutral-800 text-gray-400 cursor-not-allowed'
-                                                    : 'bg-gradient-to-r from-red-600 to-rose-600 text-white hover:shadow-[0_0_60px_rgba(239,68,68,0.5)] hover:-translate-y-1'} 
-                                                font-black text-lg rounded-xl shadow-[0_0_40px_rgba(239,68,68,0.3)] transition-all overflow-hidden`}
-                                            >
-                                                {membership.isPremium ? t('pricing.current_plan') : t('pricing.get_pro')}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* FAQ Section */}
-                                <div className="max-w-4xl mx-auto mt-32 mb-20 px-4">
-                                    {/* JSON-LD Schema Markup for SEO */}
-                                    <script type="application/ld+json" dangerouslySetInnerHTML={{
-                                        __html: JSON.stringify({
-                                            "@context": "https://schema.org",
-                                            "@type": "FAQPage",
-                                            "mainEntity": Array.isArray(t('faq.items')) ? t('faq.items').map(item => ({
-                                                "@type": "Question",
-                                                "name": item.q,
-                                                "acceptedAnswer": {
-                                                    "@type": "Answer",
-                                                    "text": item.a.replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown formatting
+                                        <div className="border-t border-white/10 my-8 w-full"></div>
+                                        <ul className="space-y-4 mb-8 flex-1 w-full">
+                                            {Array.isArray(t('pricing.free_features')) && t('pricing.free_features').map((feature, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-gray-300">
+                                                    <Check className="w-5 h-5 text-gray-500 shrink-0" />
+                                                    <span className="text-sm">{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <button
+                                            onClick={() => {
+                                                if (user) {
+                                                    setActiveTab('new_trade');
+                                                    setExplicitLandingView(false);
+                                                } else {
+                                                    setIsRegisterMode(true);
+                                                    setShowLoginModal(true);
                                                 }
-                                            })) : []
-                                        })
-                                    }} />
-
-                                    <div className="text-center mb-12">
-                                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-3 sm:mb-4 tracking-tight">{t('faq.title')}</h2>
-                                        <p className="text-gray-400 text-sm md:text-base">{t('faq.subtitle')}</p>
+                                            }}
+                                            className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all"
+                                        >
+                                            {user ? t('pricing.go_dashboard') : t('pricing.start_free')}
+                                        </button>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        {Array.isArray(t('faq.items')) && t('faq.items').map((item, index) => (
-                                            <div key={index} className="bg-neutral-900/50 border border-white/5 rounded-2xl overflow-hidden hover:bg-neutral-900/80 transition-colors p-5 sm:p-6 md:p-8 text-left">
-                                                <h3 className="text-base sm:text-lg font-bold text-amber-500 mb-3 sm:mb-4">{item.q}</h3>
-                                                <div className="text-gray-400 text-sm md:text-base leading-relaxed">
-                                                    <div dangerouslySetInnerHTML={{ __html: item.a.replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-200">$1</strong>') }} />
+                                    {/* Lifetime Plan */}
+                                    <div className="relative bg-gradient-to-br from-red-500/10 to-rose-500/5 backdrop-blur-md border-2 border-red-500/50 rounded-3xl p-6 sm:p-8 hover:border-red-400/70 transition-all hover:-translate-y-2 duration-300 flex flex-col text-left items-start shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg border border-red-400/30">
+                                            <Crown className="w-3 h-3 text-white" /> {t('pricing.pro_badge')}
+                                        </div>
+                                        <div className="mb-8 w-full">
+                                            <h3 className="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
+                                                {t('pricing.pro_title')}
+                                            </h3>
+                                            <div className="mb-2">
+                                                {/* Annual Price */}
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-5xl font-black text-white">$39.00</span>
                                                 </div>
                                             </div>
-                                        ))}
+                                            <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
+                                        </div>
+                                        <div className="border-t border-white/10 my-8 w-full"></div>
+                                        <ul className="space-y-4 mb-8 flex-1 w-full">
+                                            {Array.isArray(t('pricing.pro_features')) && t('pricing.pro_features').map((feature, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-white">
+                                                    <div className="bg-red-500/20 rounded-full p-0.5">
+                                                        <Check className="w-4 h-4 text-red-500 shrink-0" />
+                                                    </div>
+                                                    <span className="text-sm font-medium">{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <button
+                                            disabled={membership.isPremium}
+                                            onClick={() => {
+                                                if (membership.isPremium) return;
+
+                                                if (user) {
+                                                    setShowPaymentModal(true);
+                                                    setPaymentMethod(null);
+                                                } else {
+                                                    setIsRegisterMode(true);
+                                                    setShowLoginModal(true);
+                                                }
+                                            }}
+                                            className={`group relative w-full py-4 ${membership.isPremium
+                                                ? 'bg-neutral-800 text-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-red-600 to-rose-600 text-white hover:shadow-[0_0_60px_rgba(239,68,68,0.5)] hover:-translate-y-1'} 
+                                                font-black text-lg rounded-xl shadow-[0_0_40px_rgba(239,68,68,0.3)] transition-all overflow-hidden`}
+                                        >
+                                            {membership.isPremium ? t('pricing.current_plan') : t('pricing.get_pro')}
+                                        </button>
                                     </div>
                                 </div>
-                            </div >
-                        </div >
-                    )
-                    }
+                            </div>
 
-                    {
-                        ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
-                            <>
-                                {/* 功能 Tab */}
-                                <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-[18px]">
-                                    <div className="flex flex-wrap gap-2">
-                                        {[
-                                            { id: 'quantum_terminal', label: t('nav.quantum_terminal'), icon: Cpu },
-                                            { id: 'daily_alpha', label: t('nav.daily_alpha'), icon: Newspaper },
-                                            { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
-                                            { id: 'journal', label: t('nav.journal'), icon: FileText },
-                                            { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain },
-                                        ].map(tab => (
-                                            <button
-                                                key={tab.id}
-                                                onClick={() => setActiveTab(tab.id)}
-                                                className={`
+                            {/* FAQ Section */}
+                            <div className="max-w-4xl mx-auto mt-32 mb-20 px-4">
+                                {/* JSON-LD Schema Markup for SEO */}
+                                <script type="application/ld+json" dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify({
+                                        "@context": "https://schema.org",
+                                        "@type": "FAQPage",
+                                        "mainEntity": Array.isArray(t('faq.items')) ? t('faq.items').map(item => ({
+                                            "@type": "Question",
+                                            "name": item.q,
+                                            "acceptedAnswer": {
+                                                "@type": "Answer",
+                                                "text": item.a.replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown formatting
+                                            }
+                                        })) : []
+                                    })
+                                }} />
+
+                                <div className="text-center mb-12">
+                                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-3 sm:mb-4 tracking-tight">{t('faq.title')}</h2>
+                                    <p className="text-gray-400 text-sm md:text-base">{t('faq.subtitle')}</p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {Array.isArray(t('faq.items')) && t('faq.items').map((item, index) => (
+                                        <div key={index} className="bg-neutral-900/50 border border-white/5 rounded-2xl overflow-hidden hover:bg-neutral-900/80 transition-colors p-5 sm:p-6 md:p-8 text-left">
+                                            <h3 className="text-base sm:text-lg font-bold text-amber-500 mb-3 sm:mb-4">{item.q}</h3>
+                                            <div className="text-gray-400 text-sm md:text-base leading-relaxed">
+                                                <div dangerouslySetInnerHTML={{ __html: item.a.replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-200">$1</strong>') }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div >
+                    </div >
+                )
+                }
+
+                {
+                    ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
+                        <>
+                            {/* 功能 Tab */}
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-[18px]">
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        { id: 'quantum_terminal', label: t('nav.quantum_terminal'), icon: Cpu },
+                                        { id: 'daily_alpha', label: t('nav.daily_alpha'), icon: Newspaper },
+                                        { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
+                                        { id: 'journal', label: t('nav.journal'), icon: FileText },
+                                        { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain },
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id)}
+                                            className={`
                                 flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap
                                 ${activeTab === tab.id
-                                                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105'
-                                                        : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'
-                                                    }
+                                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105'
+                                                    : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'
+                                                }
                             `}
-                                            >
-                                                {tab.icon && <tab.icon className="w-5 h-5 sm:w-4 sm:h-4" />}
-                                                <span className="hidden xs:inline sm:inline">{tab.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
+                                        >
+                                            {tab.icon && <tab.icon className="w-5 h-5 sm:w-4 sm:h-4" />}
+                                            <span className="hidden xs:inline sm:inline">{tab.label}</span>
+                                        </button>
+                                    ))}
                                 </div>
+                            </div>
 
 
 
-                                {/* --- 1. 录入交易 (核心) --- */}
-                                {activeTab === 'new_trade' && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
-                                        {/* 左侧：录入表单 */}
-                                        <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-xl">
-                                            <div className="flex justify-between items-center mb-4 sm:mb-6 border-b border-neutral-800 pb-3 sm:pb-4">
-                                                <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                                                    <Target className="w-5 h-5 text-amber-500" />
-                                                    {t('form.title')}
-                                                </h2>
-                                                <span className="text-xs bg-neutral-800 text-gray-400 px-2 py-1 rounded">
-                                                    {t('form.today_trade_count', { count: trades.filter(t => t.date === new Date().toLocaleDateString()).length + 1 })}
-                                                </span>
-                                            </div>
-
-                                            <div className="space-y-4 sm:space-y-6">
-                                                {/* 第一行：基础信息 */}
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                    <div className="col-span-2 md:col-span-1">
-                                                        <label className="block text-xs text-gray-500 mb-1.5">{t('form.direction')}</label>
-                                                        <div className="flex bg-neutral-800 rounded-lg p-1">
-                                                            <button
-                                                                onClick={() => handleInputChange('tradeType', 'buy')}
-                                                                className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'buy' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                            >{t('form.long')}</button>
-                                                            <button
-                                                                onClick={() => handleInputChange('tradeType', 'sell')}
-                                                                className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'sell' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                            >{t('form.short')}</button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="col-span-2 md:col-span-1">
-                                                        <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
-                                                        <div className="relative group">
-                                                            {/* Visual Hint Icon - Moved to LEFT to avoid overlap with datalist arrow */}
-                                                            <div className="absolute left-3 top-3 pointer-events-none text-gray-500 z-10">
-                                                                <Search className="w-4 h-4" />
-                                                            </div>
-                                                            <input
-                                                                type="text"
-                                                                // IME Optimization: Hint browser to use English/Latin
-                                                                lang="en"
-                                                                spellCheck="false"
-                                                                autoComplete="off"
-                                                                autoCorrect="off"
-                                                                autoCapitalize="characters"
-                                                                placeholder="BTC"
-                                                                value={formData.symbol}
-                                                                onChange={e => {
-                                                                    const val = e.target.value.toUpperCase();
-                                                                    handleInputChange('symbol', val);
-                                                                    setShowSuggestions(true);
-                                                                }}
-                                                                onFocus={() => setShowSuggestions(true)}
-                                                                onBlur={() => {
-                                                                    // Smart append logic
-                                                                    let val = formData.symbol.trim();
-                                                                    if (val && !val.includes('/') && val.length < 10) {
-                                                                        const common = ['USDT', 'USD', 'BTC', 'ETH'];
-                                                                        if (!common.some(c => val.endsWith(c))) {
-                                                                            val = val + '/USDT';
-                                                                            handleInputChange('symbol', val);
-                                                                        }
-                                                                    }
-                                                                    // Delay hide to allow click
-                                                                    setTimeout(() => setShowSuggestions(false), 200);
-                                                                }}
-                                                                // Removed list="crypto-suggestions" to disable native datalist
-                                                                className="w-full min-h-[44px] bg-neutral-800 border border-neutral-700 rounded-lg pl-10 pr-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
-                                                            />
-                                                            {showSuggestions && (
-                                                                <div className="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
-                                                                    {['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'DOGE/USDT', 'PEPE/USDT', 'SUI/USDT', 'XRP/USDT', 'BNB/USDT', 'ADA/USDT', 'LINK/USDT', 'AVAX/USDT', 'DOT/USDT', 'MATIC/USDT', 'LTC/USDT', 'UNI/USDT']
-                                                                        .filter(pair => !formData.symbol || pair.includes(formData.symbol))
-                                                                        .map(pair => (
-                                                                            <div
-                                                                                key={pair}
-                                                                                className="px-4 py-3 hover:bg-neutral-800 cursor-pointer text-sm font-mono text-gray-300 hover:text-white transition-colors border-b border-neutral-800/50 last:border-0"
-                                                                                onClick={() => {
-                                                                                    handleInputChange('symbol', pair);
-                                                                                    setShowSuggestions(false);
-                                                                                }}
-                                                                            >
-                                                                                {pair}
-                                                                            </div>
-                                                                        ))}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="col-span-1">
-                                                        <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>
-                                                        <select
-                                                            value={formData.timeframe}
-                                                            onChange={e => handleInputChange('timeframe', e.target.value)}
-                                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                        >
-                                                            {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
-                                                        </select>
-                                                    </div>
-                                                    <div className="col-span-1">
-                                                        <div className="flex justify-between items-center mb-1.5">
-                                                            <label className="block text-xs text-gray-500">{t('form.pattern')}</label>
-                                                            <button onClick={() => setShowPatternModal(true)} className="text-[10px] text-amber-500 hover:underline flex items-center gap-1">
-                                                                <Settings className="w-3 h-3" /> {t('form.manage')}
-                                                            </button>
-                                                        </div>
-                                                        <select
-                                                            value={formData.pattern}
-                                                            onChange={e => handleInputChange('pattern', e.target.value)}
-                                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                        >
-                                                            {patterns.map(p => (
-                                                                <option key={p} value={p}>{p}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                {/* Trading Pair Risk Warnings */}
-                                                {tradingPairRisk?.showDailyWarning && (
-                                                    <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                        <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                                                        <div className="text-xs text-red-400 leading-relaxed">
-                                                            <span className="font-bold">{t('risk.daily_loss_warning')}</span>
-                                                            <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {tradingPairRisk?.showHistoricalWarning && (
-                                                    <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                        <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                                                        <div className="text-xs text-orange-400 leading-relaxed">
-                                                            <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
-                                                            <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* 第二行：资金管理 */}
-                                                <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div>
-                                                            <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
-                                                            <input
-                                                                type="number" placeholder="1000" value={formData.margin}
-                                                                onChange={e => handleInputChange('margin', e.target.value)}
-                                                                step="any"
-                                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-xs text-gray-500 mb-1.5">{t('form.leverage')}</label>
-                                                            <input
-                                                                type="number" placeholder="10" value={formData.leverage}
-                                                                onChange={e => handleInputChange('leverage', e.target.value)}
-                                                                step="any"
-                                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* 第三行：点位执行 - Mobile: Single Column (Safe), Desktop: 3 Columns */}
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                    <div>
-                                                        <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
-                                                        <input
-                                                            type="number" placeholder="0.00" value={formData.entryPrice}
-                                                            onChange={e => handleInputChange('entryPrice', e.target.value)}
-                                                            step="any"
-                                                            className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono font-bold notranslate"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs text-gray-500 mb-1.5 text-red-400">{t('form.stop_loss')}</label>
-                                                        <input
-                                                            type="number" placeholder="0.00" value={formData.stopLoss}
-                                                            onChange={e => handleInputChange('stopLoss', e.target.value)}
-                                                            step="any"
-                                                            className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
-                                                        />
-                                                        {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
-                                                        {formData.entryPrice && formData.stopLoss && formData.margin && (() => {
-                                                            const slPercent = Math.abs((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * 100);
-                                                            const predictedLoss = Math.abs((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage));
-
-                                                            // Determine level and color
-                                                            let levelText, levelColor, levelBg;
-                                                            if (slPercent < 1) {
-                                                                levelText = t('form.sl_level.too_tight');
-                                                                levelColor = 'text-yellow-500';
-                                                                levelBg = 'bg-yellow-500/10 border-yellow-500/30';
-                                                            } else if (slPercent <= 2) {
-                                                                levelText = t('form.sl_level.short_term');
-                                                                levelColor = 'text-cyan-400';
-                                                                levelBg = 'bg-cyan-500/10 border-cyan-500/30';
-                                                            } else if (slPercent <= 5) {
-                                                                levelText = t('form.sl_level.structure');
-                                                                levelColor = 'text-amber-400';
-                                                                levelBg = 'bg-amber-500/10 border-amber-500/30';
-                                                            } else if (slPercent <= 12) {
-                                                                levelText = t('form.sl_level.trend');
-                                                                levelColor = 'text-purple-400';
-                                                                levelBg = 'bg-purple-500/10 border-purple-500/30';
-                                                            } else {
-                                                                levelText = t('form.sl_level.too_wide');
-                                                                levelColor = 'text-red-500';
-                                                                levelBg = 'bg-red-500/10 border-red-500/30';
-                                                            }
-
-                                                            return (
-                                                                <div className="mt-1.5 space-y-1">
-                                                                    <div className="text-[10px] text-gray-500">
-                                                                        {t('form.predicted_loss')}: <span className="text-red-500">${predictedLoss.toFixed(2)}</span>
-                                                                    </div>
-                                                                    <div className={`text-[10px] px-2 py-0.5 rounded border inline-flex items-center gap-1.5 ${levelBg}`}>
-                                                                        <span className="text-gray-400">{t('form.sl_level.current')}:</span>
-                                                                        <span className={`font-bold ${levelColor}`}>{slPercent.toFixed(1)}%</span>
-                                                                        <span className="text-gray-500">→</span>
-                                                                        <span className={`font-medium ${levelColor}`}>{levelText}</span>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
-                                                        <input
-                                                            type="number" placeholder="0.00" value={formData.takeProfit}
-                                                            onChange={e => handleInputChange('takeProfit', e.target.value)}
-                                                            step="any"
-                                                            className={`w-full bg-neutral-800 border ${validationErrors.takeProfit ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-green-500 focus:outline-none font-mono notranslate`}
-                                                        />
-                                                        {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
-                                                        {formData.entryPrice && formData.takeProfit && formData.margin && (
-                                                            <div className="text-[10px] text-gray-500 mt-1">
-                                                                {t('form.predicted_profit')}: <span className="text-green-500">
-                                                                    ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* 提交按钮区域 */}
-                                                <div className="pt-4">
-                                                    {!membership.isPremium && trades.length >= membership.maxTrades ? (
-                                                        <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
-                                                            <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
-                                                            <span className="text-xs font-normal">{t('form.quota_desc')}</span>
-                                                        </button>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => {
-                                                                if (!riskAnalysis.valid) {
-                                                                    setIsShaking(true);
-                                                                    setTimeout(() => setIsShaking(false), 500);
-                                                                    return;
-                                                                }
-                                                                handleSubmitTrade();
-                                                            }}
-                                                            className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
-                                                        >
-                                                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
-                                                        </button>)}
-                                                    <p className="text-center text-xs text-gray-600 mt-3">
-                                                        {t('form.honest_note')}
-                                                    </p>
-                                                </div>
-                                            </div>
+                            {/* --- 1. 录入交易 (核心) --- */}
+                            {activeTab === 'new_trade' && (
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+                                    {/* 左侧：录入表单 */}
+                                    <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+                                        <div className="flex justify-between items-center mb-4 sm:mb-6 border-b border-neutral-800 pb-3 sm:pb-4">
+                                            <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                                                <Target className="w-5 h-5 text-amber-500" />
+                                                {t('form.title')}
+                                            </h2>
+                                            <span className="text-xs bg-neutral-800 text-gray-400 px-2 py-1 rounded">
+                                                {t('form.today_trade_count', { count: trades.filter(t => t.date === new Date().toLocaleDateString()).length + 1 })}
+                                            </span>
                                         </div>
 
-                                        {/* 右侧：实时风控面板 */}
-                                        <div className="space-y-6">
-                                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
-                                                <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
-                                                    <Shield className="w-4 h-4 text-amber-500" />
-                                                    {t('risk.title')}
-                                                </h3>
-
-                                                {/* Total Capital Management */}
-                                                <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
-                                                    <div className="flex justify-between items-center mb-2">
-                                                        <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
-                                                        {!isEditingCapital && (
-                                                            <button onClick={() => {
-                                                                // Round to integer to avoid floating point display issues
-                                                                setTotalCapital(Math.round(totalCapital));
-                                                                setIsEditingCapital(true);
-                                                            }} className="text-amber-500 hover:text-amber-400">
-                                                                <Edit3 className="w-3 h-3" />
-                                                            </button>
+                                        <div className="space-y-4 sm:space-y-6">
+                                            {/* 第一行：基础信息 */}
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div className="col-span-2 md:col-span-1">
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.direction')}</label>
+                                                    <div className="flex bg-neutral-800 rounded-lg p-1">
+                                                        <button
+                                                            onClick={() => handleInputChange('tradeType', 'buy')}
+                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'buy' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                                        >{t('form.long')}</button>
+                                                        <button
+                                                            onClick={() => handleInputChange('tradeType', 'sell')}
+                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'sell' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                                        >{t('form.short')}</button>
+                                                    </div>
+                                                </div>
+                                                <div className="col-span-2 md:col-span-1">
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
+                                                    <div className="relative group">
+                                                        {/* Visual Hint Icon - Moved to LEFT to avoid overlap with datalist arrow */}
+                                                        <div className="absolute left-3 top-3 pointer-events-none text-gray-500 z-10">
+                                                            <Search className="w-4 h-4" />
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            // IME Optimization: Hint browser to use English/Latin
+                                                            lang="en"
+                                                            spellCheck="false"
+                                                            autoComplete="off"
+                                                            autoCorrect="off"
+                                                            autoCapitalize="characters"
+                                                            placeholder="BTC"
+                                                            value={formData.symbol}
+                                                            onChange={e => {
+                                                                const val = e.target.value.toUpperCase();
+                                                                handleInputChange('symbol', val);
+                                                                setShowSuggestions(true);
+                                                            }}
+                                                            onFocus={() => setShowSuggestions(true)}
+                                                            onBlur={() => {
+                                                                // Smart append logic
+                                                                let val = formData.symbol.trim();
+                                                                if (val && !val.includes('/') && val.length < 10) {
+                                                                    const common = ['USDT', 'USD', 'BTC', 'ETH'];
+                                                                    if (!common.some(c => val.endsWith(c))) {
+                                                                        val = val + '/USDT';
+                                                                        handleInputChange('symbol', val);
+                                                                    }
+                                                                }
+                                                                // Delay hide to allow click
+                                                                setTimeout(() => setShowSuggestions(false), 200);
+                                                            }}
+                                                            // Removed list="crypto-suggestions" to disable native datalist
+                                                            className="w-full min-h-[44px] bg-neutral-800 border border-neutral-700 rounded-lg pl-10 pr-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
+                                                        />
+                                                        {showSuggestions && (
+                                                            <div className="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
+                                                                {['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'DOGE/USDT', 'PEPE/USDT', 'SUI/USDT', 'XRP/USDT', 'BNB/USDT', 'ADA/USDT', 'LINK/USDT', 'AVAX/USDT', 'DOT/USDT', 'MATIC/USDT', 'LTC/USDT', 'UNI/USDT']
+                                                                    .filter(pair => !formData.symbol || pair.includes(formData.symbol))
+                                                                    .map(pair => (
+                                                                        <div
+                                                                            key={pair}
+                                                                            className="px-4 py-3 hover:bg-neutral-800 cursor-pointer text-sm font-mono text-gray-300 hover:text-white transition-colors border-b border-neutral-800/50 last:border-0"
+                                                                            onClick={() => {
+                                                                                handleInputChange('symbol', pair);
+                                                                                setShowSuggestions(false);
+                                                                            }}
+                                                                        >
+                                                                            {pair}
+                                                                        </div>
+                                                                    ))}
+                                                            </div>
                                                         )}
                                                     </div>
-                                                    {isEditingCapital ? (
-                                                        <div className="flex flex-col gap-2 w-full">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-xs text-gray-500 w-16">资金($):</span>
-                                                                <input
-                                                                    type="number"
-                                                                    step="1"
-                                                                    value={totalCapital}
-                                                                    onChange={(e) => {
-                                                                        const val = e.target.value;
-                                                                        if (val === '' || val === '-') {
-                                                                            setTotalCapital('');
-                                                                        } else {
-                                                                            const parsed = parseInt(val);
-                                                                            setTotalCapital(isNaN(parsed) ? 0 : parsed);
-                                                                        }
-                                                                    }}
-                                                                    className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
-                                                                    autoFocus
-                                                                />
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-xs text-gray-500 w-16">风控(%):</span>
-                                                                <input
-                                                                    type="number"
-                                                                    step="0.1"
-                                                                    value={accountRiskLimit}
-                                                                    onChange={(e) => setAccountRiskLimit(e.target.value)}
-                                                                    className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
-                                                                />
-                                                            </div>
-                                                            <button onClick={handleSaveCapital} className="w-full bg-green-600 hover:bg-green-500 text-white px-2 py-1.5 rounded text-xs font-bold mt-1">保存设置</button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex flex-col">
-                                                            <div className="text-xl font-black font-mono text-white tracking-wider">
-                                                                ${(totalCapital || 0).toLocaleString()}
-                                                            </div>
-                                                            <div className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
-                                                                <AlertCircle className="w-3 h-3" />
-                                                                账户风控红线: <span className="text-amber-500 font-bold">{accountRiskLimit}%</span>
-                                                            </div>
-                                                        </div>
-                                                    )}
                                                 </div>
-
-                                                <div className="space-y-4">
-                                                    <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
-                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
-                                                        <div className="text-3xl font-black font-mono flex items-end gap-2">
-                                                            {riskAnalysis.rrRatio || '0.00'}
-                                                            <span className="text-sm font-normal text-gray-400 mb-1">
-                                                                {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
-                                                            </span>
-                                                        </div>
+                                                <div className="col-span-1">
+                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>
+                                                    <select
+                                                        value={formData.timeframe}
+                                                        onChange={e => handleInputChange('timeframe', e.target.value)}
+                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
+                                                    >
+                                                        {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <label className="block text-xs text-gray-500">{t('form.pattern')}</label>
+                                                        <button onClick={() => setShowPatternModal(true)} className="text-[10px] text-amber-500 hover:underline flex items-center gap-1">
+                                                            <Settings className="w-3 h-3" /> {t('form.manage')}
+                                                        </button>
                                                     </div>
+                                                    <select
+                                                        value={formData.pattern}
+                                                        onChange={e => handleInputChange('pattern', e.target.value)}
+                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
+                                                    >
+                                                        {patterns.map(p => (
+                                                            <option key={p} value={p}>{p}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
 
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="p-3 bg-neutral-800 rounded-lg">
-                                                            <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
-                                                            <div className="text-lg font-bold font-mono text-white notranslate">
-                                                                {riskAnalysis.positionSize.toLocaleString()} USDT
-                                                            </div>
-                                                        </div>
-                                                        <div className="p-3 bg-neutral-800 rounded-lg">
-                                                            <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
-                                                            <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
-                                                                {riskAnalysis.riskPercent}%
-                                                            </div>
-                                                        </div>
+                                            {/* Trading Pair Risk Warnings */}
+                                            {tradingPairRisk?.showDailyWarning && (
+                                                <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                    <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                                    <div className="text-xs text-red-400 leading-relaxed">
+                                                        <span className="font-bold">{t('risk.daily_loss_warning')}</span>
+                                                        <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
                                                     </div>
+                                                </div>
+                                            )}
 
-                                                    {riskAnalysis.riskPercent > 10 && (
-                                                        <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
-                                                            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                                            <p className="text-xs text-red-400 leading-relaxed">
-                                                                <span className="font-bold">{t('risk.warning_title')}</span>
-                                                                {t('risk.warning_msg')}
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                            {tradingPairRisk?.showHistoricalWarning && (
+                                                <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                                    <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                                                    <div className="text-xs text-orange-400 leading-relaxed">
+                                                        <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
+                                                        <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
+                                                    </div>
+                                                </div>
+                                            )}
 
-                                                    {riskAnalysis.accountRiskPercent > accountRiskLimit && (
-                                                        <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
-                                                            <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'text-red-500' : 'text-yellow-500'}`} />
-                                                            <div className="text-xs leading-relaxed">
-                                                                <p className={`font-bold ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'text-red-400' : 'text-yellow-400'}`}>
-                                                                    {riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
-                                                                </p>
-                                                                <p className="text-gray-400">
-                                                                    当前账户风险为 {riskAnalysis.accountRiskPercent}%，
-                                                                    {riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? `严重超出设定阈值 (>${(accountRiskLimit * 1.5).toFixed(1)}%)！建议大幅降低仓位。` : `已超出设定阈值 (${accountRiskLimit}%)，请谨慎操作。`}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    <div className="mt-4 pt-4 border-t border-neutral-800">
-                                                        <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
-                                                        <div className="space-y-2">
-                                                            {[
-                                                                { id: 'trend', label: t('risk.check_trend') },
-                                                                { id: 'close', label: t('risk.check_close') },
-                                                                { id: 'structure', label: t('risk.check_structure') }
-                                                            ].map(item => (
-                                                                <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
-                                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
-                                                                        {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
-                                                                    </div>
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        className="hidden"
-                                                                        checked={checklist[item.id]}
-                                                                        onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                                                                    />
-                                                                    <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
-                                                                </label>
-                                                            ))}
-                                                        </div>
+                                            {/* 第二行：资金管理 */}
+                                            <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
+                                                        <input
+                                                            type="number" placeholder="1000" value={formData.margin}
+                                                            onChange={e => handleInputChange('margin', e.target.value)}
+                                                            step="any"
+                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-500 mb-1.5">{t('form.leverage')}</label>
+                                                        <input
+                                                            type="number" placeholder="10" value={formData.leverage}
+                                                            onChange={e => handleInputChange('leverage', e.target.value)}
+                                                            step="any"
+                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Market Sentiment (Moved from AI Analysis) */}
-                                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-                                                <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
-                                                    <Activity className="w-4 h-4 text-blue-400" />
-                                                    <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
+                                            {/* 第三行：点位执行 - Mobile: Single Column (Safe), Desktop: 3 Columns */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
+                                                    <input
+                                                        type="number" placeholder="0.00" value={formData.entryPrice}
+                                                        onChange={e => handleInputChange('entryPrice', e.target.value)}
+                                                        step="any"
+                                                        className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono font-bold notranslate"
+                                                    />
                                                 </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5 text-red-400">{t('form.stop_loss')}</label>
+                                                    <input
+                                                        type="number" placeholder="0.00" value={formData.stopLoss}
+                                                        onChange={e => handleInputChange('stopLoss', e.target.value)}
+                                                        step="any"
+                                                        className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
+                                                    />
+                                                    {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
+                                                    {formData.entryPrice && formData.stopLoss && formData.margin && (() => {
+                                                        const slPercent = Math.abs((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * 100);
+                                                        const predictedLoss = Math.abs((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage));
 
-                                                {/* BTC Price */}
-                                                <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
-                                                            <span className="text-[#F7931A] font-bold text-xs">₿</span>
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-[10px] text-gray-400">BTC/USDT</div>
-                                                            <div className="text-sm font-bold text-white">
-                                                                ${(btcMarket.price || 0).toLocaleString()}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                            {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                        // Determine level and color
+                                                        let levelText, levelColor, levelBg;
+                                                        if (slPercent < 1) {
+                                                            levelText = t('form.sl_level.too_tight');
+                                                            levelColor = 'text-yellow-500';
+                                                            levelBg = 'bg-yellow-500/10 border-yellow-500/30';
+                                                        } else if (slPercent <= 2) {
+                                                            levelText = t('form.sl_level.short_term');
+                                                            levelColor = 'text-cyan-400';
+                                                            levelBg = 'bg-cyan-500/10 border-cyan-500/30';
+                                                        } else if (slPercent <= 5) {
+                                                            levelText = t('form.sl_level.structure');
+                                                            levelColor = 'text-amber-400';
+                                                            levelBg = 'bg-amber-500/10 border-amber-500/30';
+                                                        } else if (slPercent <= 12) {
+                                                            levelText = t('form.sl_level.trend');
+                                                            levelColor = 'text-purple-400';
+                                                            levelBg = 'bg-purple-500/10 border-purple-500/30';
+                                                        } else {
+                                                            levelText = t('form.sl_level.too_wide');
+                                                            levelColor = 'text-red-500';
+                                                            levelBg = 'bg-red-500/10 border-red-500/30';
+                                                        }
 
-                                                {/* Fear & Greed */}
-                                                <div className="flex flex-col items-center justify-center py-2">
-                                                    {(() => {
-                                                        const fearIndex = 30 + (new Date().getDate() % 20);
                                                         return (
-                                                            <>
-                                                                <div className="flex items-baseline gap-2 mb-2">
-                                                                    <span className="text-2xl font-black text-white">{fearIndex}</span>
-                                                                    <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
+                                                            <div className="mt-1.5 space-y-1">
+                                                                <div className="text-[10px] text-gray-500">
+                                                                    {t('form.predicted_loss')}: <span className="text-red-500">${predictedLoss.toFixed(2)}</span>
                                                                 </div>
-                                                                <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
-                                                                    <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
+                                                                <div className={`text-[10px] px-2 py-0.5 rounded border inline-flex items-center gap-1.5 ${levelBg}`}>
+                                                                    <span className="text-gray-400">{t('form.sl_level.current')}:</span>
+                                                                    <span className={`font-bold ${levelColor}`}>{slPercent.toFixed(1)}%</span>
+                                                                    <span className="text-gray-500">→</span>
+                                                                    <span className={`font-medium ${levelColor}`}>{levelText}</span>
                                                                 </div>
-                                                            </>
+                                                            </div>
                                                         );
                                                     })()}
                                                 </div>
-                                                <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
-                                                    {t('ai.sentiment_tip')}
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
+                                                    <input
+                                                        type="number" placeholder="0.00" value={formData.takeProfit}
+                                                        onChange={e => handleInputChange('takeProfit', e.target.value)}
+                                                        step="any"
+                                                        className={`w-full bg-neutral-800 border ${validationErrors.takeProfit ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-green-500 focus:outline-none font-mono notranslate`}
+                                                    />
+                                                    {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
+                                                    {formData.entryPrice && formData.takeProfit && formData.margin && (
+                                                        <div className="text-[10px] text-gray-500 mt-1">
+                                                            {t('form.predicted_profit')}: <span className="text-green-500">
+                                                                ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* 提交按钮区域 */}
+                                            <div className="pt-4">
+                                                {!membership.isPremium && trades.length >= membership.maxTrades ? (
+                                                    <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
+                                                        <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
+                                                        <span className="text-xs font-normal">{t('form.quota_desc')}</span>
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!riskAnalysis.valid) {
+                                                                setIsShaking(true);
+                                                                setTimeout(() => setIsShaking(false), 500);
+                                                                return;
+                                                            }
+                                                            handleSubmitTrade();
+                                                        }}
+                                                        className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
+                                                    >
+                                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
+                                                    </button>)}
+                                                <p className="text-center text-xs text-gray-600 mt-3">
+                                                    {t('form.honest_note')}
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
 
-                                )}
+                                    {/* 右侧：实时风控面板 */}
+                                    <div className="space-y-6">
+                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
+                                            <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
+                                                <Shield className="w-4 h-4 text-amber-500" />
+                                                {t('risk.title')}
+                                            </h3>
 
-                                {/* --- 2. 交易日记列表 --- */}
-                                {activeTab === 'journal' && (
-                                    <div
-                                        className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4"
-                                        ref={(el) => {
-                                            if (el) {
-                                                console.log('🔍 Journal Tab Grid Container Width:', el.offsetWidth);
-                                                const child = el.querySelector('.lg\\:col-span-3');
-                                                if (child) {
-                                                    console.log('🔍 Journal Tab Content Width:', child.offsetWidth);
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <div className="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-                                            <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
-                                                <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
-                                                <div className="text-sm text-gray-400 flex items-center gap-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <span>{t('journal.total_trades')}: <span className="text-white font-bold">{trades.length}</span></span>
-                                                        <span className="text-gray-600">|</span>
-                                                        <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
-                                                        <span className="text-gray-600">|</span>
-                                                        <span>{t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span></span>
+                                            {/* Total Capital Management */}
+                                            <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
+                                                    {!isEditingCapital && (
+                                                        <button onClick={() => {
+                                                            // Round to integer to avoid floating point display issues
+                                                            setTotalCapital(Math.round(totalCapital));
+                                                            setIsEditingCapital(true);
+                                                        }} className="text-amber-500 hover:text-amber-400">
+                                                            <Edit3 className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {isEditingCapital ? (
+                                                    <div className="flex flex-col gap-2 w-full">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs text-gray-500 w-16">资金($):</span>
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                value={totalCapital}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    if (val === '' || val === '-') {
+                                                                        setTotalCapital('');
+                                                                    } else {
+                                                                        const parsed = parseInt(val);
+                                                                        setTotalCapital(isNaN(parsed) ? 0 : parsed);
+                                                                    }
+                                                                }}
+                                                                className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
+                                                                autoFocus
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs text-gray-500 w-16">风控(%):</span>
+                                                            <input
+                                                                type="number"
+                                                                step="0.1"
+                                                                value={accountRiskLimit}
+                                                                onChange={(e) => setAccountRiskLimit(e.target.value)}
+                                                                className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
+                                                            />
+                                                        </div>
+                                                        <button onClick={handleSaveCapital} className="w-full bg-green-600 hover:bg-green-500 text-white px-2 py-1.5 rounded text-xs font-bold mt-1">保存设置</button>
                                                     </div>
-                                                    <button
-                                                        onClick={handleExportTrades}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors"
-                                                    >
-                                                        <FileText className="w-3.5 h-3.5" />
-                                                        {t('journal.export_csv')}
-                                                    </button>
+                                                ) : (
+                                                    <div className="flex flex-col">
+                                                        <div className="text-xl font-black font-mono text-white tracking-wider">
+                                                            ${(totalCapital || 0).toLocaleString()}
+                                                        </div>
+                                                        <div className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
+                                                            <AlertCircle className="w-3 h-3" />
+                                                            账户风控红线: <span className="text-amber-500 font-bold">{accountRiskLimit}%</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
+                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
+                                                    <div className="text-3xl font-black font-mono flex items-end gap-2">
+                                                        {riskAnalysis.rrRatio || '0.00'}
+                                                        <span className="text-sm font-normal text-gray-400 mb-1">
+                                                            {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="p-3 bg-neutral-800 rounded-lg">
+                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
+                                                        <div className="text-lg font-bold font-mono text-white notranslate">
+                                                            {riskAnalysis.positionSize.toLocaleString()} USDT
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-3 bg-neutral-800 rounded-lg">
+                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
+                                                        <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
+                                                            {riskAnalysis.riskPercent}%
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {riskAnalysis.riskPercent > 10 && (
+                                                    <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
+                                                        <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                                                        <p className="text-xs text-red-400 leading-relaxed">
+                                                            <span className="font-bold">{t('risk.warning_title')}</span>
+                                                            {t('risk.warning_msg')}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {riskAnalysis.accountRiskPercent > accountRiskLimit && (
+                                                    <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
+                                                        <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'text-red-500' : 'text-yellow-500'}`} />
+                                                        <div className="text-xs leading-relaxed">
+                                                            <p className={`font-bold ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'text-red-400' : 'text-yellow-400'}`}>
+                                                                {riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
+                                                            </p>
+                                                            <p className="text-gray-400">
+                                                                当前账户风险为 {riskAnalysis.accountRiskPercent}%，
+                                                                {riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? `严重超出设定阈值 (>${(accountRiskLimit * 1.5).toFixed(1)}%)！建议大幅降低仓位。` : `已超出设定阈值 (${accountRiskLimit}%)，请谨慎操作。`}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="mt-4 pt-4 border-t border-neutral-800">
+                                                    <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
+                                                    <div className="space-y-2">
+                                                        {[
+                                                            { id: 'trend', label: t('risk.check_trend') },
+                                                            { id: 'close', label: t('risk.check_close') },
+                                                            { id: 'structure', label: t('risk.check_structure') }
+                                                        ].map(item => (
+                                                            <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
+                                                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
+                                                                    {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
+                                                                </div>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="hidden"
+                                                                    checked={checklist[item.id]}
+                                                                    onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                                                />
+                                                                <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            {trades.length === 0 ? (
-                                                <div className="p-20 text-center text-gray-600">
-                                                    <Package className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                                    <p>{t('journal.empty_state')}</p>
+                                        </div>
+
+                                        {/* Market Sentiment (Moved from AI Analysis) */}
+                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
+                                            <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
+                                                <Activity className="w-4 h-4 text-blue-400" />
+                                                <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
+                                            </div>
+
+                                            {/* BTC Price */}
+                                            <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
+                                                        <span className="text-[#F7931A] font-bold text-xs">₿</span>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-[10px] text-gray-400">BTC/USDT</div>
+                                                        <div className="text-sm font-bold text-white">
+                                                            ${(btcMarket.price || 0).toLocaleString()}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <div className="max-h-[calc(100vh-320px)] min-h-[300px] overflow-y-auto overflow-x-hidden">
-                                                    <div className="overflow-x-auto -mx-4 sm:mx-0 pb-2">
-                                                        <table className="w-full text-left text-sm whitespace-nowrap min-w-[640px]">
-                                                            <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
-                                                                <tr>
-                                                                    <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.date')}</th>
-                                                                    <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[120px]">{t('journal.columns.symbol_dir')}</th>
-                                                                    <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[180px]">{t('journal.columns.basis')}</th>
-                                                                    <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[80px]">{t('journal.columns.rr')}</th>
-                                                                    <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.status')}</th>
-                                                                    <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">{t('journal.columns.review_content')}</th>
-                                                                    <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[180px]">{t('journal.columns.action')}</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody className="divide-y divide-neutral-800">
-                                                                {trades.map(trade => (
-                                                                    <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
-                                                                        <td className="px-4 py-4 font-mono text-gray-400 text-xs">{trade.date}</td>
-                                                                        <td className="px-4 py-4">
-                                                                            <div className="font-bold text-white text-sm">{trade.symbol}</div>
-                                                                            <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="px-4 py-4">
-                                                                            <div className="flex flex-col gap-1">
-                                                                                <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700 inline-block w-fit">
-                                                                                    {trade.timeframe}
-                                                                                </span>
-                                                                                <span className="text-gray-400 text-xs">{trade.pattern || '-'}</span>
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="px-4 py-4 font-mono group relative text-sm">
-                                                                            <div className="flex items-center gap-1.5">
-                                                                                <span>{trade.rrRatio}</span>
-                                                                                <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
-                                                                            </div>
-                                                                            {/* Tooltip with price details */}
-                                                                            <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
-                                                                                <div className="space-y-1.5">
-                                                                                    <div className="flex justify-between gap-3">
-                                                                                        <span className="text-gray-400">{t('journal.entry_price')}</span>
-                                                                                        <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
-                                                                                    </div>
-                                                                                    {trade.stopLoss && (
-                                                                                        <div className="flex justify-between gap-3">
-                                                                                            <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
-                                                                                            <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
-                                                                                        </div>
-                                                                                    )}
-                                                                                    {trade.takeProfit && (
-                                                                                        <div className="flex justify-between gap-3">
-                                                                                            <span className="text-gray-400">{t('journal.take_profit_price')}</span>
-                                                                                            <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
-                                                                                        </div>
-                                                                                    )}
+                                                <div className="text-right">
+                                                    <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                        {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Fear & Greed */}
+                                            <div className="flex flex-col items-center justify-center py-2">
+                                                {(() => {
+                                                    const fearIndex = 30 + (new Date().getDate() % 20);
+                                                    return (
+                                                        <>
+                                                            <div className="flex items-baseline gap-2 mb-2">
+                                                                <span className="text-2xl font-black text-white">{fearIndex}</span>
+                                                                <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
+                                                            </div>
+                                                            <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                                                                <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
+                                                            </div>
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
+                                            <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
+                                                {t('ai.sentiment_tip')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            )}
+
+                            {/* --- 2. 交易日记列表 --- */}
+                            {activeTab === 'journal' && (
+                                <div
+                                    className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4"
+                                    ref={(el) => {
+                                        if (el) {
+                                            console.log('🔍 Journal Tab Grid Container Width:', el.offsetWidth);
+                                            const child = el.querySelector('.lg\\:col-span-3');
+                                            if (child) {
+                                                console.log('🔍 Journal Tab Content Width:', child.offsetWidth);
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <div className="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+                                        <div className="p-6 border-b border-neutral-800 flex justify-between items-center">
+                                            <h2 className="text-xl font-bold text-white">{t('journal.title')}</h2>
+                                            <div className="text-sm text-gray-400 flex items-center gap-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{t('journal.total_trades')}: <span className="text-white font-bold">{trades.length}</span></span>
+                                                    <span className="text-gray-600">|</span>
+                                                    <span>{t('journal.win_rate')}: <span className="text-amber-500 font-bold">{stats.winRate}%</span></span>
+                                                    <span className="text-gray-600">|</span>
+                                                    <span>{t('journal.net_pnl')}: <span className={stats.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}>${stats.totalPnL.toFixed(2)}</span></span>
+                                                </div>
+                                                <button
+                                                    onClick={handleExportTrades}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-gray-300 text-xs rounded-lg border border-neutral-700 transition-colors"
+                                                >
+                                                    <FileText className="w-3.5 h-3.5" />
+                                                    {t('journal.export_csv')}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {trades.length === 0 ? (
+                                            <div className="p-20 text-center text-gray-600">
+                                                <Package className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                                                <p>{t('journal.empty_state')}</p>
+                                            </div>
+                                        ) : (
+                                            <div className="max-h-[calc(100vh-320px)] min-h-[300px] overflow-y-auto overflow-x-hidden">
+                                                <div className="overflow-x-auto -mx-4 sm:mx-0 pb-2">
+                                                    <table className="w-full text-left text-sm whitespace-nowrap min-w-[640px]">
+                                                        <thead className="text-xs text-gray-500 bg-neutral-900/50 uppercase tracking-wider relative">
+                                                            <tr>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.date')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[120px]">{t('journal.columns.symbol_dir')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[180px]">{t('journal.columns.basis')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[80px]">{t('journal.columns.rr')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.status')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">{t('journal.columns.review_content')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 text-center min-w-[180px]">{t('journal.columns.action')}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-neutral-800">
+                                                            {trades.map(trade => (
+                                                                <tr key={trade.id} className="hover:bg-neutral-800/50 transition-colors">
+                                                                    <td className="px-4 py-4 font-mono text-gray-400 text-xs">{trade.date}</td>
+                                                                    <td className="px-4 py-4">
+                                                                        <div className="font-bold text-white text-sm">{trade.symbol}</div>
+                                                                        <div className={`text-xs ${trade.tradeType === 'buy' ? 'text-green-500' : 'text-red-500'}`}>
+                                                                            {trade.tradeType === 'buy' ? t('form.long') : t('form.short')} x{trade.leverage}
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-4 py-4">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <span className="bg-neutral-800 text-gray-300 px-2 py-1 rounded text-xs border border-neutral-700 inline-block w-fit">
+                                                                                {trade.timeframe}
+                                                                            </span>
+                                                                            <span className="text-gray-400 text-xs">{trade.pattern || '-'}</span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-4 py-4 font-mono group relative text-sm">
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <span>{trade.rrRatio}</span>
+                                                                            <Info className="w-3.5 h-3.5 text-gray-600 group-hover:text-amber-500 transition-colors" />
+                                                                        </div>
+                                                                        {/* Tooltip with price details */}
+                                                                        <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 w-44 p-3 bg-black border border-neutral-700 rounded-lg shadow-xl text-xs text-left text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
+                                                                            <div className="space-y-1.5">
+                                                                                <div className="flex justify-between gap-3">
+                                                                                    <span className="text-gray-400">{t('journal.entry_price')}</span>
+                                                                                    <span className="text-amber-400 font-mono">${parseFloat(trade.entryPrice).toFixed(2)}</span>
                                                                                 </div>
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="px-4 py-4">
-                                                                            <div className="flex items-center gap-2">
-                                                                                {trade.status === 'open' ? (
-                                                                                    <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
-                                                                                ) : (
-                                                                                    <>
-                                                                                        <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                            {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
-                                                                                        </span>
-                                                                                        {trade.violatedDiscipline && (
-                                                                                            <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
-                                                                                        )}
-                                                                                    </>
+                                                                                {trade.stopLoss && (
+                                                                                    <div className="flex justify-between gap-3">
+                                                                                        <span className="text-gray-400">{t('journal.stop_loss_price')}</span>
+                                                                                        <span className="text-red-400 font-mono">${parseFloat(trade.stopLoss).toFixed(2)}</span>
+                                                                                    </div>
+                                                                                )}
+                                                                                {trade.takeProfit && (
+                                                                                    <div className="flex justify-between gap-3">
+                                                                                        <span className="text-gray-400">{t('journal.take_profit_price')}</span>
+                                                                                        <span className="text-green-400 font-mono">${parseFloat(trade.takeProfit).toFixed(2)}</span>
+                                                                                    </div>
                                                                                 )}
                                                                             </div>
-                                                                        </td>
-                                                                        <td className="px-4 py-4 max-w-[300px]">
-                                                                            {trade.review ? (
-                                                                                <div className="text-xs text-gray-300 truncate" title={trade.review}>
-                                                                                    {trade.review}
-                                                                                </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-4 py-4">
+                                                                        <div className="flex items-center gap-2">
+                                                                            {trade.status === 'open' ? (
+                                                                                <span className="text-amber-500 text-xs font-bold border border-amber-500/30 px-2 py-1 rounded-full">{t('journal.status.open')}</span>
                                                                             ) : (
-                                                                                <span className="text-xs text-gray-600 italic">{t('journal.not_reviewed')}</span>
+                                                                                <>
+                                                                                    <span className={`text-xs font-bold ${trade.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                        {trade.profitLoss >= 0 ? '+' : '-'}${Math.abs(trade.profitLoss).toFixed(2)}
+                                                                                    </span>
+                                                                                    {trade.violatedDiscipline && (
+                                                                                        <span className="text-red-500 text-base" title={t('risk.violation')}>⚠️</span>
+                                                                                    )}
+                                                                                </>
                                                                             )}
-                                                                        </td>
-                                                                        <td className="px-4 py-4">
-                                                                            <div className="flex items-center justify-center gap-2">
-                                                                                {/* Settle/Closed button */}
-                                                                                <button
-                                                                                    onClick={() => {
-                                                                                        if (trade.status === 'open') {
-                                                                                            handleSettleTrade(trade.id);
-                                                                                        }
-                                                                                    }}
-                                                                                    disabled={trade.status !== 'open'}
-                                                                                    className={`
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-4 py-4 max-w-[300px]">
+                                                                        {trade.review ? (
+                                                                            <div className="text-xs text-gray-300 truncate" title={trade.review}>
+                                                                                {trade.review}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="text-xs text-gray-600 italic">{t('journal.not_reviewed')}</span>
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="px-4 py-4">
+                                                                        <div className="flex items-center justify-center gap-2">
+                                                                            {/* Settle/Closed button */}
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    if (trade.status === 'open') {
+                                                                                        handleSettleTrade(trade.id);
+                                                                                    }
+                                                                                }}
+                                                                                disabled={trade.status !== 'open'}
+                                                                                className={`
                                                                             px-3 py-1.5 rounded border text-xs font-bold transition-all min-w-[70px]
                                                                             ${trade.status === 'open'
-                                                                                            ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
-                                                                                            : 'border-neutral-700 text-gray-600 cursor-not-allowed bg-neutral-800/50'}
+                                                                                        ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
+                                                                                        : 'border-neutral-700 text-gray-600 cursor-not-allowed bg-neutral-800/50'}
                                                                         `}
-                                                                                >
-                                                                                    {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
-                                                                                </button>
+                                                                            >
+                                                                                {trade.status === 'open' ? t('journal.settle') : t('journal.status.closed')}
+                                                                            </button>
 
-                                                                                {/* Review button */}
-                                                                                <button
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        handleReviewTrade(trade);
-                                                                                    }}
-                                                                                    className={`
+                                                                            {/* Review button */}
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleReviewTrade(trade);
+                                                                                }}
+                                                                                className={`
                                                                             px-3 py-1.5 rounded text-xs font-medium transition-all w-[100px] flex items-center justify-center gap-1
                                                                             ${trade.review
-                                                                                            ? 'bg-green-900/30 text-green-400 border border-green-500/30 hover:bg-green-900/50'
-                                                                                            : 'bg-neutral-800 text-gray-400 border border-neutral-700 hover:bg-neutral-700 hover:text-white'}
+                                                                                        ? 'bg-green-900/30 text-green-400 border border-green-500/30 hover:bg-green-900/50'
+                                                                                        : 'bg-neutral-800 text-gray-400 border border-neutral-700 hover:bg-neutral-700 hover:text-white'}
                                                                         `}
-                                                                                >
-                                                                                    {trade.review ? (
-                                                                                        <>
-                                                                                            <CheckCircle2 className="w-3 h-3" />
-                                                                                            <span>{t('journal.reviewed')}</span>
-                                                                                        </>
-                                                                                    ) : (
-                                                                                        <span>{t('journal.review')}</span>
-                                                                                    )}
-                                                                                </button>
-
-                                                                                {/* Delete button */}
-                                                                                <button
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        setTradeToDelete(trade);
-                                                                                        setShowDeleteModal(true);
-                                                                                    }}
-                                                                                    className="p-2 rounded border border-neutral-700 text-gray-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-900/20 transition-all"
-                                                                                    title={language === 'zh' ? '删除交易' : 'Delete Trade'}
-                                                                                >
-                                                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                                                </button>
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            )}
-
-
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* --- 3. AI 行为诊断 (核心卖点) --- */}
-                                {
-                                    activeTab === 'ai_analysis' && (
-                                        <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
-                                            {/* 会员锁定遮罩 */}
-                                            {!membership.isPremium && (
-                                                <div className="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30 relative overflow-hidden text-center">
-                                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-
-                                                    {/* Blurred K-line Chart Silhouette */}
-                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-64 opacity-30 blur-sm pointer-events-none select-none z-0">
-                                                        <svg viewBox="0 0 120 80" className="w-full h-full text-amber-500 animate-pulse duration-[5000ms] drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]">
-                                                            {/* Grid Lines */}
-                                                            <line x1="10" y1="10" x2="10" y2="70" stroke="currentColor" strokeWidth="0.3" opacity="0.3" />
-                                                            <line x1="10" y1="70" x2="110" y2="70" stroke="currentColor" strokeWidth="0.3" opacity="0.3" />
-
-                                                            {/* Candlesticks - Simulating a volatile market */}
-                                                            {/* Red Candle */}
-                                                            <rect x="15" y="35" width="4" height="15" fill="#ef4444" opacity="0.8" />
-                                                            <line x1="17" y1="30" x2="17" y2="55" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Green Candle */}
-                                                            <rect x="23" y="40" width="4" height="12" fill="currentColor" opacity="0.8" />
-                                                            <line x1="25" y1="35" x2="25" y2="58" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Red Candle */}
-                                                            <rect x="31" y="32" width="4" height="18" fill="#ef4444" opacity="0.8" />
-                                                            <line x1="33" y1="28" x2="33" y2="52" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Green Candle - Larger */}
-                                                            <rect x="39" y="25" width="4" height="20" fill="currentColor" opacity="0.8" />
-                                                            <line x1="41" y1="20" x2="41" y2="48" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Green Candle */}
-                                                            <rect x="47" y="30" width="4" height="10" fill="currentColor" opacity="0.8" />
-                                                            <line x1="49" y1="25" x2="49" y2="45" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Red Candle - Small */}
-                                                            <rect x="55" y="38" width="4" height="8" fill="#ef4444" opacity="0.8" />
-                                                            <line x1="57" y1="35" x2="57" y2="50" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Green Candle - Bullish momentum */}
-                                                            <rect x="63" y="28" width="4" height="15" fill="currentColor" opacity="0.8" />
-                                                            <line x1="65" y1="23" x2="65" y2="48" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Green Candle */}
-                                                            <rect x="71" y="22" width="4" height="18" fill="currentColor" opacity="0.8" />
-                                                            <line x1="73" y1="18" x2="73" y2="45" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Green Candle - Strong */}
-                                                            <rect x="79" y="18" width="4" height="20" fill="currentColor" opacity="0.8" />
-                                                            <line x1="81" y1="15" x2="81" y2="42" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Red Candle - Pullback */}
-                                                            <rect x="87" y="25" width="4" height="12" fill="#ef4444" opacity="0.8" />
-                                                            <line x1="89" y1="22" x2="89" y2="40" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Green Candle - Resume uptrend */}
-                                                            <rect x="95" y="20" width="4" height="15" fill="currentColor" opacity="0.8" />
-                                                            <line x1="97" y1="17" x2="97" y2="38" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                            {/* Moving Average Line - Simulating trend */}
-                                                            <polyline points="15,50 25,48 35,42 45,38 55,40 65,35 75,30 85,28 95,30"
-                                                                fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" strokeDasharray="2,2" />
-                                                        </svg>
-                                                    </div>
-
-                                                    <Lock className="w-16 h-16 text-amber-500 mb-6 mx-auto relative z-10" />
-                                                    <h2 className="text-3xl font-black text-white mb-4 relative z-10">{t('ai.locked_title')}</h2>
-                                                    <p className="text-gray-400 mb-8 text-lg relative z-10">
-                                                        {t('ai.locked_desc')}
-                                                    </p>
-                                                    <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="relative z-10 bg-amber-500 hover:bg-amber-400 text-black font-bold px-10 py-4 rounded-xl shadow-xl shadow-amber-500/20 text-lg hover:scale-105 transition-transform inline-flex items-center gap-2">
-                                                        <Crown className="w-5 h-5" /> {t('ai.unlock_btn')}
-                                                    </button>
-                                                </div>
-                                            )}
-
-                                            {membership.isPremium && (
-                                                <div className="lg:col-span-3">
-                                                    <AIAnalysisDashboard
-                                                        trades={trades}
-                                                        language={language}
-                                                        riskMode={riskMode}
-                                                        onRiskModeChange={handleRiskModeChange}
-                                                        totalCapital={totalCapital}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    )
-                                }
-
-                                {/* --- 4. 每日内参 (Daily Alpha) --- */}
-                                {activeTab === 'daily_alpha' && (
-                                    <div className="mt-6 animate-in fade-in slide-in-from-bottom-4">
-                                        <DailyAlphaTab lang={language} />
-                                    </div>
-                                )}
-
-                                {/* --- 5. Quantum Observer Terminal (New Feature) --- */}
-                                {activeTab === 'quantum_terminal' && (
-                                    <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 min-h-screen pb-32">
-                                        <TerminalApp
-                                            lang={language}
-                                            user={user}
-                                            membership={membership}
-                                            onRequireLogin={() => setShowLoginModal(true)}
-                                            onUpgrade={() => setShowPaymentModal(true)}
-                                        />
-                                    </div>
-                                )}
-                            </>
-                        )
-                    }
-                    {/* Fixed Bottom Progress Bar - The Path to Discipline */}
-                    {/* Fixed Bottom Progress Bar - HIDDEN Only on Quantum Terminal */}
-                    {/* Fixed Bottom Progress Bar - The Path to Discipline */}
-                    {/* Fixed Bottom Progress Bar - HIDDEN on Quantum Terminal AND Daily Alpha */}
-                    {
-                        activeTab !== 'quantum_terminal' && activeTab !== 'daily_alpha' && ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
-                            <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/95 backdrop-blur-xl border-t border-white/5 pb-2 pt-2 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
-                                <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
-                                    {
-                                        (() => {
-                                            const count = trades.length;
-                                            // 4 Segments Definition
-                                            const segments = [
-                                                { id: 'phase1', min: 0, max: 20, width: '20%' },
-                                                { id: 'phase2', min: 20, max: 50, width: '30%' },
-                                                { id: 'phase3', min: 50, max: 80, width: '30%' },
-                                                { id: 'phase4', min: 80, max: 100, width: '20%' },
-                                            ];
-
-                                            let currentPhaseKey = 'phase1';
-                                            if (count > 80) currentPhaseKey = 'phase4';
-                                            else if (count > 50) currentPhaseKey = 'phase3';
-                                            else if (count > 20) currentPhaseKey = 'phase2';
-
-                                            const currentPhase = t(`home.phases.${currentPhaseKey}`, { returnObjects: true }) || {};
-                                            const maturity = Math.min((count / 100) * 100, 100).toFixed(1);
-
-                                            return (
-                                                <div className="flex flex-col md:flex-row items-end md:items-center justify-between gap-4 md:gap-8">
-
-                                                    {/* LEFT: Global Title & Subtitle */}
-                                                    <div className="flex-1 w-full md:w-1/3 min-w-[280px]">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <span className="text-amber-500 font-bold font-mono text-xs tracking-wider">[{t('home.footer_title')}]</span>
-                                                            <div className="h-px bg-white/10 flex-1"></div>
-                                                        </div>
-                                                        <h3 className="text-sm sm:text-base font-bold text-white mb-1 shadow-black drop-shadow-md">
-                                                            {t('home.footer_subtitle')}
-                                                        </h3>
-                                                    </div>
-
-                                                    {/* CENTER: Segmented Energy Bar */}
-                                                    <div className="w-full md:w-1/2 flex flex-col justify-end pb-1 mt-4 md:mt-0">
-                                                        {/* Bar Container */}
-                                                        <div className="flex items-center gap-1.5 w-full h-3 md:h-4 mb-2 relative">
-                                                            {/* Left Static Labels */}
-                                                            <div className="absolute -left-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 font-mono -translate-x-full">0</div>
-
-                                                            {segments.map((seg, index) => {
-                                                                // Force equal visual width (25%)
-                                                                const segmentWidth = '25%';
-
-                                                                let segProgress = 0;
-                                                                if (count >= seg.max) segProgress = 100;
-                                                                else if (count > seg.min) {
-                                                                    segProgress = ((count - seg.min) / (seg.max - seg.min)) * 100;
-                                                                }
-
-                                                                const isCompleted = count >= seg.max;
-                                                                const isActive = count > seg.min && count < seg.max;
-                                                                // Special handling for phase label display
-                                                                const isCurrent = (count === 0 && index === 0) || (count > seg.min && count <= seg.max);
-
-                                                                const phaseData = t(`home.phases.${seg.id}`, { returnObjects: true });
-
-                                                                return (
-                                                                    <div
-                                                                        key={seg.id}
-                                                                        className="relative h-full rounded-sm border border-white/5 group transition-all duration-300 hover:border-amber-500/30"
-                                                                        style={{ width: segmentWidth }}
-                                                                    >
-                                                                        {/* Inner Bar (Overflow Hidden) */}
-                                                                        <div className="absolute inset-0 overflow-hidden rounded-sm bg-neutral-900/80">
-                                                                            {/* Fill */}
-                                                                            <div
-                                                                                className={`absolute inset-y-0 left-0 transition-all duration-700 ease-out ${isCompleted ? 'bg-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-400'}`}
-                                                                                style={{ width: `${segProgress}%` }}
                                                                             >
-                                                                                {(isActive || isCompleted) && (
-                                                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_infinite] -translate-x-full"></div>
+                                                                                {trade.review ? (
+                                                                                    <>
+                                                                                        <CheckCircle2 className="w-3 h-3" />
+                                                                                        <span>{t('journal.reviewed')}</span>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <span>{t('journal.review')}</span>
                                                                                 )}
-                                                                            </div>
+                                                                            </button>
+
+                                                                            {/* Delete button */}
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setTradeToDelete(trade);
+                                                                                    setShowDeleteModal(true);
+                                                                                }}
+                                                                                className="p-2 rounded border border-neutral-700 text-gray-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-900/20 transition-all"
+                                                                                title={language === 'zh' ? '删除交易' : 'Delete Trade'}
+                                                                            >
+                                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                                            </button>
                                                                         </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                                                        {/* Unlock Icon / Marker at end */}
-                                                                        <div className="absolute right-0 top-0 bottom-0 w-px bg-black/20 pointer-events-none"></div>
-                                                                        {isCompleted && (
-                                                                            <div className="absolute right-0.5 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-                                                                                <Unlock className="w-2 h-2 text-black/50" />
-                                                                            </div>
-                                                                        )}
 
-                                                                        {/* Tooltip (Hover) */}
-                                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-[200px] hidden group-hover:block animate-in fade-in slide-in-from-bottom-2 z-50 pointer-events-none">
-                                                                            <div className="bg-[#121212] border border-amber-500/30 text-xs p-2.5 rounded-lg shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] relative">
-                                                                                <div className="text-amber-500 font-bold mb-0.5 text-[10px] uppercase tracking-wider flex items-center gap-1">
-                                                                                    <Unlock className="w-3 h-3" /> UNLOCK
-                                                                                </div>
-                                                                                <div className="text-white/90 font-medium mb-1">{phaseData.unlock?.replace('解锁', '')}</div>
-                                                                                <div className="text-[9px] text-gray-500 leading-tight">{phaseData.logic}</div>
+                                    </div>
+                                </div>
+                            )}
 
-                                                                                {/* Arrow */}
-                                                                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#121212] border-r border-b border-amber-500/30 rotate-45"></div>
-                                                                            </div>
-                                                                        </div>
+                            {/* --- 3. AI 行为诊断 (核心卖点) --- */}
+                            {
+                                activeTab === 'ai_analysis' && (
+                                    <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
+                                        {/* 会员锁定遮罩 */}
+                                        {!membership.isPremium && (
+                                            <div className="lg:col-span-3 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-12 border border-amber-500/30 relative overflow-hidden text-center">
+                                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
 
-                                                                        {/* Current Phase Badge (Hanging Below) */}
-                                                                        <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-3 transition-opacity duration-500 whitespace-nowrap z-20 ${isCurrent ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                                                                            <span className="text-amber-500 font-bold font-mono text-[10px] sm:text-xs block text-shadow-sm">
-                                                                                [{phaseData.range}] {phaseData.title?.split(/[:：]/)[0]}
-                                                                            </span>
-                                                                            {/* Connecting Line */}
-                                                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gradient-to-b from-amber-500 to-transparent opacity-50"></div>
-                                                                        </div>
+                                                {/* Blurred K-line Chart Silhouette */}
+                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-64 opacity-30 blur-sm pointer-events-none select-none z-0">
+                                                    <svg viewBox="0 0 120 80" className="w-full h-full text-amber-500 animate-pulse duration-[5000ms] drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]">
+                                                        {/* Grid Lines */}
+                                                        <line x1="10" y1="10" x2="10" y2="70" stroke="currentColor" strokeWidth="0.3" opacity="0.3" />
+                                                        <line x1="10" y1="70" x2="110" y2="70" stroke="currentColor" strokeWidth="0.3" opacity="0.3" />
 
-                                                                    </div>
-                                                                )
-                                                            })}
+                                                        {/* Candlesticks - Simulating a volatile market */}
+                                                        {/* Red Candle */}
+                                                        <rect x="15" y="35" width="4" height="15" fill="#ef4444" opacity="0.8" />
+                                                        <line x1="17" y1="30" x2="17" y2="55" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
 
-                                                            {/* Right Static Labels */}
-                                                            <div className="absolute -right-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 font-mono translate-x-full">100</div>
-                                                        </div>
+                                                        {/* Green Candle */}
+                                                        <rect x="23" y="40" width="4" height="12" fill="currentColor" opacity="0.8" />
+                                                        <line x1="25" y1="35" x2="25" y2="58" stroke="currentColor" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Red Candle */}
+                                                        <rect x="31" y="32" width="4" height="18" fill="#ef4444" opacity="0.8" />
+                                                        <line x1="33" y1="28" x2="33" y2="52" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Green Candle - Larger */}
+                                                        <rect x="39" y="25" width="4" height="20" fill="currentColor" opacity="0.8" />
+                                                        <line x1="41" y1="20" x2="41" y2="48" stroke="currentColor" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Green Candle */}
+                                                        <rect x="47" y="30" width="4" height="10" fill="currentColor" opacity="0.8" />
+                                                        <line x1="49" y1="25" x2="49" y2="45" stroke="currentColor" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Red Candle - Small */}
+                                                        <rect x="55" y="38" width="4" height="8" fill="#ef4444" opacity="0.8" />
+                                                        <line x1="57" y1="35" x2="57" y2="50" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Green Candle - Bullish momentum */}
+                                                        <rect x="63" y="28" width="4" height="15" fill="currentColor" opacity="0.8" />
+                                                        <line x1="65" y1="23" x2="65" y2="48" stroke="currentColor" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Green Candle */}
+                                                        <rect x="71" y="22" width="4" height="18" fill="currentColor" opacity="0.8" />
+                                                        <line x1="73" y1="18" x2="73" y2="45" stroke="currentColor" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Green Candle - Strong */}
+                                                        <rect x="79" y="18" width="4" height="20" fill="currentColor" opacity="0.8" />
+                                                        <line x1="81" y1="15" x2="81" y2="42" stroke="currentColor" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Red Candle - Pullback */}
+                                                        <rect x="87" y="25" width="4" height="12" fill="#ef4444" opacity="0.8" />
+                                                        <line x1="89" y1="22" x2="89" y2="40" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Green Candle - Resume uptrend */}
+                                                        <rect x="95" y="20" width="4" height="15" fill="currentColor" opacity="0.8" />
+                                                        <line x1="97" y1="17" x2="97" y2="38" stroke="currentColor" strokeWidth="1" opacity="0.8" />
+
+                                                        {/* Moving Average Line - Simulating trend */}
+                                                        <polyline points="15,50 25,48 35,42 45,38 55,40 65,35 75,30 85,28 95,30"
+                                                            fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" strokeDasharray="2,2" />
+                                                    </svg>
+                                                </div>
+
+                                                <Lock className="w-16 h-16 text-amber-500 mb-6 mx-auto relative z-10" />
+                                                <h2 className="text-3xl font-black text-white mb-4 relative z-10">{t('ai.locked_title')}</h2>
+                                                <p className="text-gray-400 mb-8 text-lg relative z-10">
+                                                    {t('ai.locked_desc')}
+                                                </p>
+                                                <button onClick={() => { setShowPaymentModal(true); setPaymentMethod(null); }} className="relative z-10 bg-amber-500 hover:bg-amber-400 text-black font-bold px-10 py-4 rounded-xl shadow-xl shadow-amber-500/20 text-lg hover:scale-105 transition-transform inline-flex items-center gap-2">
+                                                    <Crown className="w-5 h-5" /> {t('ai.unlock_btn')}
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {membership.isPremium && (
+                                            <div className="lg:col-span-3">
+                                                <AIAnalysisDashboard
+                                                    trades={trades}
+                                                    language={language}
+                                                    riskMode={riskMode}
+                                                    onRiskModeChange={handleRiskModeChange}
+                                                    totalCapital={totalCapital}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            }
+
+                            {/* --- 4. 每日内参 (Daily Alpha) --- */}
+                            {activeTab === 'daily_alpha' && (
+                                <div className="mt-6 animate-in fade-in slide-in-from-bottom-4">
+                                    <DailyAlphaTab lang={language} />
+                                </div>
+                            )}
+
+                            {/* --- 5. Quantum Observer Terminal (New Feature) --- */}
+                            {activeTab === 'quantum_terminal' && (
+                                <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 min-h-screen pb-32">
+                                    <TerminalApp
+                                        lang={language}
+                                        user={user}
+                                        membership={membership}
+                                        onRequireLogin={() => setShowLoginModal(true)}
+                                        onUpgrade={() => setShowPaymentModal(true)}
+                                    />
+                                </div>
+                            )}
+                        </>
+                    )
+                }
+                {/* Fixed Bottom Progress Bar - The Path to Discipline */}
+                {/* Fixed Bottom Progress Bar - HIDDEN Only on Quantum Terminal */}
+                {/* Fixed Bottom Progress Bar - The Path to Discipline */}
+                {/* Fixed Bottom Progress Bar - HIDDEN on Quantum Terminal AND Daily Alpha */}
+                {
+                    activeTab !== 'quantum_terminal' && activeTab !== 'daily_alpha' && ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
+                        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/95 backdrop-blur-xl border-t border-white/5 pb-2 pt-2 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+                            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
+                                {
+                                    (() => {
+                                        const count = trades.length;
+                                        // 4 Segments Definition
+                                        const segments = [
+                                            { id: 'phase1', min: 0, max: 20, width: '20%' },
+                                            { id: 'phase2', min: 20, max: 50, width: '30%' },
+                                            { id: 'phase3', min: 50, max: 80, width: '30%' },
+                                            { id: 'phase4', min: 80, max: 100, width: '20%' },
+                                        ];
+
+                                        let currentPhaseKey = 'phase1';
+                                        if (count > 80) currentPhaseKey = 'phase4';
+                                        else if (count > 50) currentPhaseKey = 'phase3';
+                                        else if (count > 20) currentPhaseKey = 'phase2';
+
+                                        const currentPhase = t(`home.phases.${currentPhaseKey}`, { returnObjects: true }) || {};
+                                        const maturity = Math.min((count / 100) * 100, 100).toFixed(1);
+
+                                        return (
+                                            <div className="flex flex-col md:flex-row items-end md:items-center justify-between gap-4 md:gap-8">
+
+                                                {/* LEFT: Global Title & Subtitle */}
+                                                <div className="flex-1 w-full md:w-1/3 min-w-[280px]">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-amber-500 font-bold font-mono text-xs tracking-wider">[{t('home.footer_title')}]</span>
+                                                        <div className="h-px bg-white/10 flex-1"></div>
                                                     </div>
-                                                    {/* RIGHT: Metrics */}
-                                                    <div className="w-full md:w-auto min-w-[120px] text-right hidden sm:block">
-                                                        <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-0.5">{t('home.maturity_index')}</p>
-                                                        <div className="text-2xl font-black bg-gradient-to-r from-amber-200 to-orange-400 bg-clip-text text-transparent font-mono flex items-center justify-end gap-2">
-                                                            {maturity}%
-                                                            <div className="relative group cursor-help flex items-center">
-                                                                <span className="text-[10px] text-gray-600 font-normal border border-gray-800 rounded px-1 bg-black/50 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 group-hover:text-amber-500 transition-colors">EV+</span>
-                                                                {/* EV+ Definition Tooltip */}
-                                                                <div className="absolute bottom-full right-0 mb-2 w-48 hidden group-hover:block animate-in fade-in slide-in-from-bottom-1 z-50">
-                                                                    <div className="bg-[#121212] border border-amber-500/30 text-xs p-3 rounded-lg shadow-xl text-left">
-                                                                        <div className="text-amber-500 font-bold mb-1">{t('home.ev_plus_title')}</div>
-                                                                        <p className="text-gray-400 leading-relaxed">
-                                                                            {t('home.ev_plus_desc')}
-                                                                        </p>
+                                                    <h3 className="text-sm sm:text-base font-bold text-white mb-1 shadow-black drop-shadow-md">
+                                                        {t('home.footer_subtitle')}
+                                                    </h3>
+                                                </div>
+
+                                                {/* CENTER: Segmented Energy Bar */}
+                                                <div className="w-full md:w-1/2 flex flex-col justify-end pb-1 mt-4 md:mt-0">
+                                                    {/* Bar Container */}
+                                                    <div className="flex items-center gap-1.5 w-full h-3 md:h-4 mb-2 relative">
+                                                        {/* Left Static Labels */}
+                                                        <div className="absolute -left-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 font-mono -translate-x-full">0</div>
+
+                                                        {segments.map((seg, index) => {
+                                                            // Force equal visual width (25%)
+                                                            const segmentWidth = '25%';
+
+                                                            let segProgress = 0;
+                                                            if (count >= seg.max) segProgress = 100;
+                                                            else if (count > seg.min) {
+                                                                segProgress = ((count - seg.min) / (seg.max - seg.min)) * 100;
+                                                            }
+
+                                                            const isCompleted = count >= seg.max;
+                                                            const isActive = count > seg.min && count < seg.max;
+                                                            // Special handling for phase label display
+                                                            const isCurrent = (count === 0 && index === 0) || (count > seg.min && count <= seg.max);
+
+                                                            const phaseData = t(`home.phases.${seg.id}`, { returnObjects: true });
+
+                                                            return (
+                                                                <div
+                                                                    key={seg.id}
+                                                                    className="relative h-full rounded-sm border border-white/5 group transition-all duration-300 hover:border-amber-500/30"
+                                                                    style={{ width: segmentWidth }}
+                                                                >
+                                                                    {/* Inner Bar (Overflow Hidden) */}
+                                                                    <div className="absolute inset-0 overflow-hidden rounded-sm bg-neutral-900/80">
+                                                                        {/* Fill */}
+                                                                        <div
+                                                                            className={`absolute inset-y-0 left-0 transition-all duration-700 ease-out ${isCompleted ? 'bg-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-400'}`}
+                                                                            style={{ width: `${segProgress}%` }}
+                                                                        >
+                                                                            {(isActive || isCompleted) && (
+                                                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_infinite] -translate-x-full"></div>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
+
+                                                                    {/* Unlock Icon / Marker at end */}
+                                                                    <div className="absolute right-0 top-0 bottom-0 w-px bg-black/20 pointer-events-none"></div>
+                                                                    {isCompleted && (
+                                                                        <div className="absolute right-0.5 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                                                                            <Unlock className="w-2 h-2 text-black/50" />
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Tooltip (Hover) */}
+                                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-[200px] hidden group-hover:block animate-in fade-in slide-in-from-bottom-2 z-50 pointer-events-none">
+                                                                        <div className="bg-[#121212] border border-amber-500/30 text-xs p-2.5 rounded-lg shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] relative">
+                                                                            <div className="text-amber-500 font-bold mb-0.5 text-[10px] uppercase tracking-wider flex items-center gap-1">
+                                                                                <Unlock className="w-3 h-3" /> UNLOCK
+                                                                            </div>
+                                                                            <div className="text-white/90 font-medium mb-1">{phaseData.unlock?.replace('解锁', '')}</div>
+                                                                            <div className="text-[9px] text-gray-500 leading-tight">{phaseData.logic}</div>
+
+                                                                            {/* Arrow */}
+                                                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#121212] border-r border-b border-amber-500/30 rotate-45"></div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Current Phase Badge (Hanging Below) */}
+                                                                    <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-3 transition-opacity duration-500 whitespace-nowrap z-20 ${isCurrent ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                                                                        <span className="text-amber-500 font-bold font-mono text-[10px] sm:text-xs block text-shadow-sm">
+                                                                            [{phaseData.range}] {phaseData.title?.split(/[:：]/)[0]}
+                                                                        </span>
+                                                                        {/* Connecting Line */}
+                                                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gradient-to-b from-amber-500 to-transparent opacity-50"></div>
+                                                                    </div>
+
+                                                                </div>
+                                                            )
+                                                        })}
+
+                                                        {/* Right Static Labels */}
+                                                        <div className="absolute -right-3 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 font-mono translate-x-full">100</div>
+                                                    </div>
+                                                </div>
+                                                {/* RIGHT: Metrics */}
+                                                <div className="w-full md:w-auto min-w-[120px] text-right hidden sm:block">
+                                                    <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-0.5">{t('home.maturity_index')}</p>
+                                                    <div className="text-2xl font-black bg-gradient-to-r from-amber-200 to-orange-400 bg-clip-text text-transparent font-mono flex items-center justify-end gap-2">
+                                                        {maturity}%
+                                                        <div className="relative group cursor-help flex items-center">
+                                                            <span className="text-[10px] text-gray-600 font-normal border border-gray-800 rounded px-1 bg-black/50 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 group-hover:text-amber-500 transition-colors">EV+</span>
+                                                            {/* EV+ Definition Tooltip */}
+                                                            <div className="absolute bottom-full right-0 mb-2 w-48 hidden group-hover:block animate-in fade-in slide-in-from-bottom-1 z-50">
+                                                                <div className="bg-[#121212] border border-amber-500/30 text-xs p-3 rounded-lg shadow-xl text-left">
+                                                                    <div className="text-amber-500 font-bold mb-1">{t('home.ev_plus_title')}</div>
+                                                                    <p className="text-gray-400 leading-relaxed">
+                                                                        {t('home.ev_plus_desc')}
+                                                                    </p>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-
                                                 </div>
-                                            );
-                                        })()
-                                    }
-                                </div>
+
+                                            </div>
+                                        );
+                                    })()
+                                }
                             </div>
-                        )
-                    }
+                        </div>
+                    )
+                }
 
-                </main >
-
-
-                {/* Payment Modal */}
-                {
-                    showPaymentModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-                            <div className="bg-neutral-900 w-full max-w-2xl rounded-2xl border border-neutral-800 p-8 shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-10">
-                                    <Crown className="w-32 h-32 text-amber-500" />
-                                </div>
-
-                                <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2 mt-4">{t('payment.title')}</h3>
+            </main >
 
 
-                                {!isPaymentSuccess && (
-                                    <button onClick={() => { setShowPaymentModal(false); setPaymentMethod(null); }} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
-                                        <X className="w-5 h-5" />
+            {/* Payment Modal */}
+            {
+                showPaymentModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+                        <div className="bg-neutral-900 w-full max-w-2xl rounded-2xl border border-neutral-800 p-8 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <Crown className="w-32 h-32 text-amber-500" />
+                            </div>
+
+                            <h3 className="text-2xl font-black bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2 mt-4">{t('payment.title')}</h3>
+
+
+                            {!isPaymentSuccess && (
+                                <button onClick={() => { setShowPaymentModal(false); setPaymentMethod(null); }} className="absolute top-4 right-4 p-2 bg-neutral-800 hover:bg-neutral-700 text-gray-400 hover:text-white rounded-lg transition-all z-10">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            )}
+
+                            {isPaymentSuccess ? (
+                                <div className="text-center py-12 animate-in fade-in zoom-in duration-300">
+                                    <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
+                                        <CheckCircle2 className="w-12 h-12 text-green-500" />
+                                    </div>
+                                    <h3 className="text-2xl font-black text-white mb-2">{t('payment.success_title')}</h3>
+                                    <p className="text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
+                                        {t('payment.success_desc')}
+                                    </p>
+                                    <button
+                                        onClick={() => {
+                                            setIsPaymentSuccess(false);
+                                            setShowPaymentModal(false);
+                                            setPaymentMethod(null);
+                                        }}
+                                        className="px-10 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all transform hover:scale-105"
+                                    >
+                                        {t('common.done')}
                                     </button>
-                                )}
-
-                                {isPaymentSuccess ? (
-                                    <div className="text-center py-12 animate-in fade-in zoom-in duration-300">
-                                        <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20">
-                                            <CheckCircle2 className="w-12 h-12 text-green-500" />
-                                        </div>
-                                        <h3 className="text-2xl font-black text-white mb-2">{t('payment.success_title')}</h3>
-                                        <p className="text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
-                                            {t('payment.success_desc')}
+                                </div>
+                            ) : !paymentMethod ? (
+                                <>
+                                    {/* Payment Method Selection */}
+                                    <div className="space-y-4">
+                                        <p className="text-gray-400 text-sm mb-6 text-center">
+                                            {language === 'zh' ? '请选择支付方式' : 'Choose Your Payment Method'}
                                         </p>
+
+                                        {/* Stripe Credit Card Option */}
                                         <button
-                                            onClick={() => {
-                                                setIsPaymentSuccess(false);
-                                                setShowPaymentModal(false);
-                                                setPaymentMethod(null);
-                                            }}
-                                            className="px-10 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all transform hover:scale-105"
+                                            onClick={handleUpgrade}
+                                            disabled={isUpgrading}
+                                            className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
                                         >
-                                            {t('common.done')}
+
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <CreditCard className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
+                                                    <div className="text-left">
+                                                        <div className="text-xl font-black text-white mb-1">
+                                                            {language === 'zh' ? '信用卡/借记卡' : 'Credit/Debit Card'}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">Visa, Mastercard, Amex</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    {isUpgrading ? (
+                                                        <div className="w-5 h-5 border-3 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="text-2xl font-black text-amber-500">$39.00</div>
+                                                            <div className="text-xs text-gray-500">/year</div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </button>
+
+                                        {/* USDT Crypto Option */}
+                                        <button
+                                            onClick={() => setPaymentMethod('usdt')}
+                                            className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group relative overflow-hidden"
+                                        >
+
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <Wallet className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
+                                                    <div className="text-left">
+                                                        <div className="text-xl font-black text-white mb-1">{t('payment.usdt')}</div>
+                                                        <div className="text-xs text-gray-500">{t('payment.crypto_payment')}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-2xl font-black text-amber-500">29.00 USDT</div>
+                                                    <div className="text-xs text-gray-500">/year</div>
+                                                </div>
+                                            </div>
                                         </button>
                                     </div>
-                                ) : !paymentMethod ? (
-                                    <>
-                                        {/* Payment Method Selection */}
-                                        <div className="space-y-4">
-                                            <p className="text-gray-400 text-sm mb-6 text-center">
-                                                {language === 'zh' ? '请选择支付方式' : 'Choose Your Payment Method'}
-                                            </p>
 
-                                            {/* Stripe Credit Card Option */}
-                                            <button
-                                                onClick={handleUpgrade}
-                                                disabled={isUpgrading}
-                                                className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                                            >
+                                </>
+                            ) : paymentMethod === 'usdt' ? (
+                                <>
+                                    {/* USDT 手动支付界面 */}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
+                                            <ArrowRight className="w-4 h-4 rotate-180" /> {language === 'zh' ? '返回选择支付方式' : 'Back to Payment Methods'}
+                                        </button>
+                                    </div>
 
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-4">
-                                                        <CreditCard className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
-                                                        <div className="text-left">
-                                                            <div className="text-xl font-black text-white mb-1">
-                                                                {language === 'zh' ? '信用卡/借记卡' : 'Credit/Debit Card'}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">Visa, Mastercard, Amex</div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        {isUpgrading ? (
-                                                            <div className="w-5 h-5 border-3 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                                                        ) : (
-                                                            <>
-                                                                <div className="text-2xl font-black text-amber-500">$39.00</div>
-                                                                <div className="text-xs text-gray-500">/year</div>
-                                                            </>
-                                                        )}
-                                                    </div>
+                                    <div className="space-y-4">
+
+
+                                        <div className="p-4 bg-neutral-800 rounded-xl">
+                                            <div className="text-xs text-gray-400 mb-2">{t('payment.receiving_address')}</div>
+
+                                            {/* QR Code Section */}
+                                            <div className="flex flex-col items-center justify-center mb-4">
+                                                <div className="p-2 bg-white rounded-xl mb-2">
+                                                    <img
+                                                        src={`/assets/payment_qr_${language === 'zh' ? 'zh' : 'en'}.png`}
+                                                        alt="Payment QR Code"
+                                                        className="w-40 h-40 object-contain"
+                                                    />
                                                 </div>
-                                            </button>
+                                                <a
+                                                    href={`/assets/payment_qr_${language === 'zh' ? 'zh' : 'en'}.png`}
+                                                    download={`goldcat_payment_qr_${language === 'zh' ? 'zh' : 'en'}.png`}
+                                                    className="text-[10px] text-amber-500 hover:text-amber-400 flex items-center gap-1 mt-1 transition-colors"
+                                                >
+                                                    <div className="w-3 h-3 border border-amber-500 rounded-full flex items-center justify-center">↓</div>
+                                                    {language === 'zh' ? '保存二维码图片' : 'Save QR Code'}
+                                                </a>
+                                            </div>
 
-                                            {/* USDT Crypto Option */}
-                                            <button
-                                                onClick={() => setPaymentMethod('usdt')}
-                                                className="w-full p-6 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl transition-all group relative overflow-hidden"
-                                            >
-
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-4">
-                                                        <Wallet className="w-12 h-12 text-amber-500 group-hover:scale-110 transition-transform" />
-                                                        <div className="text-left">
-                                                            <div className="text-xl font-black text-white mb-1">{t('payment.usdt')}</div>
-                                                            <div className="text-xs text-gray-500">{t('payment.crypto_payment')}</div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="text-2xl font-black text-amber-500">29.00 USDT</div>
-                                                        <div className="text-xs text-gray-500">/year</div>
-                                                    </div>
-                                                </div>
-                                            </button>
+                                            <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg">
+                                                <code className="text-xs font-mono text-white break-all">TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R</code>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText('TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R');
+                                                        setToastMessage(t('payment.copied'));
+                                                        setShowSuccessToast(true);
+                                                    }}
+                                                    className="ml-2 text-gray-400 hover:text-white"
+                                                >
+                                                    <Copy className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
 
-                                    </>
-                                ) : paymentMethod === 'usdt' ? (
-                                    <>
-                                        {/* USDT 手动支付界面 */}
-                                        <div className="flex items-center justify-between mb-4">
-                                            <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                                <ArrowRight className="w-4 h-4 rotate-180" /> {language === 'zh' ? '返回选择支付方式' : 'Back to Payment Methods'}
-                                            </button>
+                                        <div className="p-4 bg-neutral-800 rounded-xl">
+                                            <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
+                                            <div className="text-3xl font-black text-amber-500">29.00 USDT</div>
                                         </div>
 
-                                        <div className="space-y-4">
-
-
-                                            <div className="p-4 bg-neutral-800 rounded-xl">
-                                                <div className="text-xs text-gray-400 mb-2">{t('payment.receiving_address')}</div>
-
-                                                {/* QR Code Section */}
-                                                <div className="flex flex-col items-center justify-center mb-4">
-                                                    <div className="p-2 bg-white rounded-xl mb-2">
-                                                        <img
-                                                            src={`/assets/payment_qr_${language === 'zh' ? 'zh' : 'en'}.png`}
-                                                            alt="Payment QR Code"
-                                                            className="w-40 h-40 object-contain"
-                                                        />
-                                                    </div>
-                                                    <a
-                                                        href={`/assets/payment_qr_${language === 'zh' ? 'zh' : 'en'}.png`}
-                                                        download={`goldcat_payment_qr_${language === 'zh' ? 'zh' : 'en'}.png`}
-                                                        className="text-[10px] text-amber-500 hover:text-amber-400 flex items-center gap-1 mt-1 transition-colors"
-                                                    >
-                                                        <div className="w-3 h-3 border border-amber-500 rounded-full flex items-center justify-center">↓</div>
-                                                        {language === 'zh' ? '保存二维码图片' : 'Save QR Code'}
-                                                    </a>
-                                                </div>
-
-                                                <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg">
-                                                    <code className="text-xs font-mono text-white break-all">TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R</code>
-                                                    <button
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText('TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R');
-                                                            setToastMessage(t('payment.copied'));
-                                                            setShowSuccessToast(true);
-                                                        }}
-                                                        className="ml-2 text-gray-400 hover:text-white"
-                                                    >
-                                                        <Copy className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                                            <div className="text-sm text-blue-400 mb-2 flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4" />
+                                                {t('payment.instructions')}
                                             </div>
+                                            <ul className="text-xs text-gray-400 space-y-1">
+                                                <li>• {t('payment.instruction_1')}</li>
+                                                <li>• {t('payment.instruction_2')}</li>
+                                                <li className="text-amber-400 font-semibold">• {t('payment.instruction_3')}</li>
+                                                <li>• {t('payment.instruction_4')}</li>
+                                            </ul>
+                                        </div>
 
-                                            <div className="p-4 bg-neutral-800 rounded-xl">
-                                                <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                                <div className="text-3xl font-black text-amber-500">29.00 USDT</div>
-                                            </div>
+                                        <div>
+                                            <label className="text-xs text-gray-400 mb-2 block">{t('payment.txid_label')}</label>
+                                            <input
+                                                type="text"
+                                                value={paymentTxId}
+                                                onChange={(e) => setPaymentTxId(e.target.value)}
+                                                placeholder={t('payment.txid_placeholder')}
+                                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono text-sm"
+                                            />
+                                        </div>
 
-                                            <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                                                <div className="text-sm text-blue-400 mb-2 flex items-center gap-2">
-                                                    <AlertCircle className="w-4 h-4" />
-                                                    {t('payment.instructions')}
-                                                </div>
-                                                <ul className="text-xs text-gray-400 space-y-1">
-                                                    <li>• {t('payment.instruction_1')}</li>
-                                                    <li>• {t('payment.instruction_2')}</li>
-                                                    <li className="text-amber-400 font-semibold">• {t('payment.instruction_3')}</li>
-                                                    <li>• {t('payment.instruction_4')}</li>
-                                                </ul>
-                                            </div>
+                                        <button
+                                            onClick={async () => {
+                                                if (!paymentTxId) {
+                                                    setErrorMessage(t('payment.txid_placeholder'));
+                                                    setShowErrorToast(true);
+                                                    return;
+                                                }
 
-                                            <div>
-                                                <label className="text-xs text-gray-400 mb-2 block">{t('payment.txid_label')}</label>
-                                                <input
-                                                    type="text"
-                                                    value={paymentTxId}
-                                                    onChange={(e) => setPaymentTxId(e.target.value)}
-                                                    placeholder={t('payment.txid_placeholder')}
-                                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono text-sm"
-                                                />
-                                            </div>
+                                                try {
+                                                    // Create or update order in Supabase
+                                                    const orderNum = orderNumber || `ORDER-${Date.now()}`;
 
-                                            <button
-                                                onClick={async () => {
-                                                    if (!paymentTxId) {
-                                                        setErrorMessage(t('payment.txid_placeholder'));
+                                                    const { error } = await supabase
+                                                        .from('orders')
+                                                        .insert({
+                                                            order_number: orderNum,
+                                                            user_id: user.id,
+                                                            user_email: user.email,
+                                                            amount: 15,
+                                                            currency: 'USDT',
+                                                            payment_method: 'usdt',
+                                                            txid: paymentTxId,
+                                                            status: 'paid'
+                                                        });
+
+                                                    if (error) {
+                                                        console.error('Order creation error:', error);
+                                                        setErrorMessage(t('common.error') + ': ' + error.message);
                                                         setShowErrorToast(true);
                                                         return;
                                                     }
 
-                                                    try {
-                                                        // Create or update order in Supabase
-                                                        const orderNum = orderNumber || `ORDER-${Date.now()}`;
-
-                                                        const { error } = await supabase
-                                                            .from('orders')
-                                                            .insert({
-                                                                order_number: orderNum,
-                                                                user_id: user.id,
-                                                                user_email: user.email,
-                                                                amount: 15,
-                                                                currency: 'USDT',
-                                                                payment_method: 'usdt',
-                                                                txid: paymentTxId,
-                                                                status: 'paid'
-                                                            });
-
-                                                        if (error) {
-                                                            console.error('Order creation error:', error);
-                                                            setErrorMessage(t('common.error') + ': ' + error.message);
-                                                            setShowErrorToast(true);
-                                                            return;
-                                                        }
-
-                                                        setIsPaymentSuccess(true);
-                                                        setPaymentTxId('');
-                                                        setOrderNumber('');
-                                                    } catch (err) {
-                                                        console.error('Unexpected error:', err);
-                                                        setErrorMessage(t('common.error'));
-                                                        setShowErrorToast(true);
-                                                    }
-                                                }}
-                                                className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
-                                            >
-                                                {t('payment.submit_review')}
-                                            </button>
-                                        </div>
-                                    </>
-
-                                ) : paymentMethod === 'cny' ? (
-                                    <>
-                                        {/* RMB Payment - Xorpay (to be integrated) */}
-                                        <div className="flex items-center justify-between mb-4">
-                                            <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
-                                                <ArrowRight className="w-4 h-4 rotate-180" /> {t('payment.back')}
-                                            </button>
-                                        </div>
-                                        <div className="text-center py-8">
-                                            <Coins className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                                            <h4 className="text-xl font-bold text-white mb-2">{t('payment.cny')}</h4>
-                                            <p className="text-gray-400 mb-6">{t('payment.channel_connecting')}</p>
-                                            <button
-                                                disabled
-                                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 text-gray-500 font-black text-lg rounded-xl cursor-not-allowed"
-                                            >
-                                                <Wallet className="w-5 h-5" />
-                                                {t('payment.coming_soon')}
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : null}
-
-
-
-                                <p className="text-center text-[10px] text-gray-600 mt-4 flex items-center justify-center gap-1">
-                                    <Shield className="w-3 h-3" /> {t('payment.security')}
-                                </p>
-
-
-                            </div>
-                        </div>
-                    )
-                }
-
-
-
-                {/* 登录弹窗 */}
-                {
-                    showLoginModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-                            <div className="bg-neutral-900 w-full max-w-sm rounded-2xl border border-neutral-800 p-8 shadow-2xl relative">
-                                <h3 className="text-2xl font-bold text-white mb-6">{isRegisterMode ? t('auth.register_title') : t('auth.login_title')}</h3>
-                                <div className="space-y-4">
-                                    {isRegisterMode && (
-                                        <input
-                                            type="text" placeholder={t('auth.username')}
-                                            value={registerForm.username} onChange={e => setRegisterForm({ ...registerForm, username: e.target.value })}
-                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                        />
-                                    )}
-                                    <input
-                                        type="email" placeholder={t('auth.email')}
-                                        value={isRegisterMode ? registerForm.email : loginForm.email}
-                                        onChange={e => isRegisterMode ? setRegisterForm({ ...registerForm, email: e.target.value }) : setLoginForm({ ...loginForm, email: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    />
-                                    <input
-                                        type="password" placeholder={t('auth.password')}
-                                        value={isRegisterMode ? registerForm.password : loginForm.password}
-                                        onChange={e => isRegisterMode ? setRegisterForm({ ...registerForm, password: e.target.value }) : setLoginForm({ ...loginForm, password: e.target.value })}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                    />
-                                    {isRegisterMode && (
-                                        <input
-                                            type="password" placeholder={t('auth.confirm_password')}
-                                            value={registerForm.confirmPassword} onChange={e => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
-                                        />
-                                    )}
-
-                                    <button onClick={isRegisterMode ? handleRegister : handleLogin} className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl">
-                                        {isRegisterMode ? t('auth.register_btn') : t('auth.login_btn')}
-                                    </button>
-
-                                    <div className="flex justify-between items-center text-xs text-gray-500 mt-4">
-                                        <button onClick={() => setIsRegisterMode(!isRegisterMode)} className="text-amber-500 hover:underline">
-                                            {isRegisterMode ? t('auth.to_login') : t('auth.to_register')}
+                                                    setIsPaymentSuccess(true);
+                                                    setPaymentTxId('');
+                                                    setOrderNumber('');
+                                                } catch (err) {
+                                                    console.error('Unexpected error:', err);
+                                                    setErrorMessage(t('common.error'));
+                                                    setShowErrorToast(true);
+                                                }
+                                            }}
+                                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
+                                        >
+                                            {t('payment.submit_review')}
                                         </button>
-                                        {!isRegisterMode && (
-                                            <button onClick={() => {
-                                                setShowLoginModal(false);
-                                                setShowFeedbackModal(true);
-                                                setFeedbackForm({
-                                                    ...feedbackForm,
-                                                    type: 'support',
-                                                    content: t('auth.forgot_password_content') + loginForm.email
-                                                });
-                                            }} className="text-gray-500 hover:text-gray-300">
-                                                {t('auth.forgot_password')}
-                                            </button>
-                                        )}
-
                                     </div>
-                                </div>
-                                <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-500"><X className="w-5 h-5" /></button>
-                            </div>
+                                </>
+
+                            ) : paymentMethod === 'cny' ? (
+                                <>
+                                    {/* RMB Payment - Xorpay (to be integrated) */}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <button onClick={() => setPaymentMethod(null)} className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-gray-300 hover:text-white rounded-lg transition-all">
+                                            <ArrowRight className="w-4 h-4 rotate-180" /> {t('payment.back')}
+                                        </button>
+                                    </div>
+                                    <div className="text-center py-8">
+                                        <Coins className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                                        <h4 className="text-xl font-bold text-white mb-2">{t('payment.cny')}</h4>
+                                        <p className="text-gray-400 mb-6">{t('payment.channel_connecting')}</p>
+                                        <button
+                                            disabled
+                                            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 text-gray-500 font-black text-lg rounded-xl cursor-not-allowed"
+                                        >
+                                            <Wallet className="w-5 h-5" />
+                                            {t('payment.coming_soon')}
+                                        </button>
+                                    </div>
+                                </>
+                            ) : null}
+
+
+
+                            <p className="text-center text-[10px] text-gray-600 mt-4 flex items-center justify-center gap-1">
+                                <Shield className="w-3 h-3" /> {t('payment.security')}
+                            </p>
+
+
                         </div>
-                    )
-                }
-
-                {/* 结算弹窗 */}
-                {
-                    showCloseTradeModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
-                                <h3 className="text-lg font-bold text-white mb-6">{t('journal.settle')}</h3>
-                                <input
-                                    type="number"
-                                    placeholder="0"
-                                    value={closePnL}
-                                    onChange={e => setClosePnL(e.target.value)}
-                                    onFocus={e => e.target.value === '0' && setClosePnL('')}
-                                    onBlur={e => e.target.value === '' && setClosePnL('0')}
-                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono mb-4 text-lg text-center"
-                                    autoFocus
-                                />
-
-                                {/* 违反纪律标记 */}
-                                <div className="mb-6 p-3 bg-red-950/20 border border-red-900/30 rounded-lg">
-                                    <label className="flex items-center gap-3 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={violatedDiscipline}
-                                            onChange={(e) => setViolatedDiscipline(e.target.checked)}
-                                            className="w-5 h-5 rounded border-red-600 text-red-500 focus:ring-red-500 focus:ring-offset-0 bg-red-900/20"
-                                        />
-                                        <div>
-                                            <div className="text-red-400 font-bold text-sm flex items-center gap-2">
-                                                <span>⚠️</span>
-                                                <span>{t('risk.violation')}</span>
-                                            </div>
-                                            <div className="text-red-300/60 text-xs mt-1">
-                                                {t('risk.violation_desc')}
-                                            </div>
-                                        </div>
-                                    </label>
-                                </div>
-
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setShowCloseTradeModal(false)}
-                                        className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded-xl font-bold transition-colors"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                    <button
-                                        onClick={confirmSettleTrade}
-                                        className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-colors shadow-lg shadow-amber-500/20"
-                                    >
-                                        {t('common.confirm')}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                }
-
-                {/* 退出登录确认弹窗 */}
-                {
-                    showLogoutModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl text-center">
-                                <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <LogOut className="w-6 h-6 text-red-500" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white mb-2">{t('auth.logout_confirm_title')}</h3>
-                                <div className="flex gap-3 mt-6">
-                                    <button
-                                        onClick={() => setShowLogoutModal(false)}
-                                        className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded-xl font-bold transition-colors"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                    <button
-                                        onClick={confirmLogout}
-                                        className="flex-1 py-3 bg-red-500 hover:bg-red-400 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-500/20"
-                                    >
-                                        {t('auth.logout_confirm_btn')}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                }
-
-                {/* 复盘弹窗 */}
-                {
-                    showReviewModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                            <div className="bg-[#1A1D24] w-full max-w-2xl rounded-2xl border border-neutral-800 p-6 shadow-2xl">
-                                <h3 className="text-lg font-bold text-white mb-4">{t('journal.review_title')}</h3>
-                                <p className="text-xs text-gray-400 mb-3">{t('journal.review_desc')}</p>
-
-                                {/* Review Prompts */}
-                                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                                    <p className="text-xs text-amber-400 font-bold mb-2">💡 思考引导：</p>
-                                    <ul className="space-y-1">
-                                        {(t('journal.review_prompts') || []).map((prompt, idx) => (
-                                            <li key={idx} className="text-xs text-gray-300 flex items-start gap-2">
-                                                <span className="text-amber-500">•</span>
-                                                <span>{prompt}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                <textarea
-                                    value={reviewNotes}
-                                    onChange={e => setReviewNotes(e.target.value)}
-                                    className="w-full h-32 bg-neutral-900 border border-neutral-700 rounded-lg p-3 text-white focus:border-amber-500 focus:outline-none mb-6 resize-none"
-                                    placeholder={t('journal.review_placeholder')}
-                                />
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setShowReviewModal(false)}
-                                        disabled={isSaving}
-                                        className="flex-1 py-3 rounded-xl bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {t('risk.cancel')}
-                                    </button>
-                                    <button
-                                        onClick={saveReview}
-                                        disabled={isSaving}
-                                        className="flex-1 py-3 rounded-xl bg-amber-500 text-black font-bold hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {isSaving && <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
-                                        {isSaving ? t('common.loading') : t('form.save')}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                }
-
-                {/* Risk Warning Modal */}
-                {
-                    showRiskWarningModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-red-900/50 p-6 shadow-2xl">
-                                <div className="flex items-center gap-3 mb-4 text-red-500">
-                                    <AlertTriangle className="w-8 h-8" />
-                                    <h3 className="text-lg font-bold text-white">{t('risk.modal_title')}</h3>
-                                </div>
-                                <p className="text-sm text-gray-300 mb-6 leading-relaxed">
-                                    {t('risk.low_rr_warning').replace('{rr}', pendingTrade?.rrRatio)}
-                                </p>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setShowRiskWarningModal(false)}
-                                        className="flex-1 py-2 rounded-lg bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold text-sm transition-colors"
-                                    >
-                                        {t('risk.cancel')}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            finalizeTrade(pendingTrade);
-                                            setShowRiskWarningModal(false);
-                                        }}
-                                        className="flex-1 py-2 rounded-lg bg-red-600/20 text-red-500 border border-red-600/50 hover:bg-red-600/30 font-bold text-sm transition-colors"
-                                    >
-                                        {t('risk.confirm_force')}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                }
+                    </div>
+                )
+            }
 
 
 
-                {/* Pattern Management Modal */}
-                {
-                    showPatternModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-lg font-bold text-white">{t('form.manage_patterns')}</h3>
-                                    <button onClick={() => setShowPatternModal(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
-                                </div>
-
-                                <div className="flex gap-2 mb-4">
+            {/* 登录弹窗 */}
+            {
+                showLoginModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+                        <div className="bg-neutral-900 w-full max-w-sm rounded-2xl border border-neutral-800 p-8 shadow-2xl relative">
+                            <h3 className="text-2xl font-bold text-white mb-6">{isRegisterMode ? t('auth.register_title') : t('auth.login_title')}</h3>
+                            <div className="space-y-4">
+                                {isRegisterMode && (
                                     <input
-                                        type="text"
-                                        value={newPattern}
-                                        onChange={e => setNewPattern(e.target.value)}
-                                        placeholder="输入新形态名称"
-                                        className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:border-amber-500 focus:outline-none"
+                                        type="text" placeholder={t('auth.username')}
+                                        value={registerForm.username} onChange={e => setRegisterForm({ ...registerForm, username: e.target.value })}
+                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
                                     />
-                                    <button onClick={addPattern} className="bg-amber-500 text-black px-3 py-2 rounded-lg font-bold text-sm hover:bg-amber-400">
-                                        <Plus className="w-4 h-4" />
-                                    </button>
-                                </div>
+                                )}
+                                <input
+                                    type="email" placeholder={t('auth.email')}
+                                    value={isRegisterMode ? registerForm.email : loginForm.email}
+                                    onChange={e => isRegisterMode ? setRegisterForm({ ...registerForm, email: e.target.value }) : setLoginForm({ ...loginForm, email: e.target.value })}
+                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                />
+                                <input
+                                    type="password" placeholder={t('auth.password')}
+                                    value={isRegisterMode ? registerForm.password : loginForm.password}
+                                    onChange={e => isRegisterMode ? setRegisterForm({ ...registerForm, password: e.target.value }) : setLoginForm({ ...loginForm, password: e.target.value })}
+                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                />
+                                {isRegisterMode && (
+                                    <input
+                                        type="password" placeholder={t('auth.confirm_password')}
+                                        value={registerForm.confirmPassword} onChange={e => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none"
+                                    />
+                                )}
 
-                                <div className="max-h-60 overflow-y-auto space-y-2">
-                                    {patterns.map(p => (
-                                        <div key={p} className="flex justify-between items-center bg-neutral-900 p-3 rounded-lg border border-neutral-800">
-                                            <span className="text-sm text-gray-300">{p}</span>
-                                            <button onClick={() => removePattern(p)} className="text-gray-500 hover:text-red-500">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
+                                <button onClick={isRegisterMode ? handleRegister : handleLogin} className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl">
+                                    {isRegisterMode ? t('auth.register_btn') : t('auth.login_btn')}
+                                </button>
 
-                                <div className="mt-4 pt-4 border-t border-neutral-800">
-                                    <button
-                                        onClick={resetPatterns}
-                                        className="w-full py-2 text-xs text-gray-500 hover:text-amber-500 hover:bg-neutral-900 rounded transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <RotateCcw className="w-3 h-3" />
-                                        {t('form.reset_default')}
+                                <div className="flex justify-between items-center text-xs text-gray-500 mt-4">
+                                    <button onClick={() => setIsRegisterMode(!isRegisterMode)} className="text-amber-500 hover:underline">
+                                        {isRegisterMode ? t('auth.to_login') : t('auth.to_register')}
                                     </button>
+                                    {!isRegisterMode && (
+                                        <button onClick={() => {
+                                            setShowLoginModal(false);
+                                            setShowFeedbackModal(true);
+                                            setFeedbackForm({
+                                                ...feedbackForm,
+                                                type: 'support',
+                                                content: t('auth.forgot_password_content') + loginForm.email
+                                            });
+                                        }} className="text-gray-500 hover:text-gray-300">
+                                            {t('auth.forgot_password')}
+                                        </button>
+                                    )}
+
                                 </div>
                             </div>
+                            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-500"><X className="w-5 h-5" /></button>
                         </div>
-                    )
-                }
+                    </div>
+                )
+            }
 
-                {/* Settings Modal */}
-                {
-                    showSettingsModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
-                            <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-lg font-bold text-white">{t('settings.title')}</h3>
-                                    <button onClick={() => setShowSettingsModal(false)} className="text-gray-500 hover:text-white">
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
+            {/* 结算弹窗 */}
+            {
+                showCloseTradeModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
+                            <h3 className="text-lg font-bold text-white mb-6">{t('journal.settle')}</h3>
+                            <input
+                                type="number"
+                                placeholder="0"
+                                value={closePnL}
+                                onChange={e => setClosePnL(e.target.value)}
+                                onFocus={e => e.target.value === '0' && setClosePnL('')}
+                                onBlur={e => e.target.value === '' && setClosePnL('0')}
+                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none font-mono mb-4 text-lg text-center"
+                                autoFocus
+                            />
 
-                                <div className="mb-6">
-                                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('settings.membership_status')}</label>
-                                    <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-700 flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${membership.isPremium ? 'bg-amber-500/20 text-amber-500' : 'bg-gray-800 text-gray-500'}`}>
-                                                <Crown className="w-5 h-5" />
+                            {/* 违反纪律标记 */}
+                            <div className="mb-6 p-3 bg-red-950/20 border border-red-900/30 rounded-lg">
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={violatedDiscipline}
+                                        onChange={(e) => setViolatedDiscipline(e.target.checked)}
+                                        className="w-5 h-5 rounded border-red-600 text-red-500 focus:ring-red-500 focus:ring-offset-0 bg-red-900/20"
+                                    />
+                                    <div>
+                                        <div className="text-red-400 font-bold text-sm flex items-center gap-2">
+                                            <span>⚠️</span>
+                                            <span>{t('risk.violation')}</span>
+                                        </div>
+                                        <div className="text-red-300/60 text-xs mt-1">
+                                            {t('risk.violation_desc')}
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowCloseTradeModal(false)}
+                                    className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded-xl font-bold transition-colors"
+                                >
+                                    {t('common.cancel')}
+                                </button>
+                                <button
+                                    onClick={confirmSettleTrade}
+                                    className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-colors shadow-lg shadow-amber-500/20"
+                                >
+                                    {t('common.confirm')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* 退出登录确认弹窗 */}
+            {
+                showLogoutModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl text-center">
+                            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <LogOut className="w-6 h-6 text-red-500" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">{t('auth.logout_confirm_title')}</h3>
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={() => setShowLogoutModal(false)}
+                                    className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded-xl font-bold transition-colors"
+                                >
+                                    {t('common.cancel')}
+                                </button>
+                                <button
+                                    onClick={confirmLogout}
+                                    className="flex-1 py-3 bg-red-500 hover:bg-red-400 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-500/20"
+                                >
+                                    {t('auth.logout_confirm_btn')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* 复盘弹窗 */}
+            {
+                showReviewModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-[#1A1D24] w-full max-w-2xl rounded-2xl border border-neutral-800 p-6 shadow-2xl">
+                            <h3 className="text-lg font-bold text-white mb-4">{t('journal.review_title')}</h3>
+                            <p className="text-xs text-gray-400 mb-3">{t('journal.review_desc')}</p>
+
+                            {/* Review Prompts */}
+                            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                                <p className="text-xs text-amber-400 font-bold mb-2">💡 思考引导：</p>
+                                <ul className="space-y-1">
+                                    {(t('journal.review_prompts') || []).map((prompt, idx) => (
+                                        <li key={idx} className="text-xs text-gray-300 flex items-start gap-2">
+                                            <span className="text-amber-500">•</span>
+                                            <span>{prompt}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <textarea
+                                value={reviewNotes}
+                                onChange={e => setReviewNotes(e.target.value)}
+                                className="w-full h-32 bg-neutral-900 border border-neutral-700 rounded-lg p-3 text-white focus:border-amber-500 focus:outline-none mb-6 resize-none"
+                                placeholder={t('journal.review_placeholder')}
+                            />
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowReviewModal(false)}
+                                    disabled={isSaving}
+                                    className="flex-1 py-3 rounded-xl bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {t('risk.cancel')}
+                                </button>
+                                <button
+                                    onClick={saveReview}
+                                    disabled={isSaving}
+                                    className="flex-1 py-3 rounded-xl bg-amber-500 text-black font-bold hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {isSaving && <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />}
+                                    {isSaving ? t('common.loading') : t('form.save')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Risk Warning Modal */}
+            {
+                showRiskWarningModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-red-900/50 p-6 shadow-2xl">
+                            <div className="flex items-center gap-3 mb-4 text-red-500">
+                                <AlertTriangle className="w-8 h-8" />
+                                <h3 className="text-lg font-bold text-white">{t('risk.modal_title')}</h3>
+                            </div>
+                            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
+                                {t('risk.low_rr_warning').replace('{rr}', pendingTrade?.rrRatio)}
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowRiskWarningModal(false)}
+                                    className="flex-1 py-2 rounded-lg bg-neutral-800 text-gray-400 hover:bg-neutral-700 font-bold text-sm transition-colors"
+                                >
+                                    {t('risk.cancel')}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        finalizeTrade(pendingTrade);
+                                        setShowRiskWarningModal(false);
+                                    }}
+                                    className="flex-1 py-2 rounded-lg bg-red-600/20 text-red-500 border border-red-600/50 hover:bg-red-600/30 font-bold text-sm transition-colors"
+                                >
+                                    {t('risk.confirm_force')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+
+
+            {/* Pattern Management Modal */}
+            {
+                showPatternModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-bold text-white">{t('form.manage_patterns')}</h3>
+                                <button onClick={() => setShowPatternModal(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+                            </div>
+
+                            <div className="flex gap-2 mb-4">
+                                <input
+                                    type="text"
+                                    value={newPattern}
+                                    onChange={e => setNewPattern(e.target.value)}
+                                    placeholder="输入新形态名称"
+                                    className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:border-amber-500 focus:outline-none"
+                                />
+                                <button onClick={addPattern} className="bg-amber-500 text-black px-3 py-2 rounded-lg font-bold text-sm hover:bg-amber-400">
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="max-h-60 overflow-y-auto space-y-2">
+                                {patterns.map(p => (
+                                    <div key={p} className="flex justify-between items-center bg-neutral-900 p-3 rounded-lg border border-neutral-800">
+                                        <span className="text-sm text-gray-300">{p}</span>
+                                        <button onClick={() => removePattern(p)} className="text-gray-500 hover:text-red-500">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-neutral-800">
+                                <button
+                                    onClick={resetPatterns}
+                                    className="w-full py-2 text-xs text-gray-500 hover:text-amber-500 hover:bg-neutral-900 rounded transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <RotateCcw className="w-3 h-3" />
+                                    {t('form.reset_default')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Settings Modal */}
+            {
+                showSettingsModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-[#1A1D24] w-full max-w-sm rounded-2xl border border-neutral-800 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-bold text-white">{t('settings.title')}</h3>
+                                <button onClick={() => setShowSettingsModal(false)} className="text-gray-500 hover:text-white">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('settings.membership_status')}</label>
+                                <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-700 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${membership.isPremium ? 'bg-amber-500/20 text-amber-500' : 'bg-gray-800 text-gray-500'}`}>
+                                            <Crown className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className={`font-bold ${membership.isPremium ? 'text-amber-500' : 'text-gray-400'}`}>
+                                                {membership.isPremium ? 'PRO MEMBER' : t('settings.free')}
                                             </div>
-                                            <div>
-                                                <div className={`font-bold ${membership.isPremium ? 'text-amber-500' : 'text-gray-400'}`}>
-                                                    {membership.isPremium ? 'PRO MEMBER' : t('settings.free')}
-                                                </div>
-                                                {/* 终身会员，不显示到期时间
+                                            {/* 终身会员，不显示到期时间
                                             {membership.isPremium && (
                                                 <div className="text-xs text-gray-500">
                                                     {t('settings.expires_on')}: {membership.expiryDate ? new Date(membership.expiryDate).toLocaleDateString() : '-'}
                                                 </div>
                                             )}
                                             */}
-                                            </div>
                                         </div>
-                                        {!membership.isPremium && (
-                                            <button
-                                                onClick={() => { setShowSettingsModal(false); setShowPaymentModal(true); setPaymentMethod(null); }}
-                                                className="text-xs bg-amber-500 text-black px-3 py-1.5 rounded-lg font-bold hover:bg-amber-400"
-                                            >
-                                                UPGRADE
-                                            </button>
-                                        )}
                                     </div>
-                                </div>
-
-                                {/* Username Editor */}
-                                <div className="mb-6">
-                                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{language === 'zh' ? '用户名' : 'Username'}</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={editedUsername}
-                                            onChange={(e) => setEditedUsername(e.target.value)}
-                                            onFocus={() => {
-                                                if (!editedUsername) {
-                                                    setEditedUsername(user?.user_metadata?.username || user?.email?.split('@')[0] || '');
-                                                }
-                                            }}
-                                            placeholder={user?.user_metadata?.username || user?.email?.split('@')[0] || (language === 'zh' ? '输入用户名' : 'Enter username')}
-                                            className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none text-sm"
-                                        />
+                                    {!membership.isPremium && (
                                         <button
-                                            onClick={async () => {
-                                                if (!editedUsername.trim()) {
-                                                    setErrorMessage(language === 'zh' ? '用户名不能为空' : 'Username cannot be empty');
-                                                    setShowErrorToast(true);
-                                                    return;
-                                                }
-                                                try {
-                                                    const { error } = await supabase.auth.updateUser({
-                                                        data: { username: editedUsername.trim() }
-                                                    });
-                                                    if (error) throw error;
-                                                    setToastMessage(language === 'zh' ? '用户名已更新！' : 'Username updated!');
-                                                    setShowSuccessToast(true);
-                                                    // Refresh user data
-                                                    const { data: { user: refreshedUser } } = await supabase.auth.getUser();
-                                                    if (refreshedUser) {
-                                                        setUser(refreshedUser);
-                                                    }
-                                                } catch (error) {
-                                                    setErrorMessage(error.message);
-                                                    setShowErrorToast(true);
-                                                }
-                                            }}
-                                            className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2.5 rounded-lg font-bold text-sm transition-colors"
+                                            onClick={() => { setShowSettingsModal(false); setShowPaymentModal(true); setPaymentMethod(null); }}
+                                            className="text-xs bg-amber-500 text-black px-3 py-1.5 rounded-lg font-bold hover:bg-amber-400"
                                         >
-                                            {language === 'zh' ? '保存' : 'Save'}
+                                            UPGRADE
                                         </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Username Editor */}
+                            <div className="mb-6">
+                                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{language === 'zh' ? '用户名' : 'Username'}</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={editedUsername}
+                                        onChange={(e) => setEditedUsername(e.target.value)}
+                                        onFocus={() => {
+                                            if (!editedUsername) {
+                                                setEditedUsername(user?.user_metadata?.username || user?.email?.split('@')[0] || '');
+                                            }
+                                        }}
+                                        placeholder={user?.user_metadata?.username || user?.email?.split('@')[0] || (language === 'zh' ? '输入用户名' : 'Enter username')}
+                                        className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none text-sm"
+                                    />
+                                    <button
+                                        onClick={async () => {
+                                            if (!editedUsername.trim()) {
+                                                setErrorMessage(language === 'zh' ? '用户名不能为空' : 'Username cannot be empty');
+                                                setShowErrorToast(true);
+                                                return;
+                                            }
+                                            try {
+                                                const { error } = await supabase.auth.updateUser({
+                                                    data: { username: editedUsername.trim() }
+                                                });
+                                                if (error) throw error;
+                                                setToastMessage(language === 'zh' ? '用户名已更新！' : 'Username updated!');
+                                                setShowSuccessToast(true);
+                                                // Refresh user data
+                                                const { data: { user: refreshedUser } } = await supabase.auth.getUser();
+                                                if (refreshedUser) {
+                                                    setUser(refreshedUser);
+                                                }
+                                            } catch (error) {
+                                                setErrorMessage(error.message);
+                                                setShowErrorToast(true);
+                                            }
+                                        }}
+                                        className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2.5 rounded-lg font-bold text-sm transition-colors"
+                                    >
+                                        {language === 'zh' ? '保存' : 'Save'}
+                                    </button>
+                                </div>
+                                <div className="text-[10px] text-gray-500 mt-1">
+                                    {language === 'zh' ? '当前：' : 'Current: '}{user?.user_metadata?.username || user?.email?.split('@')[0] || '-'}
+                                </div>
+                            </div>
+
+                            {/* Membership Benefits (Visible to all, highlighted for Pro) */}
+                            <div className="mb-6">
+                                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('payment.badge')}</label>
+                                <div className="space-y-2">
+                                    <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
+                                        <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
+                                        <span>{t('payment.ai_analysis')}</span>
                                     </div>
-                                    <div className="text-[10px] text-gray-500 mt-1">
-                                        {language === 'zh' ? '当前：' : 'Current: '}{user?.user_metadata?.username || user?.email?.split('@')[0] || '-'}
+                                    <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
+                                        <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
+                                        <span>{t('payment.unlimited')}</span>
+                                    </div>
+                                    <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
+                                        <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
+                                        <span>{t('payment.support')}</span>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Membership Benefits (Visible to all, highlighted for Pro) */}
-                                <div className="mb-6">
-                                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('payment.badge')}</label>
-                                    <div className="space-y-2">
-                                        <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
-                                            <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
-                                            <span>{t('payment.ai_analysis')}</span>
-                                        </div>
-                                        <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
-                                            <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
-                                            <span>{t('payment.unlimited')}</span>
-                                        </div>
-                                        <div className={`flex items-center gap-2 text-sm ${membership.isPremium ? 'text-white' : 'text-gray-500'}`}>
-                                            <CheckCircle2 className={`w-4 h-4 ${membership.isPremium ? 'text-amber-500' : 'text-gray-600'}`} />
-                                            <span>{t('payment.support')}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Fortune Compass Settings (Hidden for now) */}
-                                {/*
+                            {/* Fortune Compass Settings (Hidden for now) */}
+                            {/*
                             <div className="mb-6">
                                 <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t('settings.birth_date')}</label>
                                 <input
@@ -4015,299 +4003,298 @@ function GoldCatApp() {
                             </div>
                             */}
 
+                            <button
+                                onClick={() => {
+                                    // Save user settings to localStorage
+                                    const storedUsers = JSON.parse(localStorage.getItem('goldcat_users') || '[]');
+                                    const updatedUsers = storedUsers.map(u => u.email === user.email ? user : u);
+                                    localStorage.setItem('goldcat_users', JSON.stringify(updatedUsers));
+                                    localStorage.setItem('goldcat_user', JSON.stringify(user)); // Update current session user
+
+                                    setShowSettingsModal(false);
+                                    setShowSuccessToast(true);
+                                }}
+                                className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-colors shadow-lg shadow-amber-500/20 mb-4"
+                            >
+                                {t('settings.save')}
+                            </button>
+
+                            <div className="border-t border-neutral-800 pt-4">
                                 <button
                                     onClick={() => {
-                                        // Save user settings to localStorage
-                                        const storedUsers = JSON.parse(localStorage.getItem('goldcat_users') || '[]');
-                                        const updatedUsers = storedUsers.map(u => u.email === user.email ? user : u);
-                                        localStorage.setItem('goldcat_users', JSON.stringify(updatedUsers));
-                                        localStorage.setItem('goldcat_user', JSON.stringify(user)); // Update current session user
-
                                         setShowSettingsModal(false);
-                                        setShowSuccessToast(true);
+                                        handleLogout();
                                     }}
-                                    className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-colors shadow-lg shadow-amber-500/20 mb-4"
+                                    className="w-full py-3 bg-neutral-800 hover:bg-red-900/20 text-gray-400 hover:text-red-500 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
                                 >
-                                    {t('settings.save')}
+                                    <LogOut className="w-4 h-4" /> {t('auth.logout_confirm_btn')}
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
-                                <div className="border-t border-neutral-800 pt-4">
+            {/* 浮动客服按钮 */}
+            <button
+                onClick={() => {
+                    setFeedbackForm({
+                        ...feedbackForm,
+                        name: user?.user_metadata?.username || '',
+                        email: user?.email || user?.user_metadata?.email || ''
+                    });
+                    setShowFeedbackModal(true);
+                }}
+                className="fixed bottom-24 right-6 z-50 bg-amber-500 hover:bg-amber-400 text-black p-4 rounded-full shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-110 transition-all group"
+            >
+                <MessageSquare className="w-6 h-6" />
+            </button>
+
+            {/* 反馈弹窗 (Founder Chat Style) */}
+            {
+                showFeedbackModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="w-full max-w-md bg-[#0D0D0D] border border-neutral-800 rounded-2xl shadow-2xl relative overflow-hidden animate-in zoom-in duration-300 font-sans">
+
+                            {/* Header */}
+                            <div className="flex items-center justify-between p-4 px-6 border-b border-neutral-800 bg-[#121212]">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                        <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-black">
+                                            <User className="w-6 h-6" />
+                                        </div>
+                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#121212]"></div>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white text-sm">{t('feedback.title')}</h3>
+                                        <div className="flex items-center gap-1.5 text-xs text-green-500 font-medium">
+                                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                                            {t('feedback.status')}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowFeedbackModal(false)}
+                                    className="text-gray-500 hover:text-white transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-6 space-y-6 bg-[#0D0D0D]">
+
+                                {/* Founder Message */}
+                                <div className="flex gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0 mt-1">
+                                        <User className="w-4 h-4 text-gray-500" />
+                                    </div>
+                                    <div className="bg-[#1C1C1E] text-gray-300 text-sm p-4 rounded-2xl rounded-tl-none border border-neutral-800 leading-relaxed whitespace-pre-wrap shadow-sm">
+                                        {t('feedback.greeting')}
+                                    </div>
+                                </div>
+
+                                {/* Form */}
+                                <div className="space-y-4 pl-11">
+                                    {/* Message Input */}
+                                    <div>
+                                        <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 pl-1">
+                                            {t('feedback.message_label')}
+                                        </label>
+                                        <textarea
+                                            placeholder={t('feedback.message_placeholder')}
+                                            value={feedbackForm.content}
+                                            onChange={(e) => setFeedbackForm({ ...feedbackForm, content: e.target.value })}
+                                            rows={3}
+                                            className="w-full bg-[#121212] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:border-neutral-600 focus:outline-none resize-none transition-colors"
+                                        />
+                                    </div>
+
+                                    {/* Contact Input */}
+                                    <div>
+                                        <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 pl-1">
+                                            {t('feedback.contact_label')}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder={t('feedback.contact_placeholder')}
+                                            value={feedbackForm.email}
+                                            onChange={(e) => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
+                                            className="w-full bg-[#121212] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:border-neutral-600 focus:outline-none transition-colors"
+                                        />
+                                    </div>
+
+                                    {/* Submit Button */}
                                     <button
-                                        onClick={() => {
-                                            setShowSettingsModal(false);
-                                            handleLogout();
-                                        }}
-                                        className="w-full py-3 bg-neutral-800 hover:bg-red-900/20 text-gray-400 hover:text-red-500 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                                        onClick={handleSubmitFeedback}
+                                        className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 flex items-center justify-center gap-2 mt-2"
                                     >
-                                        <LogOut className="w-4 h-4" /> {t('auth.logout_confirm_btn')}
+                                        {t('feedback.submit_btn')}
+                                        <Send className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    )
-                }
+                    </div>
+                )
+            }
 
-                {/* 浮动客服按钮 */}
-                <button
-                    onClick={() => {
-                        setFeedbackForm({
-                            ...feedbackForm,
-                            name: user?.user_metadata?.username || '',
-                            email: user?.email || user?.user_metadata?.email || ''
-                        });
-                        setShowFeedbackModal(true);
-                    }}
-                    className="fixed bottom-24 right-6 z-50 bg-amber-500 hover:bg-amber-400 text-black p-4 rounded-full shadow-2xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-110 transition-all group"
-                >
-                    <MessageSquare className="w-6 h-6" />
-                </button>
+            {/* Footer with Privacy and Terms - Static Scrollable */}
+            <div className="relative w-full max-w-7xl mx-auto px-4 py-4 md:py-8 mt-auto mb-2 md:mb-6 text-gray-500 text-xs font-mono">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4 border-t border-white/10 pt-4 md:pt-8">
+                    {/* Left: Copyright */}
+                    <div className="scale-90 md:scale-100">
+                        © {new Date().getFullYear()} GoldCat Terminal. {language === 'zh' ? '保留所有权利。' : 'All rights reserved.'}
+                    </div>
 
-                {/* 反馈弹窗 (Founder Chat Style) */}
-                {
-                    showFeedbackModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                            <div className="w-full max-w-md bg-[#0D0D0D] border border-neutral-800 rounded-2xl shadow-2xl relative overflow-hidden animate-in zoom-in duration-300 font-sans">
+                    {/* Right: Links */}
+                    <div className="flex items-center gap-4 md:gap-6 scale-90 md:scale-100">
+                        <button
+                            onClick={() => setCurrentPage('privacy')}
+                            className="text-gray-500 hover:text-amber-500 transition-colors"
+                        >
+                            {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage('terms')}
+                            className="text-gray-500 hover:text-amber-500 transition-colors"
+                        >
+                            {language === 'zh' ? '服务条款' : 'Terms of Service'}
+                        </button>
+                        <a
+                            href="https://paragraph.com/@goldcat.trade/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 hover:text-amber-500 transition-colors"
+                        >
+                            {language === 'zh' ? '博客' : 'Blog'}
+                        </a>
+                        <button
+                            onClick={() => setShowDisclaimer(!showDisclaimer)}
+                            className="text-gray-500 hover:text-amber-500 transition-colors flex items-center gap-1"
+                        >
+                            <AlertTriangle className="w-3 h-3" />
+                            {language === 'zh' ? '风险提示' : 'Risk Disclaimer'}
+                        </button>
+                    </div>
+                </div>
 
-                                {/* Header */}
-                                <div className="flex items-center justify-between p-4 px-6 border-b border-neutral-800 bg-[#121212]">
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative">
-                                            <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-black">
-                                                <User className="w-6 h-6" />
-                                            </div>
-                                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#121212]"></div>
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-white text-sm">{t('feedback.title')}</h3>
-                                            <div className="flex items-center gap-1.5 text-xs text-green-500 font-medium">
-                                                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                                                {t('feedback.status')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowFeedbackModal(false)}
-                                        className="text-gray-500 hover:text-white transition-colors"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
+                {showDisclaimer && (
+                    <div className="max-w-3xl mx-auto mt-2 px-4 py-2 bg-amber-900/10 border border-amber-500/20 rounded text-xs text-gray-300">
+                        {language === 'zh' ? (
+                            <span><strong className="text-amber-400">风险提示：</strong>GoldCat 仅提供交易记录工具，不构成任何投资建议。交易有风险，投资需谨慎。</span>
+                        ) : (
+                            <span><strong className="text-amber-400">Risk Disclaimer:</strong> GoldCat is a trading journal tool only and does not constitute investment advice. Trading involves risk. Please invest responsibly.</span>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Delete Confirmation Modal */}
+            {
+                showDeleteModal && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl scale-in-95 animate-in zoom-in-95 duration-200">
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Trash2 className="w-8 h-8 text-red-500" />
                                 </div>
-
-                                {/* Body */}
-                                <div className="p-6 space-y-6 bg-[#0D0D0D]">
-
-                                    {/* Founder Message */}
-                                    <div className="flex gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0 mt-1">
-                                            <User className="w-4 h-4 text-gray-500" />
-                                        </div>
-                                        <div className="bg-[#1C1C1E] text-gray-300 text-sm p-4 rounded-2xl rounded-tl-none border border-neutral-800 leading-relaxed whitespace-pre-wrap shadow-sm">
-                                            {t('feedback.greeting')}
-                                        </div>
-                                    </div>
-
-                                    {/* Form */}
-                                    <div className="space-y-4 pl-11">
-                                        {/* Message Input */}
-                                        <div>
-                                            <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 pl-1">
-                                                {t('feedback.message_label')}
-                                            </label>
-                                            <textarea
-                                                placeholder={t('feedback.message_placeholder')}
-                                                value={feedbackForm.content}
-                                                onChange={(e) => setFeedbackForm({ ...feedbackForm, content: e.target.value })}
-                                                rows={3}
-                                                className="w-full bg-[#121212] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:border-neutral-600 focus:outline-none resize-none transition-colors"
-                                            />
-                                        </div>
-
-                                        {/* Contact Input */}
-                                        <div>
-                                            <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 pl-1">
-                                                {t('feedback.contact_label')}
-                                            </label>
-                                            <input
-                                                type="text"
-                                                placeholder={t('feedback.contact_placeholder')}
-                                                value={feedbackForm.email}
-                                                onChange={(e) => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
-                                                className="w-full bg-[#121212] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:border-neutral-600 focus:outline-none transition-colors"
-                                            />
-                                        </div>
-
-                                        {/* Submit Button */}
-                                        <button
-                                            onClick={handleSubmitFeedback}
-                                            className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 flex items-center justify-center gap-2 mt-2"
-                                        >
-                                            {t('feedback.submit_btn')}
-                                            <Send className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">
+                                    {language === 'zh' ? '确认删除交易？' : 'Delete Trade?'}
+                                </h3>
+                                <p className="text-gray-400 text-sm">
+                                    {language === 'zh'
+                                        ? '此操作将永久删除该交易记录，无法恢复。'
+                                        : 'This action will permanently delete this trade record. It cannot be undone.'}
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowDeleteModal(false);
+                                        setTradeToDelete(null);
+                                    }}
+                                    className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-bold transition-colors"
+                                >
+                                    {language === 'zh' ? '取消' : 'Cancel'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (tradeToDelete) {
+                                            removeTrade(tradeToDelete.id);
+                                            setShowDeleteModal(false);
+                                            setTradeToDelete(null);
+                                        }
+                                    }}
+                                    className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-900/20"
+                                >
+                                    {language === 'zh' ? '确认删除' : 'Delete'}
+                                </button>
                             </div>
                         </div>
-                    )
-                }
+                    </div>
+                )
+            }
 
-                {/* Footer with Privacy and Terms - Static Scrollable */}
-                <div className="relative w-full max-w-7xl mx-auto px-4 py-4 md:py-8 mt-auto mb-2 md:mb-6 text-gray-500 text-xs font-mono">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4 border-t border-white/10 pt-4 md:pt-8">
-                        {/* Left: Copyright */}
-                        <div className="scale-90 md:scale-100">
-                            © {new Date().getFullYear()} GoldCat Terminal. {language === 'zh' ? '保留所有权利。' : 'All rights reserved.'}
-                        </div>
+            {/* Page Routing: Privacy Policy and Terms of Service Pages */}
+            {
+                currentPage === 'privacy' && (
+                    <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
+                        <PrivacyPolicyPage language={language} onBack={() => setCurrentPage('main')} />
+                    </div>
+                )
+            }
+            {
+                currentPage === 'terms' && (
+                    <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
+                        <TermsOfServicePage language={language} onBack={() => setCurrentPage('main')} />
+                    </div>
+                )
+            }
 
-                        {/* Right: Links */}
-                        <div className="flex items-center gap-4 md:gap-6 scale-90 md:scale-100">
-                            <button
-                                onClick={() => setCurrentPage('privacy')}
-                                className="text-gray-500 hover:text-amber-500 transition-colors"
-                            >
-                                {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
-                            </button>
-                            <button
-                                onClick={() => setCurrentPage('terms')}
-                                className="text-gray-500 hover:text-amber-500 transition-colors"
-                            >
-                                {language === 'zh' ? '服务条款' : 'Terms of Service'}
-                            </button>
-                            <a
-                                href="https://paragraph.com/@goldcat.trade/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-500 hover:text-amber-500 transition-colors"
-                            >
-                                {language === 'zh' ? '博客' : 'Blog'}
-                            </a>
-                            <button
-                                onClick={() => setShowDisclaimer(!showDisclaimer)}
-                                className="text-gray-500 hover:text-amber-500 transition-colors flex items-center gap-1"
-                            >
-                                <AlertTriangle className="w-3 h-3" />
-                                {language === 'zh' ? '风险提示' : 'Risk Disclaimer'}
+
+            {/* 成功提示 Toast (Moved to end to ensure z-index priority) */}
+            {
+                showSuccessToast && (
+                    <div className="fixed bottom-8 right-8 z-[10000] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="bg-black/60 backdrop-blur-xl border border-white/10 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 ring-1 ring-white/5">
+                            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                                <CheckCircle2 className="w-5 h-5 text-green-400" />
+                            </div>
+                            <div>
+                                <div className="font-bold text-sm tracking-wide">{toastMessage || t('common.success')}</div>
+                            </div>
+                            <button onClick={() => setShowSuccessToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">
+                                <X className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
+                )
+            }
 
-                    {showDisclaimer && (
-                        <div className="max-w-3xl mx-auto mt-2 px-4 py-2 bg-amber-900/10 border border-amber-500/20 rounded text-xs text-gray-300">
-                            {language === 'zh' ? (
-                                <span><strong className="text-amber-400">风险提示：</strong>GoldCat 仅提供交易记录工具，不构成任何投资建议。交易有风险，投资需谨慎。</span>
-                            ) : (
-                                <span><strong className="text-amber-400">Risk Disclaimer:</strong> GoldCat is a trading journal tool only and does not constitute investment advice. Trading involves risk. Please invest responsibly.</span>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Delete Confirmation Modal */}
-                {
-                    showDeleteModal && (
-                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl scale-in-95 animate-in zoom-in-95 duration-200">
-                                <div className="text-center mb-6">
-                                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Trash2 className="w-8 h-8 text-red-500" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-white mb-2">
-                                        {language === 'zh' ? '确认删除交易？' : 'Delete Trade?'}
-                                    </h3>
-                                    <p className="text-gray-400 text-sm">
-                                        {language === 'zh'
-                                            ? '此操作将永久删除该交易记录，无法恢复。'
-                                            : 'This action will permanently delete this trade record. It cannot be undone.'}
-                                    </p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => {
-                                            setShowDeleteModal(false);
-                                            setTradeToDelete(null);
-                                        }}
-                                        className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-bold transition-colors"
-                                    >
-                                        {language === 'zh' ? '取消' : 'Cancel'}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (tradeToDelete) {
-                                                removeTrade(tradeToDelete.id);
-                                                setShowDeleteModal(false);
-                                                setTradeToDelete(null);
-                                            }
-                                        }}
-                                        className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-900/20"
-                                    >
-                                        {language === 'zh' ? '确认删除' : 'Delete'}
-                                    </button>
-                                </div>
+            {/* 错误提示 Toast (Moved to end) */}
+            {
+                showErrorToast && (
+                    <div className="fixed bottom-8 right-8 z-[10000] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="bg-black/60 backdrop-blur-xl border border-red-500/30 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 ring-1 ring-red-500/20">
+                            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                                <AlertCircle className="w-5 h-5 text-red-500" />
                             </div>
-                        </div>
-                    )
-                }
-
-                {/* Page Routing: Privacy Policy and Terms of Service Pages */}
-                {
-                    currentPage === 'privacy' && (
-                        <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
-                            <PrivacyPolicyPage language={language} onBack={() => setCurrentPage('main')} />
-                        </div>
-                    )
-                }
-                {
-                    currentPage === 'terms' && (
-                        <div className="fixed inset-0 z-[10000] bg-black overflow-y-auto animate-in fade-in duration-200">
-                            <TermsOfServicePage language={language} onBack={() => setCurrentPage('main')} />
-                        </div>
-                    )
-                }
-
-
-                {/* 成功提示 Toast (Moved to end to ensure z-index priority) */}
-                {
-                    showSuccessToast && (
-                        <div className="fixed bottom-8 right-8 z-[10000] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="bg-black/60 backdrop-blur-xl border border-white/10 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 ring-1 ring-white/5">
-                                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-                                    <CheckCircle2 className="w-5 h-5 text-green-400" />
+                            <div>
+                                <div className="font-bold text-sm tracking-wide text-red-400">
+                                    {t('common.error') === 'common.error' ? (language === 'zh' ? '发生错误' : 'Error') : t('common.error')}
                                 </div>
-                                <div>
-                                    <div className="font-bold text-sm tracking-wide">{toastMessage || t('common.success')}</div>
-                                </div>
-                                <button onClick={() => setShowSuccessToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">
-                                    <X className="w-4 h-4" />
-                                </button>
+                                <div className="text-xs text-gray-400">{errorMessage}</div>
                             </div>
+                            <button onClick={() => setShowErrorToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">
+                                <X className="w-4 h-4" />
+                            </button>
                         </div>
-                    )
-                }
+                    </div>
+                )
+            }
 
-                {/* 错误提示 Toast (Moved to end) */}
-                {
-                    showErrorToast && (
-                        <div className="fixed bottom-8 right-8 z-[10000] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="bg-black/60 backdrop-blur-xl border border-red-500/30 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 ring-1 ring-red-500/20">
-                                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                                    <AlertCircle className="w-5 h-5 text-red-500" />
-                                </div>
-                                <div>
-                                    <div className="font-bold text-sm tracking-wide text-red-400">
-                                        {t('common.error') === 'common.error' ? (language === 'zh' ? '发生错误' : 'Error') : t('common.error')}
-                                    </div>
-                                    <div className="text-xs text-gray-400">{errorMessage}</div>
-                                </div>
-                                <button onClick={() => setShowErrorToast(false)} className="ml-2 text-gray-400 hover:text-white transition-colors">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    )
-                }
-
-            </div>
-        </Suspense>
+        </div >
     );
 }
 
