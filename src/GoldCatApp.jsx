@@ -597,10 +597,10 @@ function GoldCatApp() {
     const [paymentTxId, setPaymentTxId] = useState(''); // Payment Transaction ID
     const [orderNumber, setOrderNumber] = useState(''); // USDT Order Number
 
-    // Auto-scroll to top when tab changes
+    // Auto-scroll to top when tab changes or view mode switches
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, [activeTab]);
+    }, [activeTab, explicitLandingView, showGuestDashboard]);
 
     // Pattern Management
     const [patterns, setPatterns] = useState(getInitialPatterns(language));
@@ -2348,14 +2348,14 @@ function GoldCatApp() {
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
                                             className={`
-                                flex items-center justify-center gap-2 px-5 py-4 sm:px-6 sm:py-3 rounded-2xl text-sm sm:text-base font-bold transition-all whitespace-nowrap
+                                flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap
                                 ${activeTab === tab.id
                                                     ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105'
                                                     : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'
                                                 }
                             `}
                                         >
-                                            {tab.icon && <tab.icon className="w-6 h-6 sm:w-5 sm:h-5" />}
+                                            {tab.icon && <tab.icon className="w-5 h-5 sm:w-4 sm:h-4" />}
                                             <span className="hidden xs:inline sm:inline">{tab.label}</span>
                                         </button>
                                     ))}
@@ -3151,7 +3151,7 @@ function GoldCatApp() {
                 {/* Fixed Bottom Progress Bar - HIDDEN on Quantum Terminal AND Daily Alpha */}
                 {
                     activeTab !== 'quantum_terminal' && activeTab !== 'daily_alpha' && ((user && !explicitLandingView) || (!user && showGuestDashboard)) && (
-                        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/95 backdrop-blur-xl border-t border-white/5 pb-4 md:pb-8 pt-3 md:pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+                        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#09090b]/95 backdrop-blur-xl border-t border-white/5 pb-2 pt-2 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
                             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
                                 {
                                     (() => {
