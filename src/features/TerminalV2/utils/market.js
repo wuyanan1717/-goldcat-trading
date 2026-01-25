@@ -1,10 +1,8 @@
 import { calculateRSI } from './indicators';
 import { addDebugLog } from './logger';
 
-// Use Supabase Proxy to bypass GFW and IP restrictions
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const BASE_URL = `${SUPABASE_URL}/functions/v1/market-proxy`;
+// Use Vercel Proxy (same origin) to bypass Mobile Carrier IP blocking to Supabase
+const BASE_URL = '/api/market';
 
 export async function fetchBinanceKlines(symbol, interval, limit = 50) {
     // Internal helper to fetch from proxy
@@ -34,7 +32,6 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
             addDebugLog(`Fetching ${symbol} (${marketType})...`, 'info');
 
             const res = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
@@ -84,7 +81,7 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
                         const prefixSymbol = `1000${symbol}`;
                         const url = `${BASE_URL}?endpoint=klines&symbol=${prefixSymbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=futures`;
 
-                        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
+                        const res = await fetch(url);
                         if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
                         const json = await res.json();
                         if (json.error) throw new Error(json.error);
