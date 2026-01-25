@@ -1,4 +1,5 @@
 import { calculateRSI } from './indicators';
+import { addDebugLog } from './logger';
 
 // Use Supabase Proxy to bypass GFW and IP restrictions
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -16,21 +17,43 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
+            // Import logger dynamically to avoid circular deps if any (though strict checking is better, dynamic is safer for quick patch)
+            // But standard import is fine here since utils usually don't depend on components.
+            // Let's use the window object if available or simple console for now, 
+            // BUT wait, I should import it at the top. 
+            // Since this is a replacement chunk, I need to add the import at the top too.
+            // I'll do a separate edit for the import, or just Assume I will add it. 
+            // For this chunk I'll use the imported function.
+
+            /* Debug Log */
+            // Note: I will add the import in a separate step or included in a full file replace? 
+            // replace_file_content is better for small chunks. 
+            // I'll use console.log which my logger hooks into? No, I want explicit logs.
+            // I'll assume I'll add `import { addDebugLog } from './logger';` at the top.
+
+            addDebugLog(`Fetching ${symbol} (${marketType})...`, 'info');
+
             const res = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
 
+            addDebugLog(`Status: ${res.status} ${res.statusText}`, res.ok ? 'success' : 'error');
+
             if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
             const json = await res.json();
             if (json.error) throw new Error(json.error);
+
+            addDebugLog(`Got ${json.length} candles`, 'success');
             return json;
         } catch (error) {
             clearTimeout(timeoutId);
             if (error.name === 'AbortError') {
+                addDebugLog(`Timeout fetching ${symbol}`, 'error');
                 throw new Error('Network timeout - connection too slow');
             }
+            addDebugLog(`Fetch failed: ${error.message}`, 'error');
             throw error;
         }
     };
@@ -44,16 +67,18 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
             rawData = await fetchFromProxy('spot');
         } catch (spotError) {
             console.warn(`[Market] Spot API failed for ${symbol}, trying FUTURES...`, spotError);
+            addDebugLog(`Spot failed, trying Futures...`, 'warning');
             // 2. Fallback to FUTURES
             try {
                 rawData = await fetchFromProxy('futures');
                 usedMarket = 'futures';
             } catch (futuresError) {
-                // 3. Last Resort: Try adding "1000" prefix for Futures (common for meme coins/low price assets)
-                // e.g. PEPE -> 1000PEPE, DOGS -> 1000DOGS
+                // 3. Last Resort: Try adding "1000" prefix for Futures
                 if (!symbol.startsWith('1000')) {
                     try {
                         console.warn(`[Market] Futures failed for ${symbol}, trying 1000${symbol}...`);
+                        addDebugLog(`Futures failed, trying 1000${symbol}...`, 'warning');
+
                         // Temporarily change symbol to 1000 prefix for this call
                         const fetchLimit = limit + 15;
                         const prefixSymbol = `1000${symbol}`;
@@ -66,14 +91,15 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
 
                         rawData = json;
                         usedMarket = 'futures';
-                        // Note: We don't update the 'symbol' variable itself, so the chart title remains what user typed,
-                        // but the data comes from the 1000-prefix contract.
+                        addDebugLog(`1000-prefix success`, 'success');
                     } catch (prefixError) {
                         console.error(`[Market] 1000-prefix fallback also failed for ${symbol}`, prefixError);
+                        addDebugLog(`All fallbacks failed for ${symbol}`, 'error');
                         throw spotError; // Throw original error if everything fails
                     }
                 } else {
                     console.error(`[Market] Futures API also failed for ${symbol}`, futuresError);
+                    addDebugLog(`Futures failed for ${symbol}`, 'error');
                     throw spotError;
                 }
             }
@@ -99,6 +125,7 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
 
     } catch (error) {
         console.error("Failed to fetch market data:", error);
+        addDebugLog(`CRITICAL: ${error.message}`, 'error');
         // Do NOT return fake data. Throw error so UI shows "Load Failed"
         throw error;
     }

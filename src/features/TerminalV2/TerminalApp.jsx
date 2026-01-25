@@ -11,6 +11,7 @@ import { fetchBinanceKlines, fetchBacktestData } from './utils/market';
 import { consultObserver } from './utils/observer';
 import { runBacktestSimulation } from './utils/backtest';
 import { detectFlatBottomGreen, detectBeheadingRed } from './utils/indicators';
+import { MobileDebugOverlay } from './components/MobileDebugOverlay';
 
 const INITIAL_LOGS = [
     { id: 1, timestamp: new Date(), message: '量子观察者终端已就绪 (Quantum Observer Ready)', type: 'info' },
@@ -418,6 +419,9 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                     isRunning={isBacktesting}
                     result={backtestResult}
                 />
+
+                {/* Debug Overlay for Mobile Issues */}
+                <MobileDebugOverlay />
 
                 <GuideModal
                     isOpen={isGuideOpen}
