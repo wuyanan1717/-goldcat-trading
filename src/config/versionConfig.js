@@ -8,7 +8,7 @@
 // Feature version configuration
 export const FEATURE_VERSIONS = {
     QUANTUM_OBSERVER: {
-        current: 'v3', // ROLLBACK: V4 has performance issues, using stable V3
+        current: 'v4', // Restored to V4 (d434f52 working state)
         available: ['v3', 'v4'],
         rolloutPercentage: 100,
         description: 'Quantum Observer - Advanced market analysis with AI'
