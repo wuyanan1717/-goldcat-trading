@@ -57,6 +57,7 @@ export const ResonanceChart = ({
             <div className="relative h-[110px] rounded-lg border border-slate-800 overflow-hidden chart-grid bg-slate-900/20">
 
                 {/* Recharts Implementation */}
+                {/* Mobile Optimization: Disable Animation */}
                 <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={100}>
                     <LineChart data={data}>
                         <YAxis domain={['auto', 'auto']} hide />
@@ -67,7 +68,7 @@ export const ResonanceChart = ({
                             stroke={color}
                             strokeWidth={2}
                             dot={false}
-                            isAnimationActive={true}
+                            isAnimationActive={window.innerWidth > 768} // Disable chart animation on mobile
                             animationDuration={1500}
                             strokeOpacity={0.8}
                         />
@@ -114,9 +115,9 @@ export const ResonanceChart = ({
                     </LineChart>
                 </ResponsiveContainer>
 
-                {/* Visual Overlays */}
+                {/* Visual Overlays - Hidden on Mobile via CSS */}
                 {isScanning && (
-                    <div className="absolute top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-yellow-500 to-transparent shadow-[0_0_15px_#eab308] z-20 animate-scan pointer-events-none" />
+                    <div className="hidden md:block absolute top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-yellow-500 to-transparent shadow-[0_0_15px_#eab308] z-20 animate-scan pointer-events-none" />
                 )}
 
                 {/* RSI Heat Indicator Background */}

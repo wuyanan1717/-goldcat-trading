@@ -11,7 +11,10 @@ const BackgroundParticles = () => {
 
         // Check for mobile
         const isMobile = window.innerWidth < 768;
-        const particleCount = isMobile ? 35 : 80;
+        if (isMobile) {
+            return; // Completely disable particles on mobile
+        }
+        const particleCount = 80;
         const connectionDistance = isMobile ? 100 : 150;
         const mouseRadius = 150;
 
