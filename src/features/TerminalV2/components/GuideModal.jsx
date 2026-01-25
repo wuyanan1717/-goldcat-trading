@@ -9,11 +9,11 @@ export const GuideModal = ({ isOpen, onClose, lang = 'zh' }) => {
             title: "观察者协议文档 (Protocol Guide)",
 
             // ... (keep existing sections) ...
-            wave_title: "波函数概率 (Wave Function & AI Confidence)",
+            wave_title: "AI 概率场 (AI Probability Field & Confidence)",
             wave_def: "定义：",
-            wave_def_text: "市场未来方向的坍缩概率。",
+            wave_def_text: "基于 AI 模型预测的未来方向概率。",
             wave_principle: "原理：",
-            wave_principle_text: "AI 基于“既视感”、“共振”、“熵增”三个维度进行综合计算，模拟无数个平行宇宙的走势。当 80% 的平行宇宙都指向“上涨”时，多头概率条就会显示 80%。",
+            wave_principle_text: "AI 基于“既视感”、“共振”、“熵增”三个维度进行综合计算，模拟无数种市场情景的走势。当 80% 的推演结果都指向“上涨”时，多头概率条就会显示 80%。",
             wave_conf: "AI 确信度：",
             wave_conf_text: "代表 AI 对这次判断的“自信程度”。如果确信度很低（如 30%），即使多头概率很高，也说明市场噪音极大，建议观望。",
 
@@ -23,7 +23,7 @@ export const GuideModal = ({ isOpen, onClose, lang = 'zh' }) => {
             tactical_fbg: "底部反转 (Flat Bottom Green):",
             tactical_fbg_text: "GoldCat 核心算法捕获的特殊做多信号。通过分析微观市场的买单堆积特征，识别主力资金在关键点位的介入痕迹。",
             tactical_br: "顶部抛压 (Beheading Red):",
-            tactical_br_text: "GoldCat 量子雷达追踪到的高危做空信号。揭示了市场情绪的瞬间崩塌与多头动能的枯竭，通常预示着趋势的剧烈反转。",
+            tactical_br_text: "GoldCat AI 雷达追踪到的高危做空信号。揭示了市场情绪的瞬间崩塌与多头动能的枯竭，通常预示着趋势的剧烈反转。",
             tactical_auto: "自动巡航：",
             tactical_auto_text: "该功能开启后，系统会每 60 秒自动扫描一次，无需手动刷新。",
 
@@ -68,11 +68,11 @@ export const GuideModal = ({ isOpen, onClose, lang = 'zh' }) => {
         en: {
             title: "Observer Protocol Guide",
 
-            wave_title: "Wave Function & AI Confidence",
+            wave_title: "AI Probability Field & Confidence",
             wave_def: "Definition:",
-            wave_def_text: "Probability of the market's future direction collapsing.",
+            wave_def_text: "Probability of the market's future direction predicted by AI.",
             wave_principle: "Principle:",
-            wave_principle_text: "AI calculates based on 'Déjà Vu', 'Resonance', and 'Entropy'. It simulates countless parallel universes. If 80% point 'Up', the Long bar shows 80%.",
+            wave_principle_text: "AI calculates based on 'Déjà Vu', 'Resonance', and 'Entropy'. It simulates countless market scenarios. If 80% point 'Up', the Long bar shows 80%.",
             wave_conf: "AI Confidence:",
             wave_conf_text: "Represents the AI's confidence in this judgment. Low confidence (e.g. 30%) means high market noise; observation is recommended over action.",
 
@@ -82,7 +82,7 @@ export const GuideModal = ({ isOpen, onClose, lang = 'zh' }) => {
             tactical_fbg: "Flat Bottom Green:",
             tactical_fbg_text: "A proprietary bullish signal detected by GoldCat's Core Algorithm. It identifies the footprint of institutional accumulation through micro-market analysis.",
             tactical_br: "Beheading Red:",
-            tactical_br_text: "A high-risk bearish signal tracked by GoldCat's Quantum Radar. It reveals the instantaneous collapse of sentiment and exhaustion of bullish momentum.",
+            tactical_br_text: "A high-risk bearish signal tracked by GoldCat's AI Radar. It reveals the instantaneous collapse of sentiment and exhaustion of bullish momentum.",
             tactical_auto: "Auto-Cruise:",
             tactical_auto_text: "When enabled, the system automatically scans every 60 seconds without manual refresh.",
 

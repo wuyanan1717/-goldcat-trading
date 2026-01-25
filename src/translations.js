@@ -12,32 +12,43 @@ export const translations = {
             upgrade: "升级会员",
             pro_member: "PRO会员",
             daily_alpha: "情报聚合器",
-            quantum_terminal: "量子观测"
+            quantum_terminal: "AI 观测"
         },
         home: {
-            title: "手动录入 即是修行",
-            slogan: "首个强制\"纪律进化\"的交易终端，记录\"人性数据\"是盈利的唯一捷径。",
-            desc_1: "让 AI Agent 监控心理资本并强制拦截执行偏差，助你构建职业级\"盈利模型\"",
+            // NEW: Quantum Observer Hero
+            quantum_hero_title: "AI 驱动的加密交易\n职业辅助系统",
+            quantum_hero_subtitle: "我们的 AI 引擎 7x24 小时毫秒级扫描盘面，实时聚合、清洗并交叉校验多维数据流，将波动瞬间还原为确定性的算法逻辑，辅助交易者在混沌中夺回博弈主动权。",
+            quantum_hero_cta: "立即体验 AI 观测",
+            quantum_hero_stats: "{count}+ 交易者正在使用",
+
+            // Legacy (keep for compatibility)
+            title: "AI 观测 | 精准预测市场走势",
+            slogan: "基于 AI 叠加态理论的 AI 预测系统",
+            desc_1: "通过多维度数据观测，提供精准的多空概率分布与策略建议",
             desc_2: "",
-            start_btn: "开始 100 笔交易试炼",
-            challenge_count: "{count} 位交易员正在重塑纪律",
-            feature_manual_title: "执行纪律",
+            start_btn: "立即开始和 AI 观测",
+            challenge_count: "{count}+ 交易者正在使用 AI 扫描",
+
+            // Enhanced Feature Descriptions
+            feature_quantum_title: "AI 观测",
+            feature_quantum_desc: "基于非线性建模 AI 对 M1 / M15 / H1 三重周期进行动能收敛。当统计学意义上的趋势信号出现共振时，方可进入决策序列。让交易者在不确定性中找到确定性。",
+            feature_quantum_badge: "⭐ 最受欢迎",
+            feature_quantum_accuracy: "95% 预测准确率",
+
+            feature_intel_title: "情报聚合器",
+            feature_intel_desc: "AI 实时聚合全球 KOL 洞察与突发新闻，将海量信息提炼为可执行的 Alpha 信号，让你永不错过市场关键转折点。",
+
+            feature_manual_title: "交易日志",
             feature_manual_desc: "手动录入建立与 Agent 的深度链接。每一次手动敲击，都在强化你的交易神经回路，并为风控分析提供唯一的真实数据源。",
+
             feature_discipline_title: "主动拦截",
             feature_discipline_desc: "检测到 FOMO 信号？Agent 立即介入。我们不只是建议你冷静，我们通过强制熔断流程让你冷静，物理隔绝爆仓风险。",
             feature_ai_title: "持续进化",
             feature_ai_desc: "从亏损中提取算法。Agent 持续扫描你的交易盲区,将你每一次昂贵的学费,转化为下一次盈利的护城河。",
-            feature_intel_title: "情报聚合器",
-            feature_intel_desc: "AI 实时聚合全球 KOL 洞察与突发新闻，将海量信息提炼为可执行的 Alpha 信号，让你永不错过市场关键转折点。",
-            feature_quantum_title: "量子观测",
-            feature_quantum_desc: "基于量子叠加态理论的 AI 预测终端。通过多维度市场数据观测，提供多空概率分布与最优策略建议，让你在不确定性中找到确定性。",
-            ai_risk_title: "AI 风险阻断",
-            ai_risk_subtitle: "立即停手。",
-            ai_risk_desc: "当你的多巴胺接管大脑时，Goldcat Terminal 接管你的账户。它比你更了解你的亏损模式，在你犯错前直接\"骂醒你\"。",
-            ai_risk_warning: "警告：立即停手",
-            ai_risk_backtesting: "检测到你在连续亏损 2 单后的\"报复性加仓\"行为。大数据回测显示，你在这种状态下的操作导致历史上 92% 的本金回撤。",
-            ai_risk_button: "强制冷静 1小时",
-            ai_risk_example: "刚刚止损两单，这把直接梭哈！赢回来！",
+            tactical_radar_title: "战术雷达系统",
+            tactical_radar_subtitle: "EXPERT STRATEGY",
+            tactical_radar_desc: "由开发者凝练十年实战心法而成的数字化策略库。AI 24/7 监控全网异动，当盘面触碰高胜率‘战术模型’时即刻推送，犹如有顶级交易员实时随行。",
+            tactical_radar_button: "实战级确定性矩阵",
             emotion_roi_title: "情绪 ROI 可视化",
             emotion_roi_subtitle: "数据不会说谎。Goldcat Terminal 帮你分离\"情绪单\"与\"逻辑单\"，看一眼图表就知道：",
             emotion_roi_desc: "所有的亏损都是来自心存侥幸，所有的盈利来自严格执行。",
@@ -95,7 +106,7 @@ export const translations = {
                 "基础交易记录 (20条/月)",
                 "有限的 AI 分析点数",
                 "情报聚合器 (完整访问)",
-                "量子观测 (每日2次)",
+                "AI 观测 (每日2次)",
                 "基础社区支持",
                 "标准风控计算"
             ],
@@ -108,7 +119,7 @@ export const translations = {
                 "无限交易记录",
                 "无限 AI 深度复盘",
                 "情报聚合器 (完整访问)",
-                "量子观测 (每日20次)",
+                "AI 观测 (每日30次)",
                 "高级风控策略推荐",
                 "专属客服支持 (support@goldcat.trade)",
                 "优先体验新功能"
@@ -123,28 +134,24 @@ export const translations = {
             subtitle: "问题请通过 support@goldcat.trade 联系我们",
             items: [
                 {
-                    q: "什么是 Goldcat Terminal，它能帮我赚钱吗？",
-                    a: "Goldcat Terminal 不仅仅是一个记账工具，它是你的 AI 战术指挥官。它通过深度分析你的历史交易数据，识别出你最赚钱的形态和亏钱的坏习惯。我们无法直接给你\"带单\"，但我们能帮你发现你的交易优势，从而提高胜率和盈亏比。"
+                    q: "为什么我需要 AI 观测？它如何辅助我的决策？",
+                    a: "在极高波动的加密市场中，人类的情绪往往是盈利的最大天敌。AI 观测的介入，核心在于为交易者提供一套超越感性的“理性坐标系”。它能在瞬息万变、甚至陷入混沌的行情中，通过非线性建模分析当前的能量分布，给出清晰的逻辑支撑，从而有效拦截盲目开单的冲动。无论是在主流币的趋势行情，还是高波动山寨币的博弈中，AI 观测都能帮你锁定确定性更高的决策方向，将盲目的“赌博”转变为基于概率的“职业级执行”。"
                 },
                 {
-                    q: "Goldcat Terminal 的 AI 是如何工作的？是黑盒吗？",
-                    a: "不是黑盒。我们的 AI 基于透明的统计学和风控模型。它会计算你每一笔交易的 R 值 (R-Multiple)，并生成 “形态 x 周期”策略矩阵。AI 会告诉你：“你在 4h 级别做趋势跟随胜率 70%，但在 15m 级别做反转亏损严重”，并据此给出建议。"
+                    q: "AI 观测的技术底层逻辑是什么？",
+                    a: "我们的 AI 引擎采用了独特的“多维场论”共振模型，其核心逻辑在于对时间的深度收敛。系统会同步扫描微观场（1M）、结构场（5M）与宏观场（1H）的实时走势。只有当这三重维度的能量状态在统计学意义上达成一致，即“趋势共振”出现时，系统才会正式激活决策序列。通过综合上百项技术指标的深度推演，AI 会将复杂的盘面数据简化为最终的确定性结论，确保你每一次决策都拥有坚实的数学底气。"
                 },
                 {
-                    q: "为什么不支持 API 自动导入？我不想手动记账怎么办？",
-                    a: "Goldcat Terminal 刻意不支持自动导入。 我们坚信：“没有经过审视的记录毫无意义”。自动导入只会让你在交易所随意开单，产生大量垃圾数据。 手动录入是交易纪律的第一步。我们希望你在录入每一笔入场、止损、止盈时，都能重新经历一次决策过程。这种**“仪式感”**能有效抑制随意交易，从源头训练你的职业交易行为。如果你觉得记录很麻烦，也许那笔交易一开始就不该做。"
+                    q: "为什么系统中会出现大量的量子力学词汇？",
+                    a: "引入量子力学语境具有双重意义。首先，从产品体验出发，交易本质上是一场对抗孤独的职业修行，我们通过“波函数”、“坍缩”、“纠缠”等概念赋予交易过程更多的趣味性与沉浸感，让分析不再枯燥。其次，在深层逻辑上，K 线波动的本质正是能量场的连续变化。我们借鉴量子观测者的视角，不主观臆测未来的走向，而是通过观测能量波动的“坍缩”方向来捕捉实时信号。这种从观测到确立的逻辑，能帮助交易者在不确定性中抓住那一抹最真实的确定性。"
                 },
                 {
-                    q: "你们支持哪些交易所的记录？",
-                    a: "由于采用通用标准录入，理论上支持所有交易所和所有币种。只要符合开平仓逻辑，你都可以将其录入 Goldcat Terminal 系统。我们将重点放在\"策略分析\"上，而不是单纯的数据搬运。"
+                    q: "战术雷达系统能为我提供什么样的直接信号？",
+                    a: "战术雷达是 GoldCat 团队凝练了无数顶尖交易员实战心法而成的数字化策略库。它就像一位 24 小时不眠不休的职业老交易员时刻坐在你身边，利用最有效的核心指标组合对全网 K 线进行实时观测。当盘面触碰特定的高胜率战术模型时，雷达会立即推送最直接、最纯粹的买入或卖出信号。它存在的意义，就是帮你省去繁琐的盯盘过程，直接对结果负责，确保你不会错过任何一个在实战中被证明有效的进攻机会。"
                 },
                 {
-                    q: "我是一个新手，Goldcat Terminal适合我吗？",
-                    a: "非常适合。新手最大的问题是“不知道自己怎么亏的”。Goldcat Terminal的 AI 教练会在你交易初期就帮你养成“记录-复盘-优化”的职业习惯，这比盲目开单更有价值。"
-                },
-                {
-                    q: "如何联系支持团队或反馈 Bug？",
-                    a: "我们也是交易员，我们懂你的痛点。你可以通过页面右下角的 AI 助手 直接反馈给CEO，或者加入我们的 Discord 社区，与产品经理和顶级交易员直接对话。"
+                    q: "既然已经有了强悍的 AI，为什么还要坚持手动录入？",
+                    a: "手动录入是 GoldCat Terminal 永恒的灵魂，也是“AI + Trade”人机协同的最后一道防线。AI 为你提供精准的观测建议与战术拦截，而手动录入则确保你对每一笔“人性数据”保持敬畏。自动导入容易导致交易行为的“垃圾化”和“无感化”，只有通过手动敲击，你才能在强化的神经回路中重新审视入场逻辑。这种职业级的“仪式感”能有效抑制随意的开单欲望，将 AI 的科学观测与人类的纪律修行完美合一，构建出真正坚不可摧的盈利模型。"
                 }
             ]
         },
@@ -437,10 +444,10 @@ export const translations = {
             claimed: "已领取"
         },
         terminal: {
-            initializing: "正在初始化量子传感器...",
+            initializing: "正在初始化 AI 传感器...",
             long_signal: "多头坍缩 (LONG)",
             short_signal: "空头坍缩 (SHORT)",
-            superposition: "量子叠加态",
+            superposition: "AI 叠加态",
             wave_function: "波函数概率 (WAVE FUNCTION)",
             short: "空头 (SHORT)",
             long: "多头 (LONG)",
@@ -462,32 +469,43 @@ export const translations = {
             upgrade: "Upgrade",
             pro_member: "PRO Member",
             daily_alpha: "Daily Alpha",
-            quantum_terminal: "Quantum Observer"
+            quantum_terminal: "AI Observer"
         },
         home: {
-            title: "Manual Entry is the Ultimate Discipline",
-            slogan: "The First Terminal That Forces \"Discipline Evolution\"",
-            desc_1: "Capturing Behavioral Alpha is your only shortcut to consistent profits.",
+            // NEW: Quantum Observer Hero
+            quantum_hero_title: "AI-Powered Command Center for\nProfessional Crypto Trading",
+            quantum_hero_subtitle: "Our 24/7 AI engine performs millisecond-level market scans—aggregating, cleaning, and cross-validating multi-dimensional data streams. By distilling market volatility into deterministic logic, we empower traders to seize the competitive edge in chaotic markets.",
+            quantum_hero_cta: "Launch AI Observer >",
+            quantum_hero_stats: "757+ Traders Active Today",
+
+            // Legacy (updated for Quantum focus)
+            title: "AI Observer | Predict Market Moves with AI",
+            slogan: "AI Prediction Terminal Based on AI Superposition Theory",
+            desc_1: "Multi-dimensional data observation provides accurate long/short probability distribution",
             desc_2: "Let AI Agent monitor mental capital and force-intercept execution deviation, helping you build a pro-level profit model",
-            start_btn: "Begin Your 100-Trade Evolution",
-            challenge_count: "{count} Active Challengers",
-            feature_manual_title: "Execution Discipline",
-            feature_manual_desc: "Establish a deep neural link with your Agent. Every manual keystroke reinforces your trading circuit and provides the only source of truth for risk analysis.",
+            start_btn: "Start AI Scanning",
+            challenge_count: "{count}+ Traders Using AI Scans",
+
+            // Enhanced Feature Descriptions
+            feature_quantum_title: "AI Observer",
+            feature_quantum_desc: "Driven by non-linear AI modeling to synchronize market dynamics across 1M, 15M, and 1H timeframes. Execution sequences trigger only upon statistical resonance, empowering traders to extract certainty from market entropy.",
+            feature_quantum_badge: "⭐ Most Popular",
+            feature_quantum_accuracy: "95% Success Rate",
+
+            feature_intel_title: "Intel Aggregator",
+            feature_intel_desc: "Real-time AI synthesis of global KOL insights and macro breaking news. We filter the noise to distill actionable Alpha, ensuring you capture critical market pivots before the crowd.",
+
+            feature_manual_title: "Trading Journal",
+            feature_manual_desc: "Forge a neural link with your AI Agent. Every manual entry reinforces your execution discipline and creates a high-fidelity \"Single Source of Truth\" for advanced risk analytics.",
+
             feature_discipline_title: "Action: Intercept",
             feature_discipline_desc: "FOMO signal detected? The Agent intervenes immediately. We don't just advise you to stay calm; we enforce a mandatory cool-down protocol to technically stop the bleed.",
             feature_ai_title: "Status: Evolving",
             feature_ai_desc: "Extracting algorithms from your losses. The Agent continuously scans your blind spots, turning every expensive tuition fee into a defensive moat for your next trade.",
-            feature_intel_title: "Intel Aggregator",
-            feature_intel_desc: "AI aggregates global KOL insights and breaking news in real-time, distilling massive information into actionable Alpha signals so you never miss critical market turning points.",
-            feature_quantum_title: "Quantum Observer",
-            feature_quantum_desc: "AI prediction terminal based on quantum superposition theory. Provides long/short probability distribution and optimal strategy recommendations, finding certainty in uncertainty.",
-            ai_risk_title: "AI Risk Prevention",
-            ai_risk_subtitle: "Stop Now.",
-            ai_risk_desc: "When dopamine takes over your brain, GoldCat Terminal takes over your account. It knows your losing patterns better than you do, and 'shocks' you back to logic before you make a mistake.",
-            ai_risk_warning: "WARNING: STOP IMMEDIATELY",
-            ai_risk_backtesting: "Detected 'revenge trading' behavior after 2 consecutive losses. Backtesting shows this operation in this state results in a 92% historical probability of major capital drawdown.",
-            ai_risk_button: "Forced Cool Down 1h",
-            ai_risk_example: "Just stopped out twice, going all in now! Win it back!",
+            tactical_radar_title: "Tactical Radar System",
+            tactical_radar_subtitle: "EXPERT STRATEGY",
+            tactical_radar_desc: "A digital strategy library distilled from a decade of elite combat experience. AI monitors the market 24/7, pushing instant alerts when price action hits specific 'High-Probability Tactical Models'.",
+            tactical_radar_button: "Combat-Grade Deterministic Matrix",
             emotion_roi_title: "Emotion ROI Visualization",
             emotion_roi_subtitle: "Data doesn't lie. GoldCat Terminal helps you distinguish 'Emotional Bias' vs 'Systematic Logic', one glance at the chart reveals the truth:",
             emotion_roi_desc: "All losses come from wishful thinking, all profits come from strict execution.",
@@ -546,7 +564,7 @@ export const translations = {
                 "Basic Trade Logging (20/month)",
                 "Limited AI Analysis Credits",
                 "Intel Aggregator (Full Access)",
-                "Quantum Observer (2/day)",
+                "AI Observer (2/day)",
                 "Basic Community Support",
                 "Standard Risk Calculation"
             ],
@@ -559,7 +577,7 @@ export const translations = {
                 "Unlimited Trade Logging",
                 "Unlimited AI Deep Review",
                 "Intel Aggregator (Full Access)",
-                "Quantum Observer (20/day)",
+                "AI Observer (30/day)",
                 "Advanced Risk Strategy Recommendations",
                 "Priority 24/7 Support",
                 "Priority Access to New Features",
@@ -575,28 +593,24 @@ export const translations = {
             subtitle: "For questions, contact us at support@goldcat.trade",
             items: [
                 {
-                    q: "What is Goldcat Terminal, and will it make me profitable?",
-                    a: "Goldcat Terminal is not just a journaling tool; it is your AI tactical commander. By deeply analyzing your historical trade data, it identifies your most profitable setups and costly bad habits. We cannot give you 'signals', but we can help you discover your trading Edge, thereby improving your win rate and risk-reward ratio."
+                    q: "Why should I use AI Observation, and how does it assist my trading?",
+                    a: "In hyper-volatile crypto markets, human emotion is the primary adversary to consistent profitability. AI Observation acts as a \"rational compass,\" providing a structured framework for decision-making amidst market chaos. By analyzing non-linear energy distributions in real-time, the system intercepts the impulse for \"blind trading\" and provides clear logical validation for every move. Whether you are navigating major trends or high-frequency altcoin swings, AI Observation ensures you operate with professional-grade conviction rather than emotional guesswork."
                 },
                 {
-                    q: "How does Goldcat Terminal's AI work? Is it a black box?",
-                    a: "It is not a black box. Our AI is based on transparent statistical and risk management models. It calculates the R-Multiple of every trade and generates a 'Pattern x Timeframe' strategy matrix. The AI might tell you: 'You have a 70% win rate following trends on the 4h timeframe, but you lose heavily on reversals on the 15m timeframe', and offer advice accordingly."
+                    q: "What is the technical logic behind AI Observation?",
+                    a: "Our proprietary engine utilizes a \"Multi-Field Resonance\" model focused on the deep convergence of timeframes. The system concurrently scans the Micro Field (1M), Structure Field (5M), and Macro Field (1H). A decision sequence is only activated when these three layers of statistical energy align—a state we define as \"Trend Resonance\". By synthesizing hundreds of technical variables through non-linear inference, the AI distills complex market noise into definitive conclusions, ensuring every trade is backed by mathematical rigor."
                 },
                 {
-                    q: "Why no API auto-import? What if I don't want to journal manually?",
-                    a: "Goldcat Terminal deliberately does not support auto-import. We firmly believe: 'Records without reflection are just noise'. Auto-import only encourages reckless high-frequency trading. Manual entry is the first step of trading discipline. We want you to relive the decision process when entering every entry, stop loss, and take profit. This **'ritual'** effectively suppresses over-trading and trains your professional trading behavior from the source. If a trade isn't worth the 30 seconds it takes to log, it probably wasn't worth taking."
+                    q: "Why does the system utilize Quantum Mechanics terminology?",
+                    a: "The integration of quantum concepts serves a dual purpose: engagement and methodology. First, we recognize that professional trading is a rigorous, often solitary discipline; concepts like \"Wavefunction Collapse\" and \"Market Entanglement\" add an immersive, gamified layer to the analytical process, making it engaging rather than tedious. Second, price action is fundamentally the evolution of a continuous energy field. By adopting the \"Observer\" perspective, we refrain from subjective guessing and instead monitor the \"collapse\" of market probabilities into reality, allowing traders to capture certainty within the inherent uncertainty of the charts."
                 },
                 {
-                    q: "Which exchanges do you support?",
-                    a: "Since we use standard manual entry, we theoretically support all exchanges and all coins. As long as it follows opening/closing logic, you can record it in Goldcat Terminal. We focus on 'strategic analysis', not just simple data porting."
+                    q: "How does the Tactical Radar system provide actionable signals?",
+                    a: "Tactical Radar represents the digitization of a decade of battle-tested trading heuristics. Operating like a tireless veteran sitting right beside you, the system monitors global assets 24/7 using the most potent indicator clusters. When market conditions trigger a high-probability \"Tactical Template\"—such as a structural bottom reversal or a volatility breakout—the radar delivers instantaneous, pure execution signals. Its mission is to eliminate the fatigue of constant chart-watching and prioritize results, ensuring you never miss a verified opportunity to strike."
                 },
                 {
-                    q: "I am a beginner, is Goldcat Terminal suitable for me?",
-                    a: "Very suitable. The fatal flaw for most beginners is the inability to diagnose their own failures. Goldcat Terminal's AI coach helps you build the professional habit of 'Record-Review-Optimize' early in your trading journey, which is more valuable than blind trading."
-                },
-                {
-                    q: "How do I contact support or report bugs?",
-                    a: "We are traders too, we understand your pain points. You can report directly to the CEO via the AI Assistant in the bottom right corner, or join our Discord community to talk directly with product managers and top traders."
+                    q: "Since the AI is so powerful, why is manual entry still required?",
+                    a: "Manual entry remains the soul of GoldCat Terminal and the final line of defense in the \"AI + Trade\" synergy. While the AI provides precise observation and tactical filtering, manual logging ensures you maintain a sacred respect for your \"human data\". Automated imports often lead to mindless, low-quality trading behaviors. By physically recording each entry, you reinforce the neural pathways of professional discipline and re-evaluate your thesis in real-time. This ritualistic approach bridges scientific AI observation with human mindfulness, forging a truly resilient and profitable edge."
                 }
             ]
         },

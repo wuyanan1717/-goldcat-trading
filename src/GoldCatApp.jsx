@@ -14,7 +14,7 @@ import {
     Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, ChevronDown, Lock, Unlock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
     PlusCircle, Check, RotateCcw, Info, Loader2, Trophy, Clock, Snowflake, BarChart2,
-    Send, Star, Gift, Newspaper, Terminal, Search
+    Send, Star, Gift, Newspaper, Terminal, Search, Radar
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -22,24 +22,26 @@ import {
 } from 'recharts';
 import { translations } from './translations';
 import AIAnalysisDashboard from './components/AIAnalysisDashboard';
-import TerminalApp from './features/TerminalV2/TerminalApp_v3'; // 实验性布局 V3 - 日志在右侧
+// Version-aware imports for Quantum Observer
+import TerminalAppV3 from './features/TerminalV2/TerminalApp_v3'; // V3 - Stable
+import TerminalAppV4 from './features/TerminalV2/TerminalApp_v4'; // V4 - Development
+import { getFeatureVersion } from './config/versionConfig';
 
 
-// Data Sync Status Indicator Component
-const SyncStatusIndicator = ({ status, language }) => {
+// Data Sync Status Indicator Component (Icon Only)
+const SyncStatusIndicator = ({ status }) => {
     const statusConfig = {
-        synced: { icon: CheckCircle2, color: 'text-green-500', text: { zh: '已同步', en: 'Saved' } },
-        saving: { icon: Loader2, color: 'text-amber-500', text: { zh: '保存中...', en: 'Saving...' }, animate: 'animate-spin' },
-        error: { icon: AlertTriangle, color: 'text-red-500', text: { zh: '同步失败', en: 'Sync Failed' } }
+        synced: { icon: CheckCircle2, color: 'text-green-500' },
+        saving: { icon: Loader2, color: 'text-amber-500', animate: 'animate-spin' },
+        error: { icon: AlertTriangle, color: 'text-red-500' }
     };
 
     const config = statusConfig[status] || statusConfig.synced;
     const Icon = config.icon;
 
     return (
-        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-medium ${config.color} transition-all duration-300`}>
-            <Icon className={`w-3.5 h-3.5 ${config.animate || ''}`} />
-            <span>{config.text[language]}</span>
+        <div className={`flex items-center justify-center w-7 h-7 rounded-full bg-neutral-900 border border-neutral-800 ${config.color} transition-all duration-300`} title={status === 'synced' ? '已同步 / Saved' : status}>
+            <Icon className={`w-4 h-4 ${config.animate || ''}`} />
         </div>
     );
 };
@@ -307,6 +309,18 @@ const SnowfallOverlay = () => {
 
 function GoldCatApp() {
     const [showSuggestions, setShowSuggestions] = useState(false);
+
+    // ===== VERSION CONTROL SYSTEM =====
+    // Dynamically select Quantum Observer version (V3 stable vs V4 development)
+    const quantumObserverVersion = getFeatureVersion('QUANTUM_OBSERVER', null);
+    const TerminalApp = TerminalAppV4;
+
+    // Optional: Log version for debugging (remove in production)
+    useEffect(() => {
+        console.log(`🔮 Quantum Observer Version: ${quantumObserverVersion.toUpperCase()}`);
+    }, [quantumObserverVersion]);
+    // ===================================
+
     // Dynamic challenge count logic (Deterministic & Time-based)
     // 逻辑：基于固定锚点时间的纯数学计算，确保刷新、不同设备、长期挂机保持严格一致
     // 用户指定：起始数 340，固定增长逻辑
@@ -534,7 +548,15 @@ function GoldCatApp() {
     const [isEditingCapital, setIsEditingCapital] = useState(false);
 
     // 表单状态
-    const [activeTab, setActiveTab] = useState('new_trade'); // 默认进入录入界面，强调纪律
+    const [activeTab, setActiveTab] = useState(() => {
+        const saved = localStorage.getItem('goldcat_active_tab');
+        return saved || 'new_trade';
+    }); // 默认进入上次的界面
+
+    // Persist active tab
+    useEffect(() => {
+        localStorage.setItem('goldcat_active_tab', activeTab);
+    }, [activeTab]);
     const [formData, setFormData] = useState({
         tradeType: 'buy',
         symbol: '',
@@ -1780,7 +1802,10 @@ function GoldCatApp() {
         <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate flex flex-col" translate="no">
 
             {/* Background Animation (KuCoin Style) */}
-            <BackgroundParticles />
+            {/* Background Particles - Hidden on Mobile to reduce distraction */}
+            <div className="hidden md:block">
+                <BackgroundParticles />
+            </div>
 
             {/* 顶部导航栏 (Header) */}
             <header className="border-b border-neutral-800 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-50">
@@ -1800,7 +1825,7 @@ function GoldCatApp() {
                         </div>
                         <div>
                             <h1 className="text-sm sm:text-base md:text-lg font-black text-white tracking-tighter leading-none">
-                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v3</span>
+                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v4</span>
                             </h1>
 
                         </div>
@@ -1923,16 +1948,17 @@ function GoldCatApp() {
 
                         <div className="relative z-10 max-w-5xl mx-auto animate-in fade-in zoom-in duration-1000 slide-in-from-bottom-8 py-20">
                             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-400 text-xs font-bold mb-8 tracking-wider uppercase backdrop-blur-md shadow-lg">
-                                <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v3
+                                <Sparkles className="w-3 h-3 animate-pulse" /> {t('app_title')} v4
                             </div>
 
-                            <h1 className={`text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black text-white mb-6 sm:mb-8 tracking-tight leading-tight drop-shadow-2xl ${language === 'zh' ? 'whitespace-normal md:whitespace-nowrap' : ''}`}>
-                                {t('home.title')}
+                            <h1 className={`text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 mb-6 sm:mb-8 tracking-tighter leading-[1.1] drop-shadow-2xl whitespace-pre-line`}>
+                                {t('home.quantum_hero_title')}
                             </h1>
 
                             {/* Simplified Subtitle */}
+                            {/* Quantum Observer Subtitle */}
                             <p className="text-gray-300 text-sm sm:text-base md:text-lg lg:text-xl mb-8 sm:mb-10 md:mb-12 max-w-3xl mx-auto leading-[2] drop-shadow-md px-4">
-                                {t('home.slogan')} {t('home.desc_1')}
+                                {t('home.quantum_hero_subtitle')}
                             </p>
 
 
@@ -1941,16 +1967,17 @@ function GoldCatApp() {
                                     <button
                                         onClick={() => {
                                             if (user) {
-                                                setActiveTab('new_trade');
+                                                setActiveTab('quantum_terminal');
                                                 setExplicitLandingView(false);
                                             } else {
                                                 setShowGuestDashboard(true);
+                                                setActiveTab('quantum_terminal');
                                             }
                                         }}
-                                        className="group relative w-full md:w-auto bg-amber-500 hover:bg-amber-400 text-black font-black text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-[0_0_40px_rgba(245,158,11,0.4)] hover:shadow-[0_0_60px_rgba(245,158,11,0.6)] hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden"
+                                        className="group relative w-full md:w-auto bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-[0_0_40px_rgba(168,85,247,0.5)] hover:shadow-[0_0_60px_rgba(168,85,247,0.7)] hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden"
                                     >
                                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                        <span className="relative flex items-center gap-2">{t('home.start_btn')} <ChevronRight className="w-6 h-6" /></span>
+                                        <span className="relative flex items-center gap-2">{t('home.quantum_hero_cta')} <ChevronRight className="w-6 h-6" /></span>
                                     </button>
 
                                     {/* System Status Badge */}
@@ -1961,7 +1988,7 @@ function GoldCatApp() {
                                                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#22C55E]"></span>
                                             </span>
                                             <span>
-                                                {t('home.challenge_count', { count: challengeCount })}
+                                                {t('home.quantum_hero_stats', { count: challengeCount })}
                                             </span>
                                         </div>
                                     </div>
@@ -1978,21 +2005,32 @@ function GoldCatApp() {
                                 </button>
                             </div>
 
-                            {/* Feature Grid */}
+                            {/* Feature Grid - Reordered for Quantum First */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                                {/* 1. Quantum Observer (Promoted) */}
                                 <div
-                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('new_trade'); }}
-                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer"
+                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('quantum_terminal'); }}
+                                    className="bg-black/40 backdrop-blur-md border border-purple-500/30 p-8 rounded-3xl hover:border-purple-500/70 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer relative overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.15)] order-1"
                                 >
-                                    <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20">
-                                        <Edit3 className="w-7 h-7 text-amber-500" />
+                                    <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-transparent text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-lg">
+                                        {t('home.feature_quantum_badge')}
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-amber-400 transition-colors">{t('home.feature_manual_title')}</h3>
-                                    <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_manual_desc')}</p>
+                                    <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(168,85,247,0.2)] border border-purple-500/30">
+                                        <Cpu className="w-7 h-7 text-purple-400" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors flex items-center gap-2">
+                                        {t('home.feature_quantum_title')}
+                                    </h3>
+                                    <p className="text-sm text-gray-400 leading-relaxed mb-4">{t('home.feature_quantum_desc')}</p>
+                                    <div className="flex items-center gap-2 text-xs text-purple-400 font-mono bg-purple-900/20 px-2 py-1 rounded border border-purple-500/20 w-fit">
+                                        <Sparkles className="w-3 h-3" /> {t('home.feature_quantum_accuracy')}
+                                    </div>
                                 </div>
+
+                                {/* 2. Daily Alpha */}
                                 <div
                                     onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('daily_alpha'); }}
-                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer"
+                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-amber-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer order-2"
                                 >
                                     <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20">
                                         <Newspaper className="w-7 h-7 text-amber-500" />
@@ -2000,89 +2038,155 @@ function GoldCatApp() {
                                     <h3 className="text-xl font-bold text-white mb-3 group-hover:text-amber-400 transition-colors">{t('home.feature_intel_title')}</h3>
                                     <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_intel_desc')}</p>
                                 </div>
+
+                                {/* 3. Manual Entry (Demoted) */}
                                 <div
-                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('quantum_terminal'); }}
-                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-purple-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer"
+                                    onClick={() => { setShowGuestDashboard(true); setExplicitLandingView(false); setActiveTab('new_trade'); }}
+                                    className="bg-black/40 backdrop-blur-md border border-white/5 p-8 rounded-3xl hover:border-gray-500/50 hover:bg-black/60 transition-all group hover:-translate-y-1 duration-300 cursor-pointer order-3"
                                 >
-                                    <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(168,85,247,0.1)] border border-purple-500/20">
-                                        <Cpu className="w-7 h-7 text-purple-500" />
+                                    <div className="w-14 h-14 bg-gray-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(107,114,128,0.1)] border border-gray-500/20">
+                                        <Edit3 className="w-7 h-7 text-gray-400 group-hover:text-white transition-colors" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors">{t('home.feature_quantum_title')}</h3>
-                                    <p className="text-sm text-gray-400 leading-relaxed">{t('home.feature_quantum_desc')}</p>
+                                    <h3 className="text-xl font-bold text-gray-300 mb-3 group-hover:text-white transition-colors">{t('home.feature_manual_title')}</h3>
+                                    <p className="text-sm text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors">{t('home.feature_manual_desc')}</p>
                                 </div>
                             </div>
 
                             {/* --- New Feature Showcase Cards (Added per user request) --- */}
-                            <div className="mt-32 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
-                                {/* Card 1: AI Risk Prevention */}
-                                <div className="bg-[#0f0a0a] border border-red-900/30 rounded-3xl p-8 relative overflow-hidden group hover:border-red-500/30 transition-all duration-500">
-                                    <div className="absolute top-0 right-0 p-4 opacity-50">
-                                        <AlertTriangle className="w-24 h-24 text-red-900/20" />
+                            {/* --- Tactical Radar System (Full Width, Dynamic Visualization) --- */}
+                            <div className="mt-32 max-w-6xl mx-auto px-4">
+                                <div className="bg-[#0a0a0c] border border-slate-800 rounded-3xl p-6 relative overflow-hidden group">
+                                    {/* Radar Scan Overlay */}
+                                    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+                                        <div className="w-[200%] h-full absolute top-0 left-[-50%] bg-gradient-to-r from-transparent via-amber-500/5 to-transparent skew-x-12 animate-[scan_4s_linear_infinite]"></div>
                                     </div>
 
-                                    {/* Dialogue Bubble */}
-                                    <div className="flex justify-end mb-8 relative z-10">
-                                        <div className="bg-[#1c1917] text-gray-400 text-xs py-2 px-4 rounded-full rounded-tr-none border border-white/5 shadow-lg">
-                                            {t('home.ai_risk_example')}
+                                    {/* Header */}
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-30">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20">
+                                                <Radar className="w-6 h-6 text-amber-500 animate-[spin_4s_linear_infinite]" />
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] font-bold text-amber-500 uppercase tracking-[0.2em] mb-1">{t('home.tactical_radar_subtitle')}</div>
+                                                <h3 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter">
+                                                    {t('home.tactical_radar_title')}
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 md:mt-0 flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg">
+                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                            <span className="text-xs text-slate-400 font-mono">SYSTEM ONLINE</span>
                                         </div>
                                     </div>
 
-                                    {/* Alert Box */}
-                                    <div className="bg-[#1f1212] border border-red-500/20 rounded-2xl p-8 mb-8 relative z-10 animate-pulse">
-                                        <div className="flex items-center gap-2 mb-3 text-red-400 font-bold text-sm">
-                                            <Lock className="w-4 h-4" /> {t('home.ai_risk_warning')}
+                                    {/* Dynamic Wave Visualization (Simulated K-Lines) */}
+                                    <div className="grid grid-cols-1 gap-4 relative z-10">
+                                        {/* 1M: Micro Field */}
+                                        <div className="bg-black/40 border border-slate-800/50 rounded-xl p-4 relative overflow-hidden h-32 group/chart">
+                                            {/* Scanner Beam */}
+                                            <div className="absolute top-0 bottom-0 w-[2px] bg-cyan-500/50 shadow-[0_0_15px_rgba(34,211,238,0.8)] z-20 animate-[scan-beam_3s_linear_infinite]" style={{ left: '0%' }}>
+                                                <div className="absolute top-0 bottom-0 left-[-20px] w-[40px] bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent"></div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center mb-2 relative z-30">
+                                                <span className="text-[10px] text-cyan-400 font-mono font-bold tracking-wider">1M: {language === 'zh' ? '微观场' : 'MICRO'} (ZENUSDT)</span>
+                                                <div className="flex gap-2">
+                                                    <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">RSI: 33.2</span>
+                                                    <span className="text-[9px] text-slate-500">AI_NOISE</span>
+                                                </div>
+                                            </div>
+                                            {/* Cyan Line (Smooth Organic Trend) */}
+                                            <svg className="absolute bottom-0 left-0 w-full h-20 opacity-90" preserveAspectRatio="none" viewBox="0 0 1200 100">
+                                                <defs>
+                                                    <linearGradient id="cyanGradient" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <path d="M0,80 C50,75 100,85 150,70 C200,55 250,75 300,65 C350,55 400,30 450,40 C500,50 550,20 600,15 C650,10 700,35 750,25 C800,15 850,40 900,45 C950,50 1000,10 1050,15 C1100,20 1150,30 1200,25 V100 H0 Z" fill="url(#cyanGradient)" stroke="none" />
+                                                <path d="M0,80 C50,75 100,85 150,70 C200,55 250,75 300,65 C350,55 400,30 450,40 C500,50 550,20 600,15 C650,10 700,35 750,25 C800,15 850,40 900,45 C950,50 1000,10 1050,15 C1100,20 1150,30 1200,25" fill="none" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round" />
+                                            </svg>
                                         </div>
-                                        <div className="text-red-200 text-sm leading-relaxed mb-4">
-                                            {t('home.ai_risk_backtesting')}
+
+                                        {/* 5M: Structure Field */}
+                                        <div className="bg-black/40 border border-slate-800/50 rounded-xl p-4 relative overflow-hidden h-32 group/chart">
+                                            {/* Scanner Beam */}
+                                            <div className="absolute top-0 bottom-0 w-[2px] bg-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.8)] z-20 animate-[scan-beam_4s_linear_infinite_1s]" style={{ left: '0%' }}>
+                                                <div className="absolute top-0 bottom-0 left-[-20px] w-[40px] bg-gradient-to-r from-transparent via-purple-500/10 to-transparent"></div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center mb-2 relative z-30">
+                                                <span className="text-[10px] text-purple-400 font-mono font-bold tracking-wider">5M: {language === 'zh' ? '结构场' : 'STRUCTURE'} (ZENUSDT)</span>
+                                                <div className="flex gap-2">
+                                                    <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">RSI: 35.0</span>
+                                                    <span className="text-[9px] text-slate-500">WAVE_PATTERN</span>
+                                                </div>
+                                            </div>
+                                            {/* Purple Line (Smooth Organic Trend) */}
+                                            <svg className="absolute bottom-0 left-0 w-full h-20 opacity-90" preserveAspectRatio="none" viewBox="0 0 1200 100">
+                                                <defs>
+                                                    <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <path d="M0,50 C60,55 120,45 180,52 C240,58 300,70 360,65 C420,60 480,45 540,50 C600,55 660,40 720,35 C780,30 840,45 900,38 C960,30 1020,15 1080,20 C1140,25 1170,18 1200,15 V100 H0 Z" fill="url(#purpleGradient)" stroke="none" />
+                                                <path d="M0,50 C60,55 120,45 180,52 C240,58 300,70 360,65 C420,60 480,45 540,50 C600,55 660,40 720,35 C780,30 840,45 900,38 C960,30 1020,15 1080,20 C1140,25 1170,18 1200,15" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" />
+                                            </svg>
                                         </div>
-                                        <button className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                                            <Snowflake className="w-3 h-3" /> {t('home.ai_risk_button')}
+
+                                        {/* 1H: Macro Field */}
+                                        <div className="bg-black/40 border border-slate-800/50 rounded-xl p-4 relative overflow-hidden h-32 group/chart">
+                                            {/* Scanner Beam */}
+                                            <div className="absolute top-0 bottom-0 w-[2px] bg-amber-500/50 shadow-[0_0_15px_rgba(251,191,36,0.8)] z-20 animate-[scan-beam_5s_linear_infinite_0.5s]" style={{ left: '0%' }}>
+                                                <div className="absolute top-0 bottom-0 left-[-20px] w-[40px] bg-gradient-to-r from-transparent via-amber-500/10 to-transparent"></div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center mb-2 relative z-30">
+                                                <span className="text-[10px] text-amber-400 font-mono font-bold tracking-wider">1H: {language === 'zh' ? '宏观场' : 'MACRO'} (ZENUSDT)</span>
+                                                <div className="flex gap-2">
+                                                    <span className="text-[9px] text-green-500 font-bold tracking-wider pr-2">LONG_SIG[1]</span>
+                                                    <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">RSI: 39.5</span>
+                                                    <span className="text-[9px] text-slate-500">GRAVITY_WELL</span>
+                                                </div>
+                                            </div>
+                                            {/* Yellow Line (Smooth Organic Trend) */}
+                                            <div className="absolute top-1/2 left-[60%] w-2 h-2 bg-green-500 rounded-full animate-ping z-20"></div>
+                                            <svg className="absolute bottom-0 left-0 w-full h-20 opacity-90" preserveAspectRatio="none" viewBox="0 0 1200 100">
+                                                <defs>
+                                                    <linearGradient id="amberGradient" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <path d="M0,70 C50,72 100,75 150,65 C200,55 250,50 300,30 C350,10 400,25 450,45 C500,65 550,70 600,60 C650,50 700,55 750,65 C800,75 850,45 900,40 C950,35 1000,45 1050,40 C1100,35 1150,50 1200,55 V100 H0 Z" fill="url(#amberGradient)" stroke="none" />
+                                                <path d="M0,70 C50,72 100,75 150,65 C200,55 250,50 300,30 C350,10 400,25 450,45 C500,65 550,70 600,60 C650,50 700,55 750,65 C800,75 850,45 900,40 C950,35 1000,45 1050,40 C1100,35 1150,50 1200,55" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer Info */}
+                                    <div className="mt-6 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 border-t border-slate-800/50 pt-4">
+                                        <p className="max-w-2xl text-center md:text-left leading-relaxed">
+                                            {t('home.tactical_radar_desc')}
+                                        </p>
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab('quantum_terminal');
+                                                window.scrollTo(0, 0);
+                                                if (user) {
+                                                    setExplicitLandingView(false);
+                                                } else {
+                                                    setShowGuestDashboard(true);
+                                                }
+                                            }}
+                                            className="mt-4 md:mt-0 px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition-colors flex items-center gap-2"
+                                        >
+                                            <Activity className="w-4 h-4" />
+                                            {t('home.tactical_radar_button')}
                                         </button>
                                     </div>
-
-                                    <h3 className="text-2xl font-black text-white mb-3 flex items-center gap-2">
-                                        <span className="text-rose-700">#</span> {t('home.ai_risk_title')}
-                                    </h3>
-                                    <p className="text-gray-400 text-sm leading-relaxed">
-                                        {t('home.ai_risk_desc')}
-                                    </p>
-                                </div>
-
-                                {/* Card 2: Emotion ROI Visualization */}
-                                <div className="bg-[#0a0f0a] border border-emerald-900/30 rounded-3xl p-8 relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-500">
-
-                                    {/* Chart Visualization */}
-                                    <div className="flex items-end justify-between gap-4 h-32 mb-8 relative z-10 px-4 mt-10">
-                                        {/* FOMO Bar */}
-                                        <div className="flex flex-col items-center gap-2 w-1/3 group/bar1">
-                                            <div className="w-full h-16 bg-gradient-to-t from-red-900/50 to-red-500/20 rounded-t-lg border-t border-red-500/30 relative">
-                                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-red-500 font-mono opacity-0 group-hover/bar1:opacity-100 transition-opacity whitespace-nowrap">-92% ROI</div>
-                                            </div>
-                                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">{t('home.fomo_entry')}</div>
-                                            <div className="text-[10px] text-gray-600 text-center">{t('home.fomo_trades')}</div>
-                                        </div>
-
-                                        <div className="text-2xl font-black text-gray-700 italic">VS</div>
-
-                                        {/* PLANNED Bar */}
-                                        <div className="flex flex-col items-center gap-2 w-1/3 group/bar2">
-                                            <div className="absolute -top-6 right-0 text-xl text-emerald-400 font-mono font-bold animate-bounce">+42.8% ROI</div>
-                                            <div className="w-full h-32 bg-gradient-to-t from-emerald-900/50 to-emerald-500/20 rounded-t-lg border-t border-emerald-500/50 relative shadow-[0_0_20px_rgba(16,185,129,0.1)]">
-                                            </div>
-                                            <div className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider text-center">{t('home.planned_entry')}</div>
-                                            <div className="text-[10px] text-gray-600 text-center">{t('home.planned_trades')}</div>
-                                        </div>
-                                    </div>
-
-                                    <h3 className="text-2xl font-black text-white mb-3 flex items-center gap-2">
-                                        <span className="text-emerald-500">#</span> {t('home.emotion_roi_title')}
-                                    </h3>
-                                    <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                                        {t('home.emotion_roi_subtitle')}
-                                    </p>
-                                    <p className="text-xs font-bold text-gray-300 bg-white/5 py-2 px-3 rounded-lg border border-white/5">
-                                        {t('home.emotion_roi_desc')}
-                                    </p>
                                 </div>
                             </div>
 
@@ -2229,11 +2333,11 @@ function GoldCatApp() {
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-[18px]">
                                 <div className="flex flex-wrap gap-2">
                                     {[
+                                        { id: 'quantum_terminal', label: t('nav.quantum_terminal'), icon: Cpu },
+                                        { id: 'daily_alpha', label: t('nav.daily_alpha'), icon: Newspaper },
                                         { id: 'new_trade', label: t('nav.new_trade'), icon: Plus },
                                         { id: 'journal', label: t('nav.journal'), icon: FileText },
                                         { id: 'ai_analysis', label: t('nav.ai_analysis'), icon: Brain },
-                                        { id: 'daily_alpha', label: t('nav.daily_alpha'), icon: Newspaper },
-                                        { id: 'quantum_terminal', label: t('nav.quantum_terminal'), icon: Cpu },
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
@@ -2241,12 +2345,8 @@ function GoldCatApp() {
                                             className={`
                                 flex items-center justify-center gap-2 px-3 sm:px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap
                                 ${activeTab === tab.id
-                                                    ? (tab.id === 'quantum_terminal'
-                                                        ? 'bg-purple-600/30 backdrop-blur-md text-purple-100 shadow-[0_0_15px_rgba(147,51,234,0.3)] border border-purple-400'
-                                                        : 'bg-amber-500 text-black shadow-lg shadow-amber-500/20')
-                                                    : (tab.id === 'quantum_terminal'
-                                                        ? 'bg-purple-900/10 text-purple-400 border border-purple-500/60 hover:bg-purple-900/30 hover:text-purple-300'
-                                                        : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600')
+                                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                                                    : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-white border border-neutral-600'
                                                 }
                             `}
                                         >
@@ -3286,7 +3386,7 @@ function GoldCatApp() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-2xl font-black text-amber-500">39.00 USDT</div>
+                                                    <div className="text-2xl font-black text-amber-500">29.00 USDT</div>
                                                     <div className="text-xs text-gray-500">/year</div>
                                                 </div>
                                             </div>
@@ -3304,27 +3404,30 @@ function GoldCatApp() {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="text-xs text-gray-400">{t('payment.order_number')}</div>
-                                                <button
-                                                    onClick={() => {
-                                                        const orderNum = orderNumber || 'ORDER-' + Date.now();
-                                                        navigator.clipboard.writeText(orderNum);
-                                                        setToastMessage(t('payment.copied'));
-                                                        setShowSuccessToast(true);
-                                                    }}
-                                                    className="flex items-center gap-1 text-amber-500 hover:text-amber-400 text-xs"
-                                                >
-                                                    <Copy className="w-3 h-3" />
-                                                    {t('payment.copy')}
-                                                </button>
-                                            </div>
-                                            <div className="text-lg font-mono text-amber-500">{orderNumber || 'ORDER-' + Date.now()}</div>
-                                        </div>
+
 
                                         <div className="p-4 bg-neutral-800 rounded-xl">
                                             <div className="text-xs text-gray-400 mb-2">{t('payment.receiving_address')}</div>
+
+                                            {/* QR Code Section */}
+                                            <div className="flex flex-col items-center justify-center mb-4">
+                                                <div className="p-2 bg-white rounded-xl mb-2">
+                                                    <img
+                                                        src={`/assets/payment_qr_${language === 'zh' ? 'zh' : 'en'}.png`}
+                                                        alt="Payment QR Code"
+                                                        className="w-40 h-40 object-contain"
+                                                    />
+                                                </div>
+                                                <a
+                                                    href={`/assets/payment_qr_${language === 'zh' ? 'zh' : 'en'}.png`}
+                                                    download={`goldcat_payment_qr_${language === 'zh' ? 'zh' : 'en'}.png`}
+                                                    className="text-[10px] text-amber-500 hover:text-amber-400 flex items-center gap-1 mt-1 transition-colors"
+                                                >
+                                                    <div className="w-3 h-3 border border-amber-500 rounded-full flex items-center justify-center">↓</div>
+                                                    {language === 'zh' ? '保存二维码图片' : 'Save QR Code'}
+                                                </a>
+                                            </div>
+
                                             <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg">
                                                 <code className="text-xs font-mono text-white break-all">TKwXfsr8XMWaHKktL3CD3NqH39oU1R461R</code>
                                                 <button
@@ -3342,7 +3445,7 @@ function GoldCatApp() {
 
                                         <div className="p-4 bg-neutral-800 rounded-xl">
                                             <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                            <div className="text-3xl font-black text-amber-500">39.00 USDT</div>
+                                            <div className="text-3xl font-black text-amber-500">29.00 USDT</div>
                                         </div>
 
                                         <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
@@ -4032,15 +4135,15 @@ function GoldCatApp() {
             }
 
             {/* Footer with Privacy and Terms - Static Scrollable */}
-            <div className="relative w-full max-w-7xl mx-auto px-4 py-8 mt-auto mb-4 md:mb-6 text-gray-500 text-xs font-mono">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-t border-white/10 pt-8">
+            <div className="relative w-full max-w-7xl mx-auto px-4 py-4 md:py-8 mt-auto mb-2 md:mb-6 text-gray-500 text-xs font-mono">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4 border-t border-white/10 pt-4 md:pt-8">
                     {/* Left: Copyright */}
-                    <div>
+                    <div className="scale-90 md:scale-100">
                         © {new Date().getFullYear()} GoldCat Terminal. {language === 'zh' ? '保留所有权利。' : 'All rights reserved.'}
                     </div>
 
                     {/* Right: Links */}
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4 md:gap-6 scale-90 md:scale-100">
                         <button
                             onClick={() => setCurrentPage('privacy')}
                             className="text-gray-500 hover:text-amber-500 transition-colors"

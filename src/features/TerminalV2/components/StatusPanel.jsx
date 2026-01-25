@@ -85,7 +85,7 @@ export const StatusPanel = ({ score, result, lang = 'zh', showSearchHint = false
                 <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-yellow-600"></div>
                 <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-yellow-600"></div>
 
-                <div className="p-5 bg-gradient-to-b from-transparent to-yellow-900/5">
+                <div className="p-4 md:p-5 bg-gradient-to-b from-transparent to-yellow-900/5">
                     <div className="flex justify-between items-start mb-4">
                         <h3 className="text-[10px] font-bold text-yellow-600/70 uppercase tracking-[0.2em] flex items-center gap-2">
                             <Zap className="w-3 h-3" />
@@ -140,7 +140,7 @@ export const StatusPanel = ({ score, result, lang = 'zh', showSearchHint = false
             </div>
 
             {/* Action Protocol Panel */}
-            <div className="bg-[#0a0a0c] border border-slate-800 p-6 relative overflow-hidden">
+            <div className="bg-[#0a0a0c] border border-slate-800 p-4 md:p-6 relative overflow-hidden">
                 <div className="absolute -right-4 -top-4 opacity-5">
                     <Activity className="w-24 h-24 rotate-45" />
                 </div>
@@ -155,27 +155,20 @@ export const StatusPanel = ({ score, result, lang = 'zh', showSearchHint = false
 
                     {/* ALWAYS SHOW METRICS IF RESULT EXISTS */}
                     {result && (
-                        <div className="grid grid-cols-3 gap-2 mt-4">
-                            {/* 1. Déjà Vu */}
-                            <div className="bg-slate-900/50 p-2 rounded-sm border border-slate-800">
-                                <span className="text-[9px] text-slate-500 uppercase block mb-1">{lang === 'zh' ? '既视感' : 'Déjà Vu'}</span>
-                                <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-purple-500" style={{ width: `${result.deja_vu || 0}%` }}></div>
-                                </div>
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                            {/* 1. Support Level */}
+                            <div className="bg-slate-900/50 p-3 rounded-sm border border-slate-800 flex flex-col items-center justify-center">
+                                <span className="text-[9px] text-slate-500 uppercase mb-1">{lang === 'zh' ? '支撑位 (1-4h)' : 'Support (1-4h)'}</span>
+                                <span className="text-lg font-mono font-bold text-green-500 tracking-wider">
+                                    {result.support_price ? `$${result.support_price}` : '---'}
+                                </span>
                             </div>
-                            {/* 2. Resonance */}
-                            <div className="bg-slate-900/50 p-2 rounded-sm border border-slate-800">
-                                <span className="text-[9px] text-slate-500 uppercase block mb-1">{lang === 'zh' ? '共振' : 'Resonance'}</span>
-                                <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-blue-500" style={{ width: `${result.resonance || 0}%` }}></div>
-                                </div>
-                            </div>
-                            {/* 3. Entropy */}
-                            <div className="bg-slate-900/50 p-2 rounded-sm border border-slate-800">
-                                <span className="text-[9px] text-slate-500 uppercase block mb-1">{lang === 'zh' ? '熵增' : 'Entropy'}</span>
-                                <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-orange-500" style={{ width: `${result.entropy || 0}%` }}></div>
-                                </div>
+                            {/* 2. Resistance Level */}
+                            <div className="bg-slate-900/50 p-3 rounded-sm border border-slate-800 flex flex-col items-center justify-center">
+                                <span className="text-[9px] text-slate-500 uppercase mb-1">{lang === 'zh' ? '阻力位 (1-4h)' : 'Resistance (1-4h)'}</span>
+                                <span className="text-lg font-mono font-bold text-red-500 tracking-wider">
+                                    {result.resistance_price ? `$${result.resistance_price}` : '---'}
+                                </span>
                             </div>
                         </div>
                     )}

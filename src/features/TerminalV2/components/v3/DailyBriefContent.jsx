@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../../supabaseClient';
+import { supabase } from '../../../../supabaseClient';
 import { Newspaper, Gift, TrendingUp, Link as LinkIcon, Zap, X } from 'lucide-react';
 
 export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => {
@@ -319,46 +319,18 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
         <div className={`bg-[#0a0a0c] border border-slate-800 w-full rounded-xl shadow-2xl relative overflow-hidden flex flex-col ${isModal ? 'max-w-5xl max-h-[90vh]' : 'h-full border-none shadow-none bg-transparent'}`}>
 
             {/* Header Section */}
-            <div className="p-4 md:p-8 pb-4 flex flex-col gap-4 relative">
-                {/* Mobile: Title + Score Row / Desktop: Flex Row */}
-                <div className="flex flex-row justify-between items-start md:items-center">
-                    <div>
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded text-[10px] font-mono tracking-widest uppercase">
-                                {safeLang === 'zh' ? '加密情报聚合器' : 'Crypto Daily Brief'}
-                            </span>
-                            <span className="text-slate-500 text-xs font-mono">{currentMock.date}</span>
-
-                            {/* Refresh Button - Inline */}
-                            <button
-                                onClick={handleForceRefresh}
-                                disabled={refreshing}
-                                className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-400 border border-slate-700 rounded transition-colors font-mono flex items-center gap-1"
-                                title={safeLang === 'zh' ? '强制刷新' : 'Force Refresh'}
-                            >
-                                <div className={`w-1.5 h-1.5 rounded-full ${refreshing ? 'bg-yellow-500 animate-pulse' : 'bg-slate-500'}`}></div>
-                                {refreshing ? (safeLang === 'zh' ? '同步中...' : 'SYNC...') : (safeLang === 'zh' ? '刷新' : 'REFRESH')}
-                            </button>
-                        </div>
-                        <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight">
-                            {safeLang === 'zh' ? '市场情绪' : 'Market Sentiment'}
-                        </h2>
+            <div className="p-6 md:p-8 pb-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded text-[10px] font-mono tracking-widest uppercase">
+                            {safeLang === 'zh' ? '加密情报聚合器' : 'Crypto Daily Brief'}
+                        </span>
+                        <span className="text-slate-500 text-xs font-mono">{currentMock.date}</span>
                     </div>
-
-                    {/* Score Block - Always Visible, Right Aligned */}
-                    <div className="flex flex-col items-end shrink-0 ml-4 md:ml-0">
-                        <div className={`text-4xl md:text-6xl font-bold tracking-tighter ${getFngColor(fngValue)}`}>
-                            {loading ? <span className="animate-pulse">--</span> : fngValue}
-                        </div>
-                        <div className="text-slate-500 text-[10px] md:text-xs font-mono tracking-widest uppercase mt-1 text-right">
-                            {safeLang === 'zh' ? '恐慌指数' : 'Fear & Greed'}: <span className={getFngColor(fngValue)}>{loading ? "..." : fngClass}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Description Text - Below Title & Score on Mobile */}
-                <div className="max-w-3xl">
-                    <p className="text-slate-400 mt-2 leading-relaxed text-sm md:text-base">
+                    <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                        {safeLang === 'zh' ? '市场情绪' : 'Market Sentiment'}
+                    </h2>
+                    <p className="text-slate-400 mt-2 max-w-2xl leading-relaxed">
                         {/* Dynamic Sentiment Analysis */}
                         {(() => {
                             if (!fngData) return safeLang === 'zh' ? "正在分析链上数据..." : "Analyzing on-chain data...";
@@ -379,21 +351,39 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                         })()}
                     </p>
                 </div>
+
+                <div className="flex flex-col items-end">
+                    <div className={`text-6xl font-bold tracking-tighter ${getFngColor(fngValue)}`}>
+                        {loading ? <span className="animate-pulse">--</span> : fngValue}
+                    </div>
+                    <div className="text-slate-500 text-xs font-mono tracking-widest uppercase mt-1">
+                        {safeLang === 'zh' ? '恐慌指数' : 'Fear & Greed'}: <span className={getFngColor(fngValue)}>{loading ? "..." : fngClass}</span>
+                    </div>
+                </div>
+
+                {/* DEBUG REFRESH BUTTON */}
+                <button
+                    onClick={handleForceRefresh}
+                    disabled={refreshing}
+                    className="absolute top-4 right-16 px-3 py-1 bg-white/5 hover:bg-white/10 text-[10px] text-slate-400 border border-slate-700 rounded-full transition-colors font-mono z-50"
+                >
+                    {refreshing ? (safeLang === 'zh' ? '正在刷新...' : 'REFRESHING...') : (safeLang === 'zh' ? '强制刷新源' : 'FORCE REFRESH')}
+                </button>
             </div>
 
             {/* Official X Account Banner */}
-            <div className="mb-4 md:mb-6 px-4">
+            <div className="mb-6 px-4">
                 <a
                     href={`https://x.com/${safeLang === 'zh' ? 'GoldCatNews' : 'GoldCatTerminal'}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-xl md:rounded-2xl px-4 py-2 md:px-5 md:py-3 hover:border-amber-500/40 hover:from-amber-500/20 transition-all group"
+                    className="flex items-center justify-between bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-2xl px-5 py-3 hover:border-amber-500/40 hover:from-amber-500/20 transition-all group"
                 >
                     <div className="flex items-center gap-3">
                         <img
                             src={`/assets/avatars/${safeLang === 'zh' ? 'GoldCatNews' : 'GoldCatTerminal'}.png`}
                             alt="Official"
-                            className="w-8 h-8 md:w-10 md:h-10 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                            className="w-10 h-10 rounded-full border-2 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
                             onError={(e) => {
                                 e.target.onerror = null;
                                 // Fallback to Unavatar (Real Twitter Avatar)
@@ -401,18 +391,18 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                             }}
                         />
                         <div>
-                            <div className="text-amber-400 font-bold text-xs md:text-sm flex items-center gap-1">
+                            <div className="text-amber-400 font-bold text-sm flex items-center gap-1">
                                 @{safeLang === 'zh' ? 'GoldCatNews' : 'GoldCatTerminal'}
-                                <svg className="w-3 h-3 md:w-4 md:h-4 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
+                                <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z" />
                                 </svg>
                             </div>
-                            <div className="text-slate-400 text-[10px] md:text-xs">
+                            <div className="text-slate-400 text-xs">
                                 {safeLang === 'zh' ? '关注官方账号获取最新情报' : 'Follow for latest alpha & updates'}
                             </div>
                         </div>
                     </div>
-                    <div className="text-amber-500 text-[10px] md:text-xs font-bold uppercase tracking-wider group-hover:translate-x-1 transition-transform">
+                    <div className="text-amber-500 text-xs font-bold uppercase tracking-wider group-hover:translate-x-1 transition-transform">
                         {safeLang === 'zh' ? '关注 →' : 'Follow →'}
                     </div>
                 </a>
@@ -427,7 +417,7 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
             )}
 
             {/* Grid Content */}
-            <div className={`p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 ${isModal ? 'overflow-y-auto custom-scrollbar' : ''}`}>
+            <div className={`p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-4 ${isModal ? 'overflow-y-auto custom-scrollbar' : ''}`}>
                 {currentMock.cards.map((card) => {
                     // STRICT REAL DATA POLICY: No fallback to card.items
                     let items = [];
@@ -440,7 +430,7 @@ export const DailyBriefContent = ({ lang = 'zh', onClose, isModal = false }) => 
                     const hasData = items.length > 0;
 
                     return (
-                        <div key={card.id} className={`p-4 md:p-6 rounded-lg border ${card.border} ${card.bg} group relative overflow-hidden transition-all hover:bg-opacity-10`}>
+                        <div key={card.id} className={`p-6 rounded-lg border ${card.border} ${card.bg} group relative overflow-hidden transition-all hover:bg-opacity-10`}>
                             <div className="flex items-center gap-3 mb-4">
                                 <card.icon className={`w-5 h-5 ${card.color}`} />
                                 <h3 className="text-lg font-bold text-white">{card.title}</h3>

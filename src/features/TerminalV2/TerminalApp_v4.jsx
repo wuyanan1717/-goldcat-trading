@@ -1,24 +1,24 @@
 /**
- * V3 - STABLE VERSION (FROZEN)
+ * V4 - ACTIVE DEVELOPMENT VERSION
  * 
- * This is the stable production version of AI Observer.
- * DO NOT MODIFY - Use V4 for new development.
+ * This is the development version for new Quantum Observer features.
+ * All new improvements should be made here.
  * 
- * Version: 3.0 (Left-right swapped layout)
- * Features: System logs on right, charts on left
+ * Version: 4.0 (Based on V3 layout)
+ * Baseline: Copied from V3 - Ready for enhancements
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Terminal, Coins, Search, Trash2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatusPanel } from './components/StatusPanel';
-import { TacticalPanel } from './components/v3/TacticalPanel';
+import { TacticalPanel } from './components/v4/TacticalPanel';
 import { ResonanceChart } from './components/ResonanceChart';
 import { BacktestModal } from './components/BacktestModal';
 import { GuideModal } from './components/GuideModal';
 import { DailyBriefModalBilingual } from './components/DailyBriefModalBilingual';
-import { QuotaLimitModal } from './components/v3/QuotaLimitModal';
+import { QuotaLimitModal } from './components/v4/QuotaLimitModal';
 import { fetchBinanceKlines, fetchBacktestData } from './utils/market';
-import { consultObserver } from './utils/v3/observer';
+import { consultObserver } from './utils/v4/observer';
 import { runBacktestSimulation } from './utils/backtest';
 import { detectFlatBottomGreen, detectBeheadingRed } from './utils/indicators';
 
@@ -36,12 +36,13 @@ const INITIAL_PRESET_COINS = [
     { label: 'SUI', value: 'SUIUSDT', fixed: false },
 ];
 
-export default function TerminalAppV3({ lang, user, membership, onRequireLogin, onUpgrade }) {
+export default function TerminalAppV4({ lang, user, membership, onRequireLogin, onUpgrade }) {
     const [logs, setLogs] = useState(INITIAL_LOGS);
     const [score, setScore] = useState(0);
     const [isScanning, setIsScanning] = useState(false);
     const [showHit, setShowHit] = useState(false);
     const [aiResult, setAiResult] = useState(null);
+    const [mobileActiveChart, setMobileActiveChart] = useState('1H');
 
     // 从 localStorage 读取活跃币种和预设列表
     const [activeSymbol, setActiveSymbol] = useState(() => {
@@ -249,14 +250,11 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
             addLog(lang === 'en' ? `Conclusion: "${analysis.conclusion}"` : `结论："${analysis.conclusion}"`, 'alert');
             setScore(Math.abs(analysis.probability_up - 50) * 2);
 
-            // DEBUG: Explicitly log what we received to debug console and user log
-            console.log("[Quantum UI Debug] S/R Received:", analysis.support_price, analysis.resistance_price);
-
             // Log Support/Resistance - EVEN IF 0 (For debugging)
             if (analysis.support_price !== undefined || analysis.resistance_price !== undefined) {
                 addLog(lang === 'en'
-                    ? `KEY LEVELS (DEBUG): Sup $${analysis.support_price} / Res $${analysis.resistance_price}`
-                    : `关键点位 (调试): 支撑 $${analysis.support_price} / 阻力 $${analysis.resistance_price}`,
+                    ? `KEY LEVELS (Intraday 1-4h): Support $${analysis.support_price} / Resistance $${analysis.resistance_price}`
+                    : `关键点位 (日内1-4h): 支撑 $${analysis.support_price} / 阻力 $${analysis.resistance_price}`,
                     'alert');
             }
 
@@ -307,8 +305,8 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
                 const label = sym.replace(/USDT$|BUSD$|USDC$|BTC$|ETH$|DAI$/, '');
                 dynamicCoins.unshift({ label, value: sym, fixed: false });
 
-                // 3. Trim to maintain total slots (default 6: 2 Fixed + 4 Dynamic)
-                const maxDynamicCount = 4;
+                // 3. Trim to maintain total slots (default 20+2)
+                const maxDynamicCount = 20;
                 if (dynamicCoins.length > maxDynamicCount) {
                     dynamicCoins.pop(); // Remove the oldest (last one)
                 }
@@ -364,8 +362,9 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
                     <div className="lg:col-span-9 space-y-4">
                         {/* 资产选择器 */}
                         {/* 资产选择器 - 移动端单行优化版 */}
-                        <div className="bg-[#0a0a0c] border border-slate-800 p-2 rounded-sm flex flex-row gap-2 justify-between items-center backdrop-blur-sm shadow-xl mt-0">
-                            <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide mask-linear-fade">
+                        {/* 资产选择器 - 移动端双行布局，PC端单行 */}
+                        <div className="bg-[#0a0a0c] border border-slate-800 p-2 rounded-sm flex flex-col md:flex-row gap-2 md:gap-4 justify-between items-stretch md:items-center backdrop-blur-sm shadow-xl mt-0">
+                            <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide mask-linear-fade pr-0 md:pr-4 md:mr-2">
                                 <span className="text-[10px] font-bold text-slate-500 uppercase px-1 whitespace-nowrap flex items-center gap-1 shrink-0">
                                     <Coins className="w-3 h-3" />
                                     <span className="hidden sm:inline">{lang === 'en' ? 'Target Asset:' : '目标资产:'}</span>
@@ -387,19 +386,30 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
                                     </button>
                                 ))}
                             </div>
-                            <form onSubmit={handleCustomSymbolSubmit} className="flex items-center gap-1 shrink-0">
-                                <div className="relative group">
+                            <form onSubmit={handleCustomSymbolSubmit} className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+                                <div className="flex-1 min-w-0 md:w-auto">
                                     <input
                                         type="text"
                                         value={customSymbol}
                                         onChange={(e) => setCustomSymbol(e.target.value)}
                                         placeholder={lang === 'en' ? "SYMBOL" : "代码"}
-                                        className="bg-slate-900 border border-slate-700 text-slate-300 text-[10px] md:text-xs px-2 py-1 w-20 md:w-40 rounded-sm focus:outline-none focus:border-yellow-600 font-mono uppercase placeholder:text-slate-600 transition-all focus:w-28 md:focus:w-40"
+                                        className="bg-slate-900 border border-slate-700 text-slate-300 text-[10px] md:text-xs px-2 py-1.5 w-full md:w-32 rounded-sm focus:outline-none focus:border-yellow-600 font-mono uppercase placeholder:text-slate-600 transition-all"
                                     />
-                                    <button type="submit" className="absolute right-0.5 top-0.5 p-0.5 md:p-1 hover:bg-slate-800 rounded cursor-pointer text-slate-600 transition-all" title="加载">
-                                        <Search className="w-3 h-3" />
-                                    </button>
                                 </div>
+                                <button
+                                    type="submit"
+                                    className={`p-1.5 rounded cursor-pointer transition-all flex items-center justify-center shrink-0 border ${customSymbol
+                                        ? 'bg-yellow-500 text-black border-yellow-500 shadow-lg shadow-yellow-500/20'
+                                        : 'bg-transparent text-slate-500 border-slate-800 hover:border-slate-600 hover:text-slate-300'
+                                        }`}
+                                    title={lang === 'en' ? "Search" : "搜索"}
+                                >
+                                    {customSymbol ? (
+                                        <span className="text-[10px] font-bold px-2">{lang === 'en' ? 'GO' : '确认'}</span>
+                                    ) : (
+                                        <Search className="w-3.5 h-3.5" />
+                                    )}
+                                </button>
                             </form>
                         </div>
 
@@ -407,9 +417,39 @@ export default function TerminalAppV3({ lang, user, membership, onRequireLogin, 
                         <StatusPanel score={score} result={aiResult} lang={lang} showSearchHint={showSearchHint} />
 
                         {/* 图表 */}
-                        <ResonanceChart title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`} meta="QUANTUM_NOISE" data={data1m} color="#22d3ee" isScanning={isScanning} showHit={showHit} enableTactical={false} />
-                        <ResonanceChart title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`} meta="WAVE_PATTERN" data={data5m} color="#a78bfa" isScanning={isScanning} showHit={showHit} enableTactical={false} />
-                        <ResonanceChart title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`} meta="GRAVITY_WELL" data={data1h} color="#fbbf24" isScanning={isScanning} showHit={showHit} enableTactical={isTacticalEnabled} />
+                        {/* Mobile Chart Tabs */}
+                        <div className="lg:hidden flex gap-2 mb-2">
+                            {['1M', '5M', '1H'].map(tf => (
+                                <button
+                                    key={tf}
+                                    onClick={() => setMobileActiveChart(tf)}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-sm border transition-all ${mobileActiveChart === tf
+                                        ? 'bg-yellow-500 text-black border-yellow-500'
+                                        : 'bg-slate-900 text-slate-500 border-slate-800'
+                                        }`}
+                                >
+                                    {tf} Field
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Charts Area - Adaptive Layout */}
+                        <div className="space-y-4">
+                            {/* 1M Chart */}
+                            <div className={`${mobileActiveChart === '1M' ? 'block' : 'hidden'} lg:block`}>
+                                <ResonanceChart title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`} meta="AI_NOISE" data={data1m} color="#22d3ee" isScanning={isScanning} showHit={showHit} enableTactical={false} />
+                            </div>
+
+                            {/* 5M Chart */}
+                            <div className={`${mobileActiveChart === '5M' ? 'block' : 'hidden'} lg:block`}>
+                                <ResonanceChart title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`} meta="WAVE_PATTERN" data={data5m} color="#a78bfa" isScanning={isScanning} showHit={showHit} enableTactical={false} />
+                            </div>
+
+                            {/* 1H Chart */}
+                            <div className={`${mobileActiveChart === '1H' ? 'block' : 'hidden'} lg:block`}>
+                                <ResonanceChart title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`} meta="GRAVITY_WELL" data={data1h} color="#fbbf24" isScanning={isScanning} showHit={showHit} enableTactical={isTacticalEnabled} />
+                            </div>
+                        </div>
                     </div>
 
                     {/* 右侧：系统日志 + 战术面板 (下) - col-span-3 */}
