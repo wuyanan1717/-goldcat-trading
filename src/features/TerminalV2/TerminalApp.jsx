@@ -13,6 +13,10 @@ import { consultObserver } from './utils/observer';
 import { runBacktestSimulation } from './utils/backtest';
 import { detectFlatBottomGreen, detectBeheadingRed } from './utils/indicators';
 
+// For debugging
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const BASE_URL = `${SUPABASE_URL}/functions/v1/market-proxy`;
+
 const INITIAL_LOGS = [
     { id: 1, timestamp: new Date(), message: '量子观察者终端已就绪 (Quantum Observer Ready)', type: 'info' },
     { id: 2, timestamp: new Date(), message: '等待观测指令... (Awaiting Observation Command)', type: 'info' },
@@ -108,7 +112,10 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
             // Reset tactical signals on symbol change to avoid confusion
             setTacticalSignals([]);
         } catch (e) {
-            console.error(e);
+            console.error('[initCharts] Error:', e);
+            console.error('[initCharts] BASE_URL:', BASE_URL);
+            console.error('[initCharts] SUPABASE_URL:', SUPABASE_URL);
+            console.error('[initCharts] Symbol:', activeSymbol);
             addLog(lang === 'en' ? `Error: Connection Failed for ${activeSymbol}` : `错误：无法连接到 ${activeSymbol} 数据源。`, 'alert');
         }
     }, [addLog, activeSymbol, lang]);
