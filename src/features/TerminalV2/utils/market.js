@@ -10,13 +10,29 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
     const fetchFromProxy = async (marketType) => {
         const fetchLimit = limit + 15;
         const url = `${BASE_URL}?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=${marketType}`;
-        const res = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
-        return json;
+
+        // Add timeout for mobile networks (15s)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+            const json = await res.json();
+            if (json.error) throw new Error(json.error);
+            return json;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                throw new Error('Network timeout - connection too slow');
+            }
+            throw error;
+        }
     };
 
     try {

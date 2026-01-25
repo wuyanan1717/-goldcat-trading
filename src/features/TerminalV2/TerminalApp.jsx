@@ -517,7 +517,7 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                         <StatusPanel score={score} result={aiResult} lang={lang} showSearchHint={showSearchHint} />
 
                         {/* Middle: 1M Micro Field */}
-                        <ResonanceChart
+                        {data1m.length > 0 && <ResonanceChart
                             title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`}
                             meta="QUANTUM_NOISE"
                             data={data1m}
@@ -525,10 +525,10 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                             isScanning={isScanning}
                             showHit={showHit}
                             enableTactical={false}
-                        />
+                        />}
 
                         {/* Middle: 5M Structure */}
-                        <ResonanceChart
+                        {data5m.length > 0 && <ResonanceChart
                             title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`}
                             meta="WAVE_PATTERN"
                             data={data5m}
@@ -536,10 +536,10 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                             isScanning={isScanning}
                             showHit={showHit}
                             enableTactical={false}
-                        />
+                        />}
 
                         {/* Bottom: 1H Macro */}
-                        <ResonanceChart
+                        {data1h.length > 0 && <ResonanceChart
                             title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`}
                             meta="GRAVITY_WELL"
                             data={data1h}
@@ -547,7 +547,7 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                             isScanning={isScanning}
                             showHit={showHit}
                             enableTactical={isTacticalEnabled}
-                        />
+                        />}
                     </div>
                 </div>
             </div>
