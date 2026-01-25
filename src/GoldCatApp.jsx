@@ -2174,7 +2174,7 @@ function GoldCatApp() {
 
                                     {/* Footer Info */}
                                     <div className="mt-6 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 border-t border-slate-800/50 pt-4">
-                                        <p className="max-w-2xl text-center md:text-left leading-relaxed">
+                                        <p className="hidden md:block max-w-2xl text-center md:text-left leading-relaxed">
                                             {t('home.tactical_radar_desc')}
                                         </p>
                                         <button
@@ -4298,7 +4298,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             <MobileDebugOverlay />
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.0.5-UI-FIX
+                v1.0.6-UI-OPT
             </div>
 
         </div >
