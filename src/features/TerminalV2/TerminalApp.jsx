@@ -553,7 +553,7 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                         <StatusPanel score={score} result={aiResult} lang={lang} showSearchHint={showSearchHint} />
 
                         {/* Middle: 1M Micro Field */}
-                        {isDesktop && (
+                        <div className={isDesktop ? "block" : "hidden"}>
                             <Suspense fallback={<div className="h-[110px] bg-slate-900/20 border border-slate-800 rounded-lg animate-pulse" />}>
                                 <ResonanceChart
                                     title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`}
@@ -565,10 +565,10 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                                     enableTactical={false}
                                 />
                             </Suspense>
-                        )}
+                        </div>
 
                         {/* Middle: 5M Structure */}
-                        {isDesktop && (
+                        <div className={isDesktop ? "block" : "hidden"}>
                             <Suspense fallback={<div className="h-[110px] bg-slate-900/20 border border-slate-800 rounded-lg animate-pulse" />}>
                                 <ResonanceChart
                                     title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`}
@@ -580,10 +580,10 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                                     enableTactical={false}
                                 />
                             </Suspense>
-                        )}
+                        </div>
 
                         {/* Bottom: 1H Macro */}
-                        {isDesktop && (
+                        <div className={isDesktop ? "block" : "hidden"}>
                             <Suspense fallback={<div className="h-[110px] bg-slate-900/20 border border-slate-800 rounded-lg animate-pulse" />}>
                                 <ResonanceChart
                                     title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`}
@@ -595,7 +595,7 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
                                     enableTactical={isTacticalEnabled}
                                 />
                             </Suspense>
-                        )}
+                        </div>
                     </div>
                 </div>
             </div>
