@@ -26,6 +26,7 @@ import AIAnalysisDashboard from './components/AIAnalysisDashboard';
 import TerminalAppV3 from './features/TerminalV2/TerminalApp_v3'; // V3 - Stable
 import TerminalAppV4 from './features/TerminalV2/TerminalApp_v4'; // V4 - Development
 import { getFeatureVersion } from './config/versionConfig';
+import { MobileDebugOverlay } from './features/TerminalV2/components/MobileDebugOverlay';
 
 
 // Data Sync Status Indicator Component (Icon Only)
@@ -4293,6 +4294,12 @@ function GoldCatApp() {
                     </div>
                 )
             }
+
+            {/* --- GLOBAL DEBUG OVERLAY --- */}
+            <MobileDebugOverlay />
+            <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
+                v1.0.2-GLOBAL
+            </div>
 
         </div >
     );
