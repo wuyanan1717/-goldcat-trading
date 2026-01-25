@@ -20,6 +20,7 @@ import { translations } from './translations';
 // Version-aware imports for Quantum Observer
 import { lazy, Suspense } from 'react';
 // Lazy load heavy components to improve initial paint time (fix white screen)
+// critical: Ensure these expose default exports
 const TerminalAppV3 = lazy(() => import('./features/TerminalV2/TerminalApp_v3'));
 const TerminalAppV4 = lazy(() => import('./features/TerminalV2/TerminalApp_v4'));
 const AIAnalysisDashboard = lazy(() => import('./components/AIAnalysisDashboard'));
@@ -523,7 +524,8 @@ function GoldCatApp() {
     // 表单状态
     const [activeTab, setActiveTab] = useState(() => {
         const saved = localStorage.getItem('goldcat_active_tab');
-        return saved || 'new_trade'; // Default to Trade Entry (Standard Dashboard)
+        // Default to AI Observer (Quantum Terminal) as requested, fallback to new_trade only if explicit
+        return saved || 'quantum_terminal';
     });
 
     // Persist active tab
@@ -4268,9 +4270,9 @@ function GoldCatApp() {
             }
 
             {/* --- GLOBAL DEBUG OVERLAY --- */}
-            <MobileDebugOverlay />
+            {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.3-API-FIX
+                v1.2.4-OBSERVER-FIX
             </div>
 
         </div >
