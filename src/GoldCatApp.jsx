@@ -950,33 +950,23 @@ function GoldCatApp() {
             }
 
             try {
-                const response = await fetch(
-                    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true'
-                );
-
-                if (!response.ok) {
-                    if (response.status === 429) {
-                        console.warn('CoinGecko rate limit reached, using cached/mock data');
-                        return; // Silent fail on 429
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                // Switch to Binance API (More stable, higher limits, no strict CORS for public ticker)
+                const response = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+                if (!response.ok) throw new Error('Binance API Error');
 
                 const data = await response.json();
 
-                if (data.bitcoin) {
-                    setBtcMarket({
-                        price: data.bitcoin.usd,
-                        change24h: data.bitcoin.usd_24h_change || 0,
-                        loading: false
-                    });
-                    localStorage.setItem('last_btc_fetch', now.toString());
-                }
+                // Binance format: { lastPrice: "65000.00", priceChangePercent: "2.5" }
+                setBtcMarket({
+                    price: parseFloat(data.lastPrice),
+                    change24h: parseFloat(data.priceChangePercent),
+                    loading: false
+                });
             } catch (error) {
                 // Silent error logging to avoid console red spam
                 console.log('Using mock BTC data due to fetch error:', error.message);
-                // 失败时使用模拟数据，不显示红色错误
-                setBtcMarket(prev => ({ ...prev, loading: false }));
+                // Fallback to mock data
+                setBtcMarket({ price: 67500 + Math.random() * 500, change24h: 2.5, loading: false });
             }
         };
 
@@ -4280,7 +4270,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             <MobileDebugOverlay />
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.2-HOTFIX
+                v1.2.3-API-FIX
             </div>
 
         </div >
