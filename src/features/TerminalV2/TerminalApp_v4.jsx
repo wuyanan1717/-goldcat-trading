@@ -119,9 +119,9 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
 
     const runSilentTacticalScan = useCallback(async () => {
         try {
-            // Optimized: Only fetch 15m and 4h (1h already fetched in initCharts)
-            const [d15m, d4h] = await Promise.all([
+            const [d15m, d1h, d4h] = await Promise.all([
                 fetchBinanceKlines(activeSymbol, '15m', 50),
+                fetchBinanceKlines(activeSymbol, '1h', 50),
                 fetchBinanceKlines(activeSymbol, '4h', 50)
             ]);
 
@@ -166,33 +166,21 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
         return () => document.removeEventListener('OPEN_GUIDE', handleOpenGuide);
     }, []);
 
-    // Optimized: Only run tactical scan when user explicitly enables it (not on mount)
     useEffect(() => {
-        if (!isTacticalEnabled) return;
+        let intervalId;
+        if (isTacticalEnabled) {
+            addLog(`>>> 战术监控 [${activeSymbol}] 已激活...`, 'info');
+            runSilentTacticalScan();
+            intervalId = setInterval(() => runSilentTacticalScan(), 60000);
+        }
+        return () => { if (intervalId) clearInterval(intervalId); };
+    }, [isTacticalEnabled, runSilentTacticalScan, addLog, activeSymbol]);
 
-        addLog(`>>> 战术监控 [${activeSymbol}] 已激活...`, 'info');
-        runSilentTacticalScan();
-        const intervalId = setInterval(() => runSilentTacticalScan(), 60000);
-
-        return () => clearInterval(intervalId);
-    }, [isTacticalEnabled, activeSymbol]); // Removed function deps to prevent re-runs
-
-    // Optimized: Run only once on mount to prevent multiple API calls
-    const hasInitialized = useRef(false);
     useEffect(() => {
-        if (hasInitialized.current) return; // Guard against double-run in React StrictMode
-        hasInitialized.current = true;
-
         addLog(lang === 'en' ? 'AI Observer Terminal Ready' : 'AI 观察者终端已就绪 (AI Observer Ready)', 'info');
         addLog(lang === 'en' ? 'Awaiting Observation Command...' : '等待观测指令... (Awaiting Observation Command)', 'info');
         initCharts();
-    }, []); // Empty deps = run once on mount
-
-    // Separate effect to re-init when symbol changes
-    useEffect(() => {
-        if (!hasInitialized.current) return; // Skip first run (handled above)
-        initCharts();
-    }, [activeSymbol]);
+    }, [addLog, initCharts, lang, activeSymbol]);
 
     // 【修复】自动滚动日志 (使用 scrollTop 避免整页跳动)
     useEffect(() => {
