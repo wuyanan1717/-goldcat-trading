@@ -45,6 +45,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
+        // Don't cache API requests - let them go directly to network
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /supabase\.co/,
+          /binance\.com/,
+          /coingecko\.com/
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
