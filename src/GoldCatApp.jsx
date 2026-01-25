@@ -14,7 +14,7 @@ import {
     Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, ChevronDown, Lock, Unlock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
     PlusCircle, Check, RotateCcw, Info, Loader2, Trophy, Clock, Snowflake, BarChart2,
-    Send, Star, Gift, Newspaper, Terminal, Search, Radar
+    Send, Star, Gift, Newspaper, Terminal, Search, Radar, Eye, BookOpen
 } from 'lucide-react';
 import { translations } from './translations';
 // Version-aware imports for Quantum Observer
@@ -4272,7 +4272,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.4-OBSERVER-FIX
+                v1.2.5-ICON-FIX
             </div>
 
         </div >
