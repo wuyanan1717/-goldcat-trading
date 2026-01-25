@@ -4,8 +4,7 @@ import { supabase } from './supabaseClient';
 import { getCheckoutUrl, CREEM_CONFIG } from './creemConfig';
 import PrivacyPolicyPage from './PrivacyPolicyPage';
 import TermsOfServicePage from './TermsOfServicePage';
-import ParticleLogo from './ParticleLogo';
-import BackgroundParticles from './BackgroundParticles';
+// Removed ParticleLogo and BackgroundParticles to reduce bundle size
 import DailyAlphaTab from './components/DailyAlphaTab';
 import {
     TrendingUp, TrendingDown, DollarSign, Package, AlertCircle, BarChart3, Target,
@@ -4220,7 +4219,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.15-BUNDLE-SPLIT
+                v1.2.16-TRUE-LAZY
             </div>
 
         </div >

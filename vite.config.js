@@ -118,10 +118,10 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          charts: ['recharts'],
+          // Removed 'charts' to ensure recharts is ONLY loaded when TerminalApp renders
           ui: ['lucide-react', 'framer-motion'],
           supabase: ['@supabase/supabase-js'],
-          utils: ['date-fns', 'react-ga4']
+          analytics: ['react-ga4']
         }
       }
     },
