@@ -524,7 +524,7 @@ function GoldCatApp() {
     // 表单状态
     const [activeTab, setActiveTab] = useState(() => {
         const saved = localStorage.getItem('goldcat_active_tab');
-        return saved || 'new_trade'; // Default to Trade Entry (Standard Dashboard)
+        return saved || 'quantum_terminal'; // Default to AI Observer
     });
 
     // Persist active tab
@@ -3006,60 +3006,7 @@ function GoldCatApp() {
 
                                                 {/* Blurred K-line Chart Silhouette */}
                                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-64 opacity-30 blur-sm pointer-events-none select-none z-0">
-                                                    <svg viewBox="0 0 120 80" className="w-full h-full text-amber-500 animate-pulse duration-[5000ms] drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]">
-                                                        {/* Grid Lines */}
-                                                        <line x1="10" y1="10" x2="10" y2="70" stroke="currentColor" strokeWidth="0.3" opacity="0.3" />
-                                                        <line x1="10" y1="70" x2="110" y2="70" stroke="currentColor" strokeWidth="0.3" opacity="0.3" />
-
-                                                        {/* Candlesticks - Simulating a volatile market */}
-                                                        {/* Red Candle */}
-                                                        <rect x="15" y="35" width="4" height="15" fill="#ef4444" opacity="0.8" />
-                                                        <line x1="17" y1="30" x2="17" y2="55" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Green Candle */}
-                                                        <rect x="23" y="40" width="4" height="12" fill="currentColor" opacity="0.8" />
-                                                        <line x1="25" y1="35" x2="25" y2="58" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Red Candle */}
-                                                        <rect x="31" y="32" width="4" height="18" fill="#ef4444" opacity="0.8" />
-                                                        <line x1="33" y1="28" x2="33" y2="52" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Green Candle - Larger */}
-                                                        <rect x="39" y="25" width="4" height="20" fill="currentColor" opacity="0.8" />
-                                                        <line x1="41" y1="20" x2="41" y2="48" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Green Candle */}
-                                                        <rect x="47" y="30" width="4" height="10" fill="currentColor" opacity="0.8" />
-                                                        <line x1="49" y1="25" x2="49" y2="45" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Red Candle - Small */}
-                                                        <rect x="55" y="38" width="4" height="8" fill="#ef4444" opacity="0.8" />
-                                                        <line x1="57" y1="35" x2="57" y2="50" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Green Candle - Bullish momentum */}
-                                                        <rect x="63" y="28" width="4" height="15" fill="currentColor" opacity="0.8" />
-                                                        <line x1="65" y1="23" x2="65" y2="48" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Green Candle */}
-                                                        <rect x="71" y="22" width="4" height="18" fill="currentColor" opacity="0.8" />
-                                                        <line x1="73" y1="18" x2="73" y2="45" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Green Candle - Strong */}
-                                                        <rect x="79" y="18" width="4" height="20" fill="currentColor" opacity="0.8" />
-                                                        <line x1="81" y1="15" x2="81" y2="42" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Red Candle - Pullback */}
-                                                        <rect x="87" y="25" width="4" height="12" fill="#ef4444" opacity="0.8" />
-                                                        <line x1="89" y1="22" x2="89" y2="40" stroke="#ef4444" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Green Candle - Resume uptrend */}
-                                                        <rect x="95" y="20" width="4" height="15" fill="currentColor" opacity="0.8" />
-                                                        <line x1="97" y1="17" x2="97" y2="38" stroke="currentColor" strokeWidth="1" opacity="0.8" />
-
-                                                        {/* Moving Average Line - Simulating trend */}
-                                                        <polyline points="15,50 25,48 35,42 45,38 55,40 65,35 75,30 85,28 95,30"
-                                                            fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" strokeDasharray="2,2" />
-                                                    </svg>
+                                                    {/* Animation Removed */}
                                                 </div>
 
                                                 <Lock className="w-16 h-16 text-amber-500 mb-6 mx-auto relative z-10" />
@@ -4271,7 +4218,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.6-ROLLBACK-FIX
+                v1.2.7-UI-POLISH
             </div>
 
         </div >
