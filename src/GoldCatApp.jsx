@@ -16,6 +16,7 @@ import {
     PlusCircle, Check, RotateCcw, Info, Loader2, Trophy, Clock, Snowflake, BarChart2,
     Send, Star, Gift, Newspaper, Terminal, Search, Radar
 } from 'lucide-react';
+import { translations } from './translations';
 // Version-aware imports for Quantum Observer
 import { lazy, Suspense } from 'react';
 // Lazy load heavy components to improve initial paint time (fix white screen)
@@ -4279,7 +4280,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             <MobileDebugOverlay />
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.1-LAZY-LOAD
+                v1.2.2-HOTFIX
             </div>
 
         </div >
