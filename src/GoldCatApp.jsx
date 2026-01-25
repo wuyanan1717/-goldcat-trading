@@ -1904,11 +1904,6 @@ function GoldCatApp() {
 
                             {/* Vignette for seamless blending */}
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
-
-                            {/* Logo - Static image instead of particle animation */}
-                            <div className="hidden sm:block absolute inset-0 z-[5] opacity-60 flex items-center justify-center" style={{ transform: 'translateY(-80px)' }}>
-                                <img src="/goldcat_logo_transparent.png" alt="GoldCat Logo" className="w-64 h-64 object-contain" />
-                            </div>
                         </div>
 
                         <div className="relative z-10 max-w-5xl mx-auto animate-in fade-in zoom-in duration-1000 slide-in-from-bottom-8 py-20">
@@ -4214,7 +4209,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.25-REDIRECT-FIX
+                v1.2.26-CLEAN
             </div>
 
         </div >
