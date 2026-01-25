@@ -526,7 +526,7 @@ function GoldCatApp() {
     // 表单状态
     const [activeTab, setActiveTab] = useState(() => {
         const saved = localStorage.getItem('goldcat_active_tab');
-        return saved || 'quantum_terminal'; // Default to AI Observer instead of trade entry
+        return saved || 'new_trade'; // Default to Trade Entry (Standard Dashboard)
     });
 
     // Persist active tab
@@ -4280,7 +4280,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             <MobileDebugOverlay />
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.0.9-GFW-BYPASS
+                v1.1.0-FIX-ENTRY
             </div>
 
         </div >
