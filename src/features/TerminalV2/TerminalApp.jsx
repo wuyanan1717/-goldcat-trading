@@ -40,7 +40,10 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
     const [showSearchHint, setShowSearchHint] = useState(false);
 
     // Feature Toggles & State
-    const [isTacticalEnabled, setIsTacticalEnabled] = useState(false);
+    const [isTacticalEnabled, setIsTacticalEnabled] = useState(() => {
+        const saved = localStorage.getItem('goldcat_tactical_enabled');
+        return saved !== null ? saved === 'true' : true; // Default to TRUE
+    });
 
     // Data State
     const [data1m, setData1m] = useState([]);
@@ -182,6 +185,7 @@ export default function TerminalApp({ lang, user, membership, onRequireLogin, on
 
     // --- Auto-Refresh Effect ---
     useEffect(() => {
+        localStorage.setItem('goldcat_tactical_enabled', isTacticalEnabled);
         let intervalId;
 
         if (isTacticalEnabled) {
