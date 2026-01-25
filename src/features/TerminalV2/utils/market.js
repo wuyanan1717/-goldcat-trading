@@ -10,9 +10,9 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
         const fetchLimit = limit + 15;
         const url = `${BASE_URL}?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=${marketType}`;
 
-        // Add timeout for mobile networks (Aggressive 3s timeout to fail fast / switch to proxy)
+        // Add timeout for mobile networks (15s)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
             // Import logger dynamically to avoid circular deps if any (though strict checking is better, dynamic is safer for quick patch)
@@ -55,96 +55,75 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
         }
     };
 
-    // Optimized Concurrent Fetching Strategy (Race to Success)
-    // launches multiple requests in parallel and returns the first successful one.
-    // This avoids waiting for timeouts on blocked endpoints.
-
-    // Helper to wrap promise with tagging
-    const attempt = (promise, name) => promise.then(data => ({ status: 'fulfilled', data, name })).catch(error => ({ status: 'rejected', error, name }));
-
     try {
-        addDebugLog(`Racing data sources for ${symbol}...`, 'info');
-
-        // Create candidates array
-        const candidates = [
-            fetchFromProxy('spot'),
-            fetchFromProxy('futures')
-        ];
-
-        // Add 1000-prefix candidate if applicable
-        if (!symbol.startsWith('1000')) {
-            // For 1000 prefix, we need to construct a specific fetch call
-            // We reuse fetchFromProxy but we need to trick it or just call the url logic directly?
-            // Since fetchFromProxy uses the 'symbol' from closure, we can't easily change it.
-            // Let's just stick to Spot vs Futures race for now, which covers 90% of cases.
-            // Simplicity is stability.
-            // Actually, we can just instantiate the race.
-        }
-
-        // Implementation of Promise.any (First Success) logic
-        // We race Spot and Futures. If both fail, we throw.
-
-        // Note: To handle the 1000-prefix case elegantly without duplicating code,
-        // lets just race Spot and Futures first. If both fail, THEN try 1000-futures (Edge case).
-        // Racing 3 might trigger rate limits.
+        let rawData;
+        let usedMarket = 'spot';
 
         try {
-            const result = await Promise.any([
-                fetchFromProxy('spot'),
-                fetchFromProxy('futures')
-            ]);
+            // 1. Try SPOT first
+            rawData = await fetchFromProxy('spot');
+        } catch (spotError) {
+            console.warn(`[Market] Spot API failed for ${symbol}, trying FUTURES...`, spotError);
+            addDebugLog(`Spot failed, trying Futures...`, 'warning');
+            // 2. Fallback to FUTURES
+            try {
+                rawData = await fetchFromProxy('futures');
+                usedMarket = 'futures';
+            } catch (futuresError) {
+                // 3. Last Resort: Try adding "1000" prefix for Futures
+                if (!symbol.startsWith('1000')) {
+                    try {
+                        console.warn(`[Market] Futures failed for ${symbol}, trying 1000${symbol}...`);
+                        addDebugLog(`Futures failed, trying 1000${symbol}...`, 'warning');
 
-            // Validate result structure (Binance format check)
-            if (!Array.isArray(result) || result.length === 0) throw new Error("Empty data");
+                        // Temporarily change symbol to 1000 prefix for this call
+                        const fetchLimit = limit + 15;
+                        const prefixSymbol = `1000${symbol}`;
+                        const url = `${BASE_URL}?endpoint=klines&symbol=${prefixSymbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=futures`;
 
-            // Transform Data
-            let charts = result.map((k, index) => ({
-                i: index,
-                v: parseFloat(k[4]), // Close price
-                o: parseFloat(k[1]), // Open
-                h: parseFloat(k[2]), // High
-                l: parseFloat(k[3]), // Low
-                vol: parseFloat(k[5]), // Volume
-                time: k[0],
-                label: new Date(k[0]).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-            }));
+                        const res = await fetch(url);
+                        if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+                        const json = await res.json();
+                        if (json.error) throw new Error(json.error);
 
-            charts = calculateRSI(charts, 14);
-            return charts.slice(-limit);
-
-        } catch (raceError) {
-            console.warn("Spot/Futures race failed, trying 1000-prefix fallback...", raceError);
-            // Fallback: Try 1000-prefix Futures (Last Resort)
-            if (!symbol.startsWith('1000')) {
-                const fetchLimit = limit + 15;
-                const prefixSymbol = `1000${symbol}`;
-                const url = `${BASE_URL}?endpoint=klines&symbol=${prefixSymbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=futures`;
-
-                // Standalone fetch for fallback
-                const res = await fetch(url);
-                if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
-                const json = await res.json();
-                if (json.error) throw new Error(json.error);
-
-                let charts = json.map((k, index) => ({
-                    i: index,
-                    v: parseFloat(k[4]),
-                    o: parseFloat(k[1]),
-                    h: parseFloat(k[2]),
-                    l: parseFloat(k[3]),
-                    vol: parseFloat(k[5]),
-                    time: k[0],
-                    label: new Date(k[0]).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-                }));
-                charts = calculateRSI(charts, 14);
-                return charts.slice(-limit);
+                        rawData = json;
+                        usedMarket = 'futures';
+                        addDebugLog(`1000-prefix success`, 'success');
+                    } catch (prefixError) {
+                        console.error(`[Market] 1000-prefix fallback also failed for ${symbol}`, prefixError);
+                        addDebugLog(`All fallbacks failed for ${symbol}`, 'error');
+                        throw spotError; // Throw original error if everything fails
+                    }
+                } else {
+                    console.error(`[Market] Futures API also failed for ${symbol}`, futuresError);
+                    addDebugLog(`Futures failed for ${symbol}`, 'error');
+                    throw spotError;
+                }
             }
-            throw raceError;
         }
 
+        // Transform Binance format [time, open, high, low, close, volume...]
+        let charts = rawData.map((k, index) => ({
+            i: index,
+            v: parseFloat(k[4]), // Close price
+            o: parseFloat(k[1]), // Open
+            h: parseFloat(k[2]), // High
+            l: parseFloat(k[3]), // Low
+            vol: parseFloat(k[5]), // Volume
+            time: k[0],
+            label: new Date(k[0]).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+        }));
+
+        // Calculate RSI
+        charts = calculateRSI(charts, 14);
+
+        // Return only the requested amount (cutting off the warmup period)
+        return charts.slice(-limit);
+
     } catch (error) {
-        console.error("All market data fetches failed:", error);
-        addDebugLog(`CRITICAL: All Sources Failed`, 'error');
+        console.error("Failed to fetch market data:", error);
+        addDebugLog(`CRITICAL: ${error.message}`, 'error');
+        // Do NOT return fake data. Throw error so UI shows "Load Failed"
         throw error;
     }
 }
