@@ -112,5 +112,19 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/gemini/, '')
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          charts: ['recharts'],
+          ui: ['lucide-react', 'framer-motion'],
+          supabase: ['@supabase/supabase-js'],
+          utils: ['date-fns', 'react-ga4']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000 // Increase warning limit to 1MB
   }
 })
