@@ -326,6 +326,15 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
         }
     };
 
+    // --- MOBILE OPTIMIZATION: Detect Screen Size ---
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     return (
         <>
             <div className="min-h-screen p-2 md:p-4 max-w-7xl mx-auto flex flex-col relative z-10 w-full text-slate-300">
@@ -417,49 +426,36 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
                         {/* AI 状态面板 */}
                         <StatusPanel score={score} result={aiResult} lang={lang} showSearchHint={showSearchHint} />
 
-                        {/* 图表 */}
-                        {/* Mobile Chart Tabs */}
-                        <div className="lg:hidden flex gap-2 mb-2">
-                            {['1M', '5M', '1H'].map(tf => (
-                                <button
-                                    key={tf}
-                                    onClick={() => setMobileActiveChart(tf)}
-                                    className={`flex-1 py-2 text-xs font-bold rounded-sm border transition-all ${mobileActiveChart === tf
-                                        ? 'bg-yellow-500 text-black border-yellow-500'
-                                        : 'bg-slate-900 text-slate-500 border-slate-800'
-                                        }`}
-                                >
-                                    {tf} Field
-                                </button>
-                            ))}
-                        </div>
-
                         {/* Charts Area - Adaptive Layout */}
-                        <div className="space-y-4 min-h-[300px]">
-                            <React.Suspense fallback={
-                                <div className="h-64 flex items-center justify-center border border-slate-800 rounded bg-slate-900/50">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Loader2 className="w-6 h-6 text-yellow-500 animate-spin" />
-                                        <span className="text-xs text-slate-500 font-mono">LOADING CHARTS...</span>
+                        {/* CRITICAL OPTIMIZATION: DO NOT RENDER CHARTS ON MOBILE TO PREVENT CRASH/LAG */}
+                        {/* Only render suspense/charts if NOT isMobile (Desktop Only) */}
+                        {!isMobile && (
+                            <div className="space-y-4 min-h-[300px]">
+                                <React.Suspense fallback={
+                                    <div className="h-64 flex items-center justify-center border border-slate-800 rounded bg-slate-900/50">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Loader2 className="w-6 h-6 text-yellow-500 animate-spin" />
+                                            <span className="text-xs text-slate-500 font-mono">LOADING CHARTS...</span>
+                                        </div>
                                     </div>
-                                </div>
-                            }>
-                                {/* 1M Chart */}
-                                <div className={`${mobileActiveChart === '1M' ? 'block' : 'hidden'} lg:block`}>
+                                }>
+                                    {/* 1M Chart */}
                                     <ResonanceChart title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`} meta="AI_NOISE" data={data1m} color="#22d3ee" isScanning={isScanning} showHit={showHit} enableTactical={false} />
-                                </div>
-
-                                {/* 5M Chart */}
-                                <div className={`${mobileActiveChart === '5M' ? 'block' : 'hidden'} lg:block`}>
+                                    {/* 5M Chart */}
                                     <ResonanceChart title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`} meta="WAVE_PATTERN" data={data5m} color="#a78bfa" isScanning={isScanning} showHit={showHit} enableTactical={false} />
-                                </div>
-
-                                {/* 1H Chart */}
-                                <div className={`${mobileActiveChart === '1H' ? 'block' : 'hidden'} lg:block`}>
+                                    {/* 1H Chart */}
                                     <ResonanceChart title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`} meta="GRAVITY_WELL" data={data1h} color="#fbbf24" isScanning={isScanning} showHit={showHit} enableTactical={isTacticalEnabled} />
-                                </div>
-                            </React.Suspense>
-                        </div>
+                                </React.Suspense>
+                            </div>
+                        )}
+                        {/* Mobile Placeholder for Charts */}
+                        {isMobile && (
+                            <div className="p-4 bg-slate-900/30 border border-slate-800 rounded text-center">
+                                <span className="text-xs text-slate-600 font-mono">
+                                    {lang === 'en' ? '[MOBILE MODE] Charts disabled for performance' : '[移动端极速模式] 图表已隐藏以优化速度'}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* 右侧：系统日志 + 战术面板 (下) - col-span-3 */}
