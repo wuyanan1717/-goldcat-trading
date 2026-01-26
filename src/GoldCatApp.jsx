@@ -16,12 +16,11 @@ import {
     Send, Star, Gift, Newspaper, Terminal, Search, Radar, Eye, BookOpen
 } from 'lucide-react';
 import { translations } from './translations';
-// Version-aware imports for Quantum Observer
+// Version-aware imports for Quantum Observer - Direct import (no lazy) for instant loading
+import TerminalAppV3 from './features/TerminalV2/TerminalApp_v3';
+import TerminalAppV4 from './features/TerminalV2/TerminalApp_v4';
+// Keep AIAnalysisDashboard lazy since it's heavy and not frequently accessed
 import { lazy, Suspense } from 'react';
-// Lazy load heavy components to improve initial paint time (fix white screen)
-// critical: Ensure these expose default exports
-const TerminalAppV3 = lazy(() => import('./features/TerminalV2/TerminalApp_v3'));
-const TerminalAppV4 = lazy(() => import('./features/TerminalV2/TerminalApp_v4'));
 const AIAnalysisDashboard = lazy(() => import('./components/AIAnalysisDashboard'));
 
 import { getFeatureVersion } from './config/versionConfig';
@@ -3038,20 +3037,13 @@ function GoldCatApp() {
                             {/* --- 5. Quantum Observer Terminal (New Feature) --- */}
                             {activeTab === 'quantum_terminal' && (
                                 <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 min-h-screen pb-32">
-                                    <Suspense fallback={
-                                        <div className="flex flex-col items-center justify-center min-h-[50vh] text-amber-500 gap-4">
-                                            <Loader2 className="w-8 h-8 animate-spin" />
-                                            <span className="text-xs font-mono opacity-70">INITIALIZING QUANTUM CORE...</span>
-                                        </div>
-                                    }>
-                                        <TerminalApp
-                                            lang={language}
-                                            user={user}
-                                            membership={membership}
-                                            onRequireLogin={() => setShowLoginModal(true)}
-                                            onUpgrade={() => setShowPaymentModal(true)}
-                                        />
-                                    </Suspense>
+                                    <TerminalApp
+                                        lang={language}
+                                        user={user}
+                                        membership={membership}
+                                        onRequireLogin={() => setShowLoginModal(true)}
+                                        onUpgrade={() => setShowPaymentModal(true)}
+                                    />
                                 </div>
                             )}
                         </>
@@ -4209,7 +4201,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.27-V4-RESTORED
+                v1.2.28-INSTANT-LOAD
             </div>
 
         </div >
