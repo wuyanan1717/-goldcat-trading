@@ -7,12 +7,13 @@
  * Version: 4.0 (Based on V3 layout)
  * Baseline: Copied from V3 - Ready for enhancements
  */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Terminal, Coins, Search, Trash2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatusPanel } from './components/StatusPanel';
 import { TacticalPanel } from './components/v4/TacticalPanel';
-import { ResonanceChart } from './components/ResonanceChart';
+// ResonanceChart lazy loaded - only downloaded on desktop
+const ResonanceChart = lazy(() => import('./components/ResonanceChart').then(m => ({ default: m.ResonanceChart })));
 import { BacktestModal } from './components/BacktestModal';
 import { GuideModal } from './components/GuideModal';
 import { DailyBriefModalBilingual } from './components/DailyBriefModalBilingual';
@@ -43,6 +44,8 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
     const [showHit, setShowHit] = useState(false);
     const [aiResult, setAiResult] = useState(null);
     const [mobileActiveChart, setMobileActiveChart] = useState('1H');
+    // Mobile detection - skip loading Recharts on mobile
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
 
     // 从 localStorage 读取活跃币种和预设列表
     const [activeSymbol, setActiveSymbol] = useState(() => {
@@ -417,39 +420,25 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
                         <StatusPanel score={score} result={aiResult} lang={lang} showSearchHint={showSearchHint} />
 
                         {/* 图表 */}
-                        {/* Mobile Chart Tabs */}
-                        <div className="lg:hidden flex gap-2 mb-2">
-                            {['1M', '5M', '1H'].map(tf => (
-                                <button
-                                    key={tf}
-                                    onClick={() => setMobileActiveChart(tf)}
-                                    className={`flex-1 py-2 text-xs font-bold rounded-sm border transition-all ${mobileActiveChart === tf
-                                        ? 'bg-yellow-500 text-black border-yellow-500'
-                                        : 'bg-slate-900 text-slate-500 border-slate-800'
-                                        }`}
-                                >
-                                    {tf} Field
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Charts Area - Adaptive Layout */}
-                        <div className="space-y-4 shadow-xl">
-                            {/* 1M Chart */}
-                            <div className={`${mobileActiveChart === '1M' ? 'block' : 'hidden'} lg:block`}>
-                                <ResonanceChart title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`} meta="AI_NOISE" data={data1m} color="#22d3ee" isScanning={isScanning} showHit={showHit} enableTactical={false} />
+                        {/* Charts Area - Desktop Only (Mobile shows simplified view) */}
+                        {!isMobile ? (
+                            <Suspense fallback={<div className="h-64 bg-slate-900 animate-pulse rounded"></div>}>
+                                <div className="space-y-4 shadow-xl">
+                                    <ResonanceChart title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`} meta="AI_NOISE" data={data1m} color="#22d3ee" isScanning={isScanning} showHit={showHit} enableTactical={false} />
+                                    <ResonanceChart title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`} meta="WAVE_PATTERN" data={data5m} color="#a78bfa" isScanning={isScanning} showHit={showHit} enableTactical={false} />
+                                    <ResonanceChart title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`} meta="GRAVITY_WELL" data={data1h} color="#fbbf24" isScanning={isScanning} showHit={showHit} enableTactical={isTacticalEnabled} />
+                                </div>
+                            </Suspense>
+                        ) : (
+                            // Mobile: Simple price display instead of charts
+                            <div className="bg-slate-900/50 border border-slate-800 rounded p-4 text-center">
+                                <div className="text-zinc-500 text-xs mb-2">{lang === 'zh' ? '图表仅在电脑端显示' : 'Charts available on desktop'}</div>
+                                <div className="text-2xl font-bold text-amber-500">
+                                    {data1h.length > 0 ? `$${data1h[data1h.length - 1]?.v?.toLocaleString() || '-'}` : '-'}
+                                </div>
+                                <div className="text-xs text-zinc-600 mt-1">{activeSymbol}</div>
                             </div>
-
-                            {/* 5M Chart */}
-                            <div className={`${mobileActiveChart === '5M' ? 'block' : 'hidden'} lg:block`}>
-                                <ResonanceChart title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`} meta="WAVE_PATTERN" data={data5m} color="#a78bfa" isScanning={isScanning} showHit={showHit} enableTactical={false} />
-                            </div>
-
-                            {/* 1H Chart */}
-                            <div className={`${mobileActiveChart === '1H' ? 'block' : 'hidden'} lg:block`}>
-                                <ResonanceChart title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`} meta="GRAVITY_WELL" data={data1h} color="#fbbf24" isScanning={isScanning} showHit={showHit} enableTactical={isTacticalEnabled} />
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* 右侧：系统日志 + 战术面板 (下) - col-span-3 */}
