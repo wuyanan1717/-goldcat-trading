@@ -31,9 +31,34 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
 
             addDebugLog(`Fetching ${symbol} (${marketType})...`, 'info');
 
-            const res = await fetch(url, {
+            // 1. Try Vercel Proxy (Primary)
+            let res = await fetch(url, {
                 signal: controller.signal
             });
+
+            // 2. Fallback: If Vercel Proxy is blocked (403 Forbidden, 451 Unavailable) or fails
+            // Binance usually returns 403 or 451 when blocking Cloud IPs (Vercel/AWS)
+            if (!res.ok && (res.status === 403 || res.status === 451 || res.status === 500 || res.status === 504)) {
+                console.warn(`[Market] Vercel Proxy failed (${res.status}), trying Supabase Proxy...`);
+                addDebugLog(`Vercel Blocked (${res.status}), trying Supabase...`, 'warning');
+
+                const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                if (supabaseUrl) {
+                    const sbUrl = `${supabaseUrl}/functions/v1/binance-proxy?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=${marketType}`;
+                    try {
+                        const sbRes = await fetch(sbUrl, { signal: controller.signal });
+                        if (sbRes.ok) {
+                            res = sbRes; // Switch to successful response
+                            addDebugLog(`Supabase Proxy Success`, 'success');
+                        } else {
+                            console.error(`[Market] Supabase Proxy also failed: ${sbRes.status}`);
+                        }
+                    } catch (sbError) {
+                        console.error("[Market] Supabase Proxy network error", sbError);
+                    }
+                }
+            }
+
             clearTimeout(timeoutId);
 
             addDebugLog(`Status: ${res.status} ${res.statusText}`, res.ok ? 'success' : 'error');
