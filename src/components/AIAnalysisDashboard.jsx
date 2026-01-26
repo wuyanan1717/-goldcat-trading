@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-    AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
-    PieChart, Pie, Cell, Legend
-} from 'recharts';
+// Recharts REMOVED to reduce bundle size (~296KB savings)
 import {
     Bot, TrendingUp, TrendingDown,
     ShieldAlert, Sparkles, Activity, Clock, Target,
@@ -672,86 +668,54 @@ const AIAnalysisDashboard = ({ trades = [], language = 'en', riskMode = 'balance
             {/* 4. The Analysis Bento Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 grid-rows-[auto_auto]">
 
-                {/* Card A: Equity Curve (Large - 2 cols) */}
+                {/* Card A: Equity Curve - Static Display (Recharts removed) */}
                 <BentoCard title={t.equityCurve} className="md:col-span-2 lg:col-span-2 min-h-[300px]" icon={TrendingUp}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={stats.equityCurve}>
-                            <defs>
-                                <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={THEME.success} stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor={THEME.success} stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                            <XAxis dataKey="date" stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} hide />
-                            <YAxis stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
-                            <RechartsTooltip
-                                contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px' }}
-                                itemStyle={{ color: '#fff' }}
-                                labelFormatter={(label, payload) => payload[0]?.payload.tooltipDate}
-                            />
-                            <Area type="monotone" dataKey="equity" stroke={THEME.success} strokeWidth={2} fillOpacity={1} fill="url(#colorEquity)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </BentoCard>
-
-                {/* Card B: Radar Chart (Medium) */}
-                <BentoCard title={t.traderDNA} className="md:col-span-1 min-h-[300px]" icon={Fingerprint}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={stats.traderDNA}>
-                            <PolarGrid stroke="#3f3f46" strokeDasharray="3 3" />
-                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#a1a1aa', fontSize: 10, fontWeight: 600 }} />
-                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                            <Radar
-                                name="You"
-                                dataKey="A"
-                                stroke={THEME.primary}
-                                strokeWidth={2}
-                                fill={THEME.primary}
-                                fillOpacity={0.4}
-                            />
-                        </RadarChart>
-                    </ResponsiveContainer>
-                </BentoCard>
-
-                {/* Card E: Directional Bias */}
-                <BentoCard title={t.directionalBias} className="md:col-span-1 min-h-[420px]" icon={Zap}>
-                    <div className="relative flex items-center justify-center mt-[-20px]">
-                        <ResponsiveContainer width="100%" height={220}>
-                            <PieChart>
-                                <Pie
-                                    data={stats.directionData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                    stroke="none"
-                                >
-                                    {stats.directionData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <RechartsTooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px' }} />
-                            </PieChart>
-                        </ResponsiveContainer>
-
-                        {/* Center Stats */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span className="text-3xl font-black text-white">{trades.length}</span>
-                            <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">{t.trades}</span>
+                    <div className="h-full flex flex-col items-center justify-center">
+                        <div className="text-5xl font-black mb-2" style={{ color: stats.netProfit >= 0 ? THEME.success : THEME.danger }}>
+                            {stats.netProfit >= 0 ? '+' : ''}{formatCurrency(stats.netProfit)}
                         </div>
+                        <div className="text-zinc-500 text-sm">{language === 'zh' ? '累计净利润' : 'Cumulative Net Profit'}</div>
+                        <div className="text-zinc-600 text-xs mt-2">({trades.length} {language === 'zh' ? '笔交易' : 'trades'})</div>
                     </div>
-                    <div className="flex justify-center gap-6 mt-[-8px]">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-1 rounded-full bg-emerald-500"></div>
-                            <span className="text-xs text-zinc-400">{t.long} ({trades.length > 0 ? Math.round((stats.directionData[0].value / trades.length) * 100) : 0}%)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-1 rounded-full bg-red-500"></div>
-                            <span className="text-xs text-zinc-400">{t.short} ({trades.length > 0 ? Math.round((stats.directionData[1].value / trades.length) * 100) : 0}%)</span>
+                </BentoCard>
+
+                {/* Card B: Trader DNA - Static Display (RadarChart removed) */}
+                <BentoCard title={t.traderDNA} className="md:col-span-1 min-h-[300px]" icon={Fingerprint}>
+                    <div className="h-full flex flex-col justify-center gap-3 px-2">
+                        {stats.traderDNA.map((item, i) => (
+                            <div key={i} className="flex items-center gap-3">
+                                <span className="text-xs text-zinc-500 w-16">{item.subject}</span>
+                                <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full rounded-full transition-all"
+                                        style={{ width: `${item.A}%`, backgroundColor: THEME.primary }}
+                                    />
+                                </div>
+                                <span className="text-xs font-mono text-zinc-400 w-8">{item.A}%</span>
+                            </div>
+                        ))}
+                    </div>
+                </BentoCard>
+
+                {/* Card E: Directional Bias - Static Display (PieChart removed) */}
+                <BentoCard title={t.directionalBias} className="md:col-span-1 min-h-[420px]" icon={Zap}>
+                    <div className="flex flex-col items-center justify-center py-6">
+                        {/* Total Trades */}
+                        <div className="text-5xl font-black text-white mb-2">{trades.length}</div>
+                        <div className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest mb-6">{t.trades}</div>
+
+                        {/* Long/Short Breakdown */}
+                        <div className="w-full grid grid-cols-2 gap-4 px-4">
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-center">
+                                <div className="text-2xl font-bold text-emerald-400">{stats.directionData[0]?.value || 0}</div>
+                                <div className="text-xs text-zinc-500">{t.long}</div>
+                                <div className="text-sm font-mono text-emerald-400 mt-1">{trades.length > 0 ? Math.round((stats.directionData[0]?.value || 0) / trades.length * 100) : 0}%</div>
+                            </div>
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
+                                <div className="text-2xl font-bold text-red-400">{stats.directionData[1]?.value || 0}</div>
+                                <div className="text-xs text-zinc-500">{t.short}</div>
+                                <div className="text-sm font-mono text-red-400 mt-1">{trades.length > 0 ? Math.round((stats.directionData[1]?.value || 0) / trades.length * 100) : 0}%</div>
+                            </div>
                         </div>
                     </div>
 
