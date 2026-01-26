@@ -359,6 +359,8 @@ function GoldCatApp() {
 
     // 用户系统
     // 用户系统
+    // Auth State Optimization: unknown -> authed/guest
+    const [authState, setAuthState] = useState('unknown'); // 'unknown' | 'authed' | 'guest'
     const [user, setUser] = useState(null);
     const [membership, setMembership] = useState({ isPremium: false, expiryDate: null, maxTrades: 20 });
     const [riskMode, setRiskMode] = useState('balanced'); // Risk mode: defensive, balanced, aggressive, degen
@@ -876,7 +878,10 @@ function GoldCatApp() {
     // Check active session
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
+            const currentUser = session?.user ?? null;
+            setUser(currentUser);
+            // Tri-state update
+            setAuthState(currentUser ? 'authed' : 'guest');
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -1777,6 +1782,46 @@ function GoldCatApp() {
     };
 
     // --- 4. 界面渲染 ---
+
+    // RENDER STRATEGY:
+    // 1. Unknown: Show App Shell & Skeleton (Looks like Dashboard, not Landing)
+    // 2. Guest & No Explicit Landing View: Show Guest Dashboard
+    // 3. Guest & Explicit Landing View: Show Landing Page (Default)
+    // 4. Authed & Explicit Landing View: Show Landing Page
+    // 5. Authed: Show Dashboard
+
+    // APP SHELL (SKELETON) - Rendered during 'unknown' auth state
+    if (authState === 'unknown') {
+        return (
+            <div className="fixed inset-0 bg-black text-gray-200 font-sans flex flex-col">
+                {/* Skeleton Header */}
+                <header className="border-b border-neutral-800 bg-[#050505]/80 backdrop-blur-md h-16 flex items-center justify-between px-4 sticky top-0 z-50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-neutral-800 rounded-full animate-pulse"></div>
+                        <div className="h-4 w-32 bg-neutral-800 rounded animate-pulse"></div>
+                    </div>
+                </header>
+
+                {/* Skeleton Content (Dashboard Structure) */}
+                <div className="flex-1 max-w-7xl mx-auto w-full px-4 pt-6">
+                    {/* Tab Bar Skeleton */}
+                    <div className="flex gap-2 mb-6">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="h-10 w-24 bg-neutral-900 border border-neutral-800 rounded-xl animate-pulse"></div>
+                        ))}
+                    </div>
+
+                    {/* Main Content Skeleton */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Left Panel */}
+                        <div className="lg:col-span-2 h-[500px] bg-neutral-900/50 border border-neutral-800 rounded-2xl animate-pulse"></div>
+                        {/* Right Panel */}
+                        <div className="h-[500px] bg-neutral-900/50 border border-neutral-800 rounded-2xl animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 bg-black text-gray-200 font-sans selection:bg-amber-500/30 notranslate flex flex-col" translate="no">
@@ -4214,7 +4259,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.36
+                v1.2.37
             </div>
 
         </div >

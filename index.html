@@ -16,10 +16,10 @@
 
 <body>
   <div id="root">
-    <!-- Static Loader: Visible immediately while React loads -->
+    <!-- Static Loader: Visible ONLY on Mobile to prevent "broken site" anxiety -->
     <style>
       body {
-        background-color: #000000;
+        background-color: #050505;
         margin: 0;
         padding: 0;
         overflow: hidden;
@@ -31,12 +31,20 @@
         left: 0;
         width: 100%;
         height: 100%;
-        display: flex;
+        display: none;
+        /* Hidden by default on Desktop */
         flex-direction: column;
         align-items: center;
         justify-content: center;
         z-index: 99999;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      /* Only show on Mobile */
+      @media (max-width: 768px) {
+        .app-loader {
+          display: flex;
+        }
       }
 
       .loader-logo {
