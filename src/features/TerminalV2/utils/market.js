@@ -36,22 +36,29 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
                 signal: controller.signal
             });
 
-            // 2. Fallback: If Vercel Proxy is blocked (403 Forbidden, 451 Unavailable) or fails
-            // Binance usually returns 403 or 451 when blocking Cloud IPs (Vercel/AWS)
-            if (!res.ok && (res.status === 403 || res.status === 451 || res.status === 500 || res.status === 504)) {
+            // 2. Fallback Logic matches:
+            // - Any error on Futures (Binance Futures aggressively blocks IPs)
+            // - Specific blocking codes on any market (403, 451, 500, 504)
+            const isBlockedError = res.status === 403 || res.status === 451 || res.status === 500 || res.status === 504;
+            const isfuturesError = marketType === 'futures' && !res.ok;
+
+            if (isBlockedError || isfuturesError) {
                 console.warn(`[Market] Vercel Proxy failed (${res.status}), trying Supabase Proxy...`);
-                addDebugLog(`Vercel Blocked (${res.status}), trying Supabase...`, 'warning');
+                addDebugLog(`Vercel Fail (${res.status}), trying Supabase...`, 'warning');
 
                 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
                 if (supabaseUrl) {
                     const sbUrl = `${supabaseUrl}/functions/v1/binance-proxy?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=${marketType}`;
                     try {
                         const sbRes = await fetch(sbUrl, { signal: controller.signal });
+                        // If Supabase succeeds, use it
                         if (sbRes.ok) {
-                            res = sbRes; // Switch to successful response
+                            res = sbRes;
                             addDebugLog(`Supabase Proxy Success`, 'success');
                         } else {
+                            // If Supabase also fails, log it (we'll throw the original Vercel error or this one later)
                             console.error(`[Market] Supabase Proxy also failed: ${sbRes.status}`);
+                            // Optional: could inspect sbRes to see if it's a better error to show
                         }
                     } catch (sbError) {
                         console.error("[Market] Supabase Proxy network error", sbError);
