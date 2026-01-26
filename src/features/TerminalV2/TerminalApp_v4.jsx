@@ -7,13 +7,12 @@
  * Version: 4.0 (Based on V3 layout)
  * Baseline: Copied from V3 - Ready for enhancements
  */
-import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Terminal, Coins, Search, Trash2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatusPanel } from './components/StatusPanel';
 import { TacticalPanel } from './components/v4/TacticalPanel';
-// ResonanceChart lazy loaded - only downloaded on desktop
-const ResonanceChart = lazy(() => import('./components/ResonanceChart').then(m => ({ default: m.ResonanceChart })));
+import { ResonanceChart } from './components/ResonanceChart';
 import { BacktestModal } from './components/BacktestModal';
 import { GuideModal } from './components/GuideModal';
 import { DailyBriefModalBilingual } from './components/DailyBriefModalBilingual';
@@ -43,9 +42,8 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
     const [isScanning, setIsScanning] = useState(false);
     const [showHit, setShowHit] = useState(false);
     const [aiResult, setAiResult] = useState(null);
-    const [mobileActiveChart, setMobileActiveChart] = useState('1H');
-    // Mobile detection - skip loading Recharts on mobile
-    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
+    // SAFE device detection: null initially, set via useEffect to avoid SSR/hydration mismatch
+    const [isDesktop, setIsDesktop] = useState(null);
 
     // 从 localStorage 读取活跃币种和预设列表
     const [activeSymbol, setActiveSymbol] = useState(() => {
@@ -162,6 +160,11 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
             console.error("Background scan failed", e);
         }
     }, [activeSymbol]);
+
+    // SAFE: Device detection only runs after mount (avoids SSR/hydration mismatch)
+    useEffect(() => {
+        setIsDesktop(window.innerWidth >= 1024);
+    }, []);
 
     useEffect(() => {
         const handleOpenGuide = () => setIsGuideOpen(true);
@@ -419,24 +422,55 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
                         {/* AI 状态面板 */}
                         <StatusPanel score={score} result={aiResult} lang={lang} showSearchHint={showSearchHint} />
 
-                        {/* 图表 */}
-                        {/* Charts Area - Desktop Only (Mobile shows simplified view) */}
-                        {!isMobile ? (
-                            <Suspense fallback={<div className="h-64 bg-slate-900 animate-pulse rounded"></div>}>
-                                <div className="space-y-4 shadow-xl">
-                                    <ResonanceChart title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`} meta="AI_NOISE" data={data1m} color="#22d3ee" isScanning={isScanning} showHit={showHit} enableTactical={false} />
-                                    <ResonanceChart title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`} meta="WAVE_PATTERN" data={data5m} color="#a78bfa" isScanning={isScanning} showHit={showHit} enableTactical={false} />
-                                    <ResonanceChart title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`} meta="GRAVITY_WELL" data={data1h} color="#fbbf24" isScanning={isScanning} showHit={showHit} enableTactical={isTacticalEnabled} />
+                        {/* 图表区域 - 安全条件渲染：useEffect后才决定 */}
+
+                        {/* 初始状态(isDesktop===null)：显示loading占位 */}
+                        {isDesktop === null && (
+                            <div className="h-32 bg-slate-900/50 border border-slate-800 rounded-lg flex items-center justify-center">
+                                <div className="text-zinc-500 text-sm">{lang === 'zh' ? '正在加载...' : 'Loading...'}</div>
+                            </div>
+                        )}
+
+                        {/* Desktop: Full Charts */}
+                        {isDesktop === true && (
+                            <div className="space-y-4 shadow-xl">
+                                <ResonanceChart title={lang === 'en' ? `1M: Micro Field (${activeSymbol})` : `1M: 微观场 (${activeSymbol})`} meta="AI_NOISE" data={data1m} color="#22d3ee" isScanning={isScanning} showHit={showHit} enableTactical={false} />
+                                <ResonanceChart title={lang === 'en' ? `5M: Structure Field (${activeSymbol})` : `5M: 结构场 (${activeSymbol})`} meta="WAVE_PATTERN" data={data5m} color="#a78bfa" isScanning={isScanning} showHit={showHit} enableTactical={false} />
+                                <ResonanceChart title={lang === 'en' ? `1H: Macro Field (${activeSymbol})` : `1H: 宏观场 (${activeSymbol})`} meta="GRAVITY_WELL" data={data1h} color="#fbbf24" isScanning={isScanning} showHit={showHit} enableTactical={isTacticalEnabled} />
+                            </div>
+                        )}
+
+                        {/* Mobile: Simplified Price Display */}
+                        {isDesktop === false && (
+                            <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-4">
+                                <div className="text-center mb-4">
+                                    <div className="text-zinc-500 text-xs mb-1">{activeSymbol}</div>
+                                    <div className="text-3xl font-bold text-amber-500">
+                                        {data1h.length > 0 ? `$${data1h[data1h.length - 1]?.c?.toLocaleString() || '-'}` : '-'}
+                                    </div>
+                                    <div className="text-xs text-zinc-600 mt-1">{lang === 'zh' ? '图表仅在电脑端显示' : 'Charts on Desktop'}</div>
                                 </div>
-                            </Suspense>
-                        ) : (
-                            // Mobile: Simple price display instead of charts
-                            <div className="bg-slate-900/50 border border-slate-800 rounded p-4 text-center">
-                                <div className="text-zinc-500 text-xs mb-2">{lang === 'zh' ? '图表仅在电脑端显示' : 'Charts available on desktop'}</div>
-                                <div className="text-2xl font-bold text-amber-500">
-                                    {data1h.length > 0 ? `$${data1h[data1h.length - 1]?.v?.toLocaleString() || '-'}` : '-'}
+                                {/* RSI Quick View */}
+                                <div className="grid grid-cols-3 gap-2 text-center">
+                                    <div className="bg-slate-800/50 rounded p-2">
+                                        <div className="text-[10px] text-zinc-500">1M RSI</div>
+                                        <div className={`text-sm font-mono ${data1m.length > 0 && data1m[data1m.length - 1]?.rsi > 70 ? 'text-red-400' : data1m.length > 0 && data1m[data1m.length - 1]?.rsi < 30 ? 'text-green-400' : 'text-zinc-300'}`}>
+                                            {data1m.length > 0 ? data1m[data1m.length - 1]?.rsi?.toFixed(1) || '-' : '-'}
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-800/50 rounded p-2">
+                                        <div className="text-[10px] text-zinc-500">5M RSI</div>
+                                        <div className={`text-sm font-mono ${data5m.length > 0 && data5m[data5m.length - 1]?.rsi > 70 ? 'text-red-400' : data5m.length > 0 && data5m[data5m.length - 1]?.rsi < 30 ? 'text-green-400' : 'text-zinc-300'}`}>
+                                            {data5m.length > 0 ? data5m[data5m.length - 1]?.rsi?.toFixed(1) || '-' : '-'}
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-800/50 rounded p-2">
+                                        <div className="text-[10px] text-zinc-500">1H RSI</div>
+                                        <div className={`text-sm font-mono ${data1h.length > 0 && data1h[data1h.length - 1]?.rsi > 70 ? 'text-red-400' : data1h.length > 0 && data1h[data1h.length - 1]?.rsi < 30 ? 'text-green-400' : 'text-zinc-300'}`}>
+                                            {data1h.length > 0 ? data1h[data1h.length - 1]?.rsi?.toFixed(1) || '-' : '-'}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-xs text-zinc-600 mt-1">{activeSymbol}</div>
                             </div>
                         )}
                     </div>
