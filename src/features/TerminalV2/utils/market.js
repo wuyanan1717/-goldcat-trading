@@ -32,39 +32,61 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
             addDebugLog(`Fetching ${symbol} (${marketType})...`, 'info');
 
             // 1. Try Vercel Proxy (Primary)
-            let res = await fetch(url, {
-                signal: controller.signal
-            });
+            let res = null;
+            let vercelFailed = false;
 
-            // 2. Fallback Logic matches:
-            // - Any error on Futures (Binance Futures aggressively blocks IPs)
-            // - Specific blocking codes on any market (403, 451, 500, 504)
-            const isBlockedError = res.status === 403 || res.status === 451 || res.status === 500 || res.status === 504;
-            const isfuturesError = marketType === 'futures' && !res.ok;
+            try {
+                res = await fetch(url, {
+                    signal: controller.signal
+                });
+            } catch (e) {
+                console.warn(`[Market] Vercel Network Error:`, e);
+                vercelFailed = true;
+            }
 
-            if (isBlockedError || isfuturesError) {
-                console.warn(`[Market] Vercel Proxy failed (${res.status}), trying Supabase Proxy...`);
-                addDebugLog(`Vercel Fail (${res.status}), trying Supabase...`, 'warning');
+            // Check if blocked or failed
+            if (!res || !res.ok) {
+                // 2. Fallback Logic matches:
+                // - Network Error (fetch threw exception)
+                // - Any error on Futures (Binance Futures aggressively blocks IPs)
+                // - Specific blocking codes on any market (403, 451, 500, 504)
+                const isBlockedError = res && (res.status === 403 || res.status === 451 || res.status === 500 || res.status === 504);
+                const isfuturesError = marketType === 'futures' && (!res || !res.ok);
 
-                const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-                if (supabaseUrl) {
-                    const sbUrl = `${supabaseUrl}/functions/v1/binance-proxy?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=${marketType}`;
-                    try {
-                        const sbRes = await fetch(sbUrl, { signal: controller.signal });
-                        // If Supabase succeeds, use it
-                        if (sbRes.ok) {
-                            res = sbRes;
-                            addDebugLog(`Supabase Proxy Success`, 'success');
-                        } else {
-                            // If Supabase also fails, log it (we'll throw the original Vercel error or this one later)
-                            console.error(`[Market] Supabase Proxy also failed: ${sbRes.status}`);
-                            // Optional: could inspect sbRes to see if it's a better error to show
+                if (vercelFailed || isBlockedError || isfuturesError) {
+                    console.warn(`[Market] Vercel Proxy failed/blocked, trying Supabase Proxy...`);
+                    addDebugLog(`Vercel Fail, switching to Supabase...`, 'warning');
+
+                    // RESET TIMEOUT for Fallback (give it fresh 15s)
+                    clearTimeout(timeoutId);
+                    const sbController = new AbortController();
+                    const sbTimeoutId = setTimeout(() => sbController.abort(), 15000);
+
+                    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                    if (supabaseUrl) {
+                        const sbUrl = `${supabaseUrl}/functions/v1/binance-proxy?endpoint=klines&symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${fetchLimit}&marketType=${marketType}`;
+                        try {
+                            const sbRes = await fetch(sbUrl, { signal: sbController.signal });
+                            clearTimeout(sbTimeoutId);
+
+                            if (sbRes.ok) {
+                                res = sbRes;
+                                addDebugLog(`Supabase Proxy Success`, 'success');
+                            } else {
+                                console.error(`[Market] Supabase Proxy also failed: ${sbRes.status}`);
+                            }
+                        } catch (sbError) {
+                            clearTimeout(sbTimeoutId);
+                            console.error("[Market] Supabase Proxy network error", sbError);
                         }
-                    } catch (sbError) {
-                        console.error("[Market] Supabase Proxy network error", sbError);
                     }
                 }
             }
+
+            // Clear original timeout if we didn't use fallback or fallback finished
+            clearTimeout(timeoutId);
+
+            if (!res) throw new Error('Network connection failed');
 
             clearTimeout(timeoutId);
 
