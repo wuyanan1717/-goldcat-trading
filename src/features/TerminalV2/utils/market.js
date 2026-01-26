@@ -57,10 +57,10 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
                     console.warn(`[Market] Vercel Proxy failed/blocked, trying Supabase Proxy...`);
                     addDebugLog(`Vercel Fail, switching to Supabase...`, 'warning');
 
-                    // RESET TIMEOUT for Fallback (give it fresh 15s)
+                    // RESET TIMEOUT for Fallback (give it 25s for potential Cold Start)
                     clearTimeout(timeoutId);
                     const sbController = new AbortController();
-                    const sbTimeoutId = setTimeout(() => sbController.abort(), 15000);
+                    const sbTimeoutId = setTimeout(() => sbController.abort(), 25000);
 
                     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
                     if (supabaseUrl) {
@@ -73,11 +73,11 @@ export async function fetchBinanceKlines(symbol, interval, limit = 50) {
                                 res = sbRes;
                                 addDebugLog(`Supabase Proxy Success`, 'success');
                             } else {
-                                console.error(`[Market] Supabase Proxy also failed: ${sbRes.status}`);
+                                console.error(`[Market] Supabase Proxy also failed: ${sbRes.status} ${sbRes.statusText}`);
                             }
                         } catch (sbError) {
                             clearTimeout(sbTimeoutId);
-                            console.error("[Market] Supabase Proxy network error", sbError);
+                            console.error("[Market] Supabase Proxy network error (Timeout?)", sbError);
                         }
                     }
                 }

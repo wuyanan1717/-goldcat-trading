@@ -34,7 +34,7 @@ export const StatusPanel = ({ score, result, lang = 'zh', showSearchHint = false
                         {lang === 'zh' ? '👆 点击上方 "启动观测" 按钮开始分析' : '👆 Click "START SCAN" button above to analyze'}
                     </p>
                     <p className="text-yellow-600/60 text-xs">
-                        {lang === 'zh' ? '已切换币种，需要重新观测' : 'Symbol changed, scan required'}
+                        {lang === 'zh' ? '已切换币种，需要重新观测（WiFi环境更优）' : 'Symbol changed, scan required'}
                     </p>
                 </div>
             );

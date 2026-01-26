@@ -403,10 +403,23 @@ function GoldCatApp() {
         return 'en';
     });
 
-    // IP Detection Removed for Performance (GFW Blocking Risk)
-    // Defaulting to user preference or 'en'
+    // IP Detection (Non-blocking / Background)
     useEffect(() => {
-        // No-op
+        const saved = localStorage.getItem('goldcat_language');
+        if (saved) return; // Respect user override
+
+        // Fast & Cheap IP Check using Cloudflare Trace
+        fetch('https://www.cloudflare.com/cdn-cgi/trace')
+            .then(res => res.text())
+            .then(data => {
+                if (data.includes('loc=CN')) {
+                    console.log('Detected China IP, switching to Chinese');
+                    setLanguage('zh');
+                }
+            })
+            .catch(err => {
+                console.warn('IP Check Failed, staying in English', err);
+            });
     }, []);
 
     // Initialize Google Analytics 4
@@ -521,13 +534,13 @@ function GoldCatApp() {
 
     // 表单状态
     const [activeTab, setActiveTab] = useState(() => {
-        const saved = localStorage.getItem('goldcat_active_tab');
-        return saved || 'new_trade';
+        const saved = localStorage.getItem('goldcat_active_tab_v2'); // New key to force reset logic
+        return saved || 'quantum_terminal'; // Default to AI Observer (Quantum Terminal)
     });
 
     // Persist active tab
     useEffect(() => {
-        localStorage.setItem('goldcat_active_tab', activeTab);
+        localStorage.setItem('goldcat_active_tab_v2', activeTab);
     }, [activeTab]);
     const [formData, setFormData] = useState({
         tradeType: 'buy',
@@ -4201,7 +4214,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-1 left-1 z-[99999] text-[9px] text-white/50 font-mono pointer-events-none bg-black/50 px-1 rounded">
-                v1.2.34-MOBILE-FALLBACK-FIX
+                v1.2.35
             </div>
 
         </div >
