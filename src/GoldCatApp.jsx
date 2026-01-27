@@ -1372,57 +1372,48 @@ function GoldCatApp() {
 
         if (funcError) {
             // Function threw an error (e.g. IP limit or Validation)
-            // Parse error message (Supabase Functions Wrap errors)
-            let msg = funcError.message;
-            if (msg.includes('Registration limit')) {
-                msg = language === 'zh' ? '该设备/IP 注册次数已达上限（最多4个账号）。' : 'Registration limit reached for this device/IP.';
+            if (funcError) {
+                console.error('Registration Network Error:', funcError);
+                setErrorMessage(language === 'zh' ? '网络错误，请稍后重试' : 'Network error. Please try again.');
+                setShowErrorToast(true);
+                setTimeout(() => setShowErrorToast(false), 3000);
+                return;
             }
-            setErrorMessage(msg);
-            setShowErrorToast(true);
-            setTimeout(() => setShowErrorToast(false), 5000);
-            return;
-        }
 
-        // Success - Map response to expected format
-        const data = funcData?.data || {};
-        const error = null;
+            // Logic error returned from Edge Function (Status 200, but has error)
+            if (funcData?.error) {
+                let msg = funcData.error;
+                if (msg.includes('Registration limit')) {
+                    msg = language === 'zh' ? '该设备/IP 注册次数已达上限（最多4个账号）。付费会员不受限制。' : 'Registration limit reached for this IP (max 4 accounts).';
+                } else if (msg.includes('already been registered')) {
+                    msg = language === 'zh' ? '该邮箱已被注册，请直接登录。' : 'User already registered. Please login.';
+                } else if (msg.includes('Password should be')) {
+                    msg = language === 'zh' ? '密码长度不足（至少6位）。' : 'Password is too short (min 6 chars).';
+                }
 
-        // Logic below handles success UI...
-        // Note: admin.createUser auto-confirms, so we might not have a session right away unless we login?
-        // Actually, let's just tell user to login.
+                setErrorMessage(msg);
+                setShowErrorToast(true);
+                setTimeout(() => setShowErrorToast(false), 5000);
+                return;
+            }
 
-        if (true) { // Success path
-            setShowLoginModal(false);
-            setShowSuccessToast(true);
-            // Optional: Auto-login could be added here if the Edge Function returned a session
-        }
-        return;
-        // ---------------------------------------------
+            // Success - Map response to expected format
+            const data = funcData?.data || {};
 
-        /* 
-           ORIGINAL CLIENT-SIDE LOGIC REMOVED 
-           (The lines below are bypassed by the return above, 
-            but for cleaner code, I should physically remove them in the edit)
-        */
-
-        if (error) {
-            setErrorMessage(error.message);
-            setShowErrorToast(true);
-            setTimeout(() => setShowErrorToast(false), 3000);
-        } else {
+            // Success path
             if (true) {
                 alert(language === 'zh' ? '注册成功！您可以直接登录了。' : 'Registration successful! You can log in now.');
-            } else {
-                setShowLoginModal(false);
-                setShowSuccessToast(true);
-                // Clear form to prevent rapid re-registration
-                setRegisterForm({
-                    username: '',
-                    email: '',
-                    password: '',
-                    confirmPassword: ''
-                });
             }
+
+            setShowLoginModal(false);
+            setShowSuccessToast(true);
+            // Clear form to prevent rapid re-registration
+            setRegisterForm({
+                username: '',
+                email: '',
+                password: '',
+                confirmPassword: ''
+            });
         }
     };
 

@@ -16,7 +16,7 @@ serve(async (req) => {
         if (!ip) {
             return new Response(
                 JSON.stringify({ error: "Unable to determine IP address" }),
-                { status: 400, headers: corsHeaders }
+                { status: 200, headers: corsHeaders }
             )
         }
 
@@ -25,7 +25,7 @@ serve(async (req) => {
         if (!email || !password) {
             return new Response(
                 JSON.stringify({ error: "Missing email or password" }),
-                { status: 400, headers: corsHeaders }
+                { status: 200, headers: corsHeaders }
             )
         }
 
@@ -51,7 +51,7 @@ serve(async (req) => {
                 JSON.stringify({
                     error: "Registration limit reached for this IP (max 4 accounts).",
                 }),
-                { status: 429, headers: corsHeaders }
+                { status: 200, headers: corsHeaders }
             )
         }
 
@@ -79,7 +79,7 @@ serve(async (req) => {
         return new Response(
             JSON.stringify({ error: err.message }),
             {
-                status: 400,
+                status: 200,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             }
         )
