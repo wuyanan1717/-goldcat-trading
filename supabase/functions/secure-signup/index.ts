@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     // 1. Extract client IP (Vercel priority)
-    const clientIp = 
+    const clientIp =
       req.headers.get('x-vercel-forwarded-for')?.split(',')[0].trim() ||
       req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       req.headers.get('x-real-ip') ||
@@ -27,13 +27,13 @@ serve(async (req) => {
 
     if (!email || !password || !username) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Missing required fields: email, password, username' 
+        JSON.stringify({
+          success: false,
+          error: 'Missing required fields: email, password, username'
         }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 200, // Business logic error, not network error
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -54,13 +54,13 @@ serve(async (req) => {
     if (rpcError) {
       console.error('[IP Check Error]:', rpcError)
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Failed to verify registration limit' 
+        JSON.stringify({
+          success: false,
+          error: 'Failed to verify registration limit'
         }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -68,13 +68,13 @@ serve(async (req) => {
     if (!allowed) {
       console.log(`[IP Limit] Blocked IP: ${clientIp}`)
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Registration limit reached for this device/IP.' 
+        JSON.stringify({
+          success: false,
+          error: 'Registration limit reached for this device/IP.'
         }),
-        { 
-          status: 429, // Too Many Requests
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 200, // Business logic error (not network error)
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -89,43 +89,43 @@ serve(async (req) => {
 
     if (createError) {
       console.error('[User Creation Error]:', createError)
-      
+
       // Handle specific errors
-      if (createError.message.includes('already been registered') || 
-          createError.message.includes('User already registered')) {
+      if (createError.message.includes('already been registered') ||
+        createError.message.includes('User already registered')) {
         return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Email already registered' 
+          JSON.stringify({
+            success: false,
+            error: 'Email already registered'
           }),
-          { 
-            status: 409, // Conflict
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          {
+            status: 200, // Business logic error (not network error)
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         )
       }
 
       if (createError.message.includes('Password should be')) {
         return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Password must be at least 6 characters' 
+          JSON.stringify({
+            success: false,
+            error: 'Password must be at least 6 characters'
           }),
-          { 
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          {
+            status: 200, // Business logic error (not network error)
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         )
       }
 
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: createError.message 
+        JSON.stringify({
+          success: false,
+          error: createError.message
         }),
-        { 
+        {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -173,9 +173,9 @@ serve(async (req) => {
             refresh_token: sessionData.refresh_token,
           },
         }),
-        { 
+        {
           status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     } else {
@@ -191,9 +191,9 @@ serve(async (req) => {
           session: null,
           message: 'User created successfully. Please log in manually.',
         }),
-        { 
+        {
           status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -201,13 +201,13 @@ serve(async (req) => {
   } catch (err) {
     console.error('[Unhandled Error]:', err)
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'Internal server error' 
+      JSON.stringify({
+        success: false,
+        error: 'Internal server error'
       }),
-      { 
+      {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
   }
