@@ -1403,14 +1403,27 @@ function GoldCatApp() {
         // Success - Map response to expected format
         const data = funcData?.data || {};
 
-        // Success path
-        if (true) {
-            alert(language === 'zh' ? '注册成功！您可以直接登录了。' : 'Registration successful! You can log in now.');
+        // Success path - AUTO LOGIN
+        try {
+            const { error: loginError } = await supabase.auth.signInWithPassword({
+                email: registerForm.email,
+                password: registerForm.password
+            });
+
+            if (loginError) {
+                // If auto-login fails, just show success toast and ask them to login manually
+                console.error('Auto-login failed:', loginError);
+                alert(language === 'zh' ? '注册成功！请手动登录。' : 'Registration successful! Please log in.');
+            } else {
+                // Auto-login success will trigger global state update automatically
+                setShowSuccessToast(true);
+            }
+        } catch (e) {
+            console.error('Auto-login exception:', e);
         }
 
         setShowLoginModal(false);
-        setShowSuccessToast(true);
-        // Clear form to prevent rapid re-registration
+        // Clear form
         setRegisterForm({
             username: '',
             email: '',
