@@ -40,7 +40,7 @@ const TermsOfServicePage = ({ language, onBack }) => {
                     list: [
                         "免费账户：限制为 20 笔交易记录",
                         "高级会员：无限交易记录、AI 智能分析、优先支持",
-                        "付款通过 Creem 处理，采用一次性终身访问模式",
+                        "付款通过 Stripe 处理，采用一次性终身访问模式",
                         "所有费用均不可退款，除非法律另有规定"
                     ]
                 },
@@ -124,7 +124,7 @@ const TermsOfServicePage = ({ language, onBack }) => {
                     list: [
                         "Free Account: Limited to 20 trade records",
                         "Premium Membership: Unlimited records, AI Smart Analysis, Priority Support",
-                        "Payments processed through Creem with one-time lifetime access model",
+                        "Payments processed through Stripe with one-time lifetime access model",
                         "All fees are non-refundable unless required by law"
                     ]
                 },

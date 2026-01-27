@@ -18,7 +18,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                         "账户信息：电子邮件地址用于身份验证",
                         "交易数据：您手动输入的交易记录、分析和笔记",
                         "使用数据：服务使用统计和交互信息",
-                        "支付信息：由第三方支付处理商（Creem）安全处理"
+                        "支付信息：由第三方支付处理商（Stripe）安全处理"
                     ]
                 },
                 {
@@ -40,7 +40,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     title: "5. 数据共享",
                     content: "我们不会出售您的个人数据。我们仅在以下情况下共享数据：",
                     list: [
-                        "第三方服务提供商：Supabase（数据库）、Creem（支付处理）",
+                        "第三方服务提供商：Supabase（数据库）、Stripe（支付处理）",
                         "法律要求：如法律、法规或法律程序要求",
                         "保护权利：保护我们的权利、隐私、安全或财产"
                     ]
@@ -88,7 +88,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                         "Account Information: Email address for authentication",
                         "Trading Data: Trade records, analysis, and notes you manually enter",
                         "Usage Data: Service usage statistics and interaction information",
-                        "Payment Information: Securely processed by third-party payment processor (Creem)"
+                        "Payment Information: Securely processed by third-party payment processor (Stripe)"
                     ]
                 },
                 {
@@ -110,7 +110,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     title: "5. Data Sharing",
                     content: "We do not sell your personal data. We only share data in the following cases:",
                     list: [
-                        "Third-party Service Providers: Supabase (database), Creem (payment processing)",
+                        "Third-party Service Providers: Supabase (database), Stripe (payment processing)",
                         "Legal Requirements: As required by law, regulation, or legal process",
                         "Protect Rights: To protect our rights, privacy, safety, or property"
                     ]

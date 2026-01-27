@@ -100,7 +100,7 @@ export const TermsOfServiceModal = ({ show, onClose, language }) => {
                             </div>
                             <div>
                                 <h3 className="text-white font-semibold mb-2">会员和付款</h3>
-                                <p>免费用户限20笔记录，高级会员无限制。通过Creem处理支付，费用不可退款。</p>
+                                <p>免费用户限20笔记录，高级会员无限制。通过Stripe处理支付，费用不可退款。</p>
                             </div>
                             <div>
                                 <h3 className="text-white font-semibold mb-2">免责声明</h3>
@@ -124,7 +124,7 @@ export const TermsOfServiceModal = ({ show, onClose, language }) => {
                             </div>
                             <div>
                                 <h3 className="text-white font-semibold mb-2">Membership & Payments</h3>
-                                <p>Free users limited to 20 trades. Premium unlimited. Payments via Creem, non-refundable.</p>
+                                <p>Free users limited to 20 trades. Premium unlimited. Payments via Stripe, non-refundable.</p>
                             </div>
                             <div>
                                 <h3 className="text-white font-semibold mb-2">Disclaimer</h3>
