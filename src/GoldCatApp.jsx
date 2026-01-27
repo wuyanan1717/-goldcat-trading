@@ -885,7 +885,10 @@ function GoldCatApp() {
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
+            const currentUser = session?.user ?? null;
+            setUser(currentUser);
+            // Fix: Also update high-level authState to switch UI from Landing to Dashboard
+            setAuthState(currentUser ? 'authed' : 'guest');
         });
 
         return () => subscription.unsubscribe();
