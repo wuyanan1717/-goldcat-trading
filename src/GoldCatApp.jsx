@@ -1338,11 +1338,19 @@ function GoldCatApp() {
     // 注册逻辑
     // 注册逻辑 -> Supabase Register (Via Secure Edge Function)
     const handleRegister = async () => {
+        // Prevent double submission
+        if (isSubmitting) {
+            console.warn('Registration already in progress, ignoring duplicate click');
+            return;
+        }
+        setIsSubmitting(true);
+
         // Validate all required fields
         if (!registerForm.email || !registerForm.password || !registerForm.username) {
             setErrorMessage(t('auth.fill_all_fields'));
             setShowErrorToast(true);
             setTimeout(() => setShowErrorToast(false), 3000);
+            setIsSubmitting(false);
             return;
         }
 
@@ -1352,6 +1360,7 @@ function GoldCatApp() {
             setErrorMessage(language === 'zh' ? '请输入有效的邮箱地址（例如：user@example.com）' : 'Please enter a valid email address (e.g., user@example.com)');
             setShowErrorToast(true);
             setTimeout(() => setShowErrorToast(false), 3000);
+            setIsSubmitting(false);
             return;
         }
 
@@ -1359,6 +1368,7 @@ function GoldCatApp() {
             setErrorMessage(t('auth.password_mismatch'));
             setShowErrorToast(true);
             setTimeout(() => setShowErrorToast(false), 3000);
+            setIsSubmitting(false);
             return;
         }
 
@@ -1378,6 +1388,7 @@ function GoldCatApp() {
             setErrorMessage(language === 'zh' ? '网络错误，请稍后重试' : 'Network error. Please try again.');
             setShowErrorToast(true);
             setTimeout(() => setShowErrorToast(false), 3000);
+            setIsSubmitting(false);
             return;
         }
 
@@ -1399,6 +1410,7 @@ function GoldCatApp() {
             setErrorMessage(msg);
             setShowErrorToast(true);
             setTimeout(() => setShowErrorToast(false), 5000);
+            setIsSubmitting(false);
             return;
         }
 
@@ -1425,6 +1437,7 @@ function GoldCatApp() {
                 });
 
                 console.log('✅ Registration + Auto-login successful');
+                setIsSubmitting(false);
             } catch (sessionError) {
                 console.error('Failed to set session:', sessionError);
                 // Graceful degradation
@@ -1432,6 +1445,7 @@ function GoldCatApp() {
                 setShowSuccessToast(true);
                 setLoginForm({ email: registerForm.email, password: '' });
                 setIsRegisterMode(false);
+                setIsSubmitting(false);
             }
         }
         // ⚠️ Rare case: User created but no session (graceful degradation)
@@ -1449,6 +1463,7 @@ function GoldCatApp() {
                 password: '',
                 confirmPassword: ''
             });
+            setIsSubmitting(false);
         }
     };
 
@@ -2325,11 +2340,18 @@ function GoldCatApp() {
                                         <div className="mb-8 w-full">
                                             <h3 className="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
                                                 {t('pricing.pro_title')}
+                                                {/* 50% OFF Badge */}
+                                                <span className="text-xs bg-gradient-to-r from-red-600 to-red-500 text-white px-2.5 py-1 rounded-full font-black uppercase tracking-wide shadow-lg animate-pulse">
+                                                    50% OFF
+                                                </span>
                                             </h3>
                                             <div className="mb-2">
-                                                {/* Annual Price */}
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-5xl font-black text-white">$39.00</span>
+                                                {/* Discount Pricing */}
+                                                <div className="flex items-baseline gap-3">
+                                                    {/* Original Price (Strikethrough) */}
+                                                    <span className="text-2xl font-bold text-gray-500 line-through opacity-60">$39.00</span>
+                                                    {/* Sale Price */}
+                                                    <span className="text-5xl font-black text-white">$19.50</span>
                                                 </div>
                                             </div>
                                             <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
@@ -3395,7 +3417,12 @@ function GoldCatApp() {
                                                         <div className="w-5 h-5 border-3 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
                                                     ) : (
                                                         <>
-                                                            <div className="text-2xl font-black text-amber-500">$39.00</div>
+                                                            <div className="flex items-baseline gap-2 justify-end">
+                                                                {/* Original Price (Strikethrough) */}
+                                                                <span className="text-sm font-bold text-gray-500 line-through">$39.00</span>
+                                                                {/* Sale Price */}
+                                                                <div className="text-2xl font-black text-amber-500">$19.50</div>
+                                                            </div>
                                                             <div className="text-xs text-gray-500">/year</div>
                                                         </>
                                                     )}
@@ -3418,7 +3445,10 @@ function GoldCatApp() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-2xl font-black text-amber-500">29.00 USDT</div>
+                                                    <div className="flex items-baseline gap-2 justify-end">
+                                                        <span className="text-sm font-bold text-gray-500 line-through">39.00 USDT</span>
+                                                        <div className="text-2xl font-black text-amber-500">19.50 USDT</div>
+                                                    </div>
                                                     <div className="text-xs text-gray-500">/year</div>
                                                 </div>
                                             </div>
@@ -3623,8 +3653,18 @@ function GoldCatApp() {
                                     />
                                 )}
 
-                                <button onClick={isRegisterMode ? handleRegister : handleLogin} className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl">
-                                    {isRegisterMode ? t('auth.register_btn') : t('auth.login_btn')}
+                                <button
+                                    onClick={isRegisterMode ? handleRegister : handleLogin}
+                                    disabled={isSubmitting}
+                                    className={`w-full py-3 font-bold rounded-xl transition-all ${isSubmitting
+                                        ? 'bg-gray-600 cursor-not-allowed'
+                                        : 'bg-amber-500 hover:bg-amber-400'
+                                        } text-black`}
+                                >
+                                    {isSubmitting
+                                        ? (language === 'zh' ? '处理中...' : 'Processing...')
+                                        : (isRegisterMode ? t('auth.register_btn') : t('auth.login_btn'))
+                                    }
                                 </button>
 
                                 <div className="flex justify-between items-center text-xs text-gray-500 mt-4">

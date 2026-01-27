@@ -111,7 +111,7 @@ export const translations = {
                 "标准风控计算"
             ],
             pro_title: "年度会员",
-            pro_price: "$39.00",
+            pro_price: "$19.50",
             pro_badge: "最受欢迎",
             pro_type: "年付费",
             pro_desc: "专业交易者的不二之选",
@@ -569,7 +569,7 @@ export const translations = {
                 "Standard Risk Calculation"
             ],
             pro_title: "Annual",
-            pro_price: "$39.00",
+            pro_price: "$19.50",
             pro_badge: "Most Popular",
             pro_type: "Billed Annually",
             pro_desc: "The choice for professional traders",
