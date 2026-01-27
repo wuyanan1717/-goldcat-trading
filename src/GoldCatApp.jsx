@@ -1371,50 +1371,53 @@ function GoldCatApp() {
         });
 
         if (funcError) {
-            // Function threw an error (e.g. IP limit or Validation)
-            if (funcError) {
-                console.error('Registration Network Error:', funcError);
-                setErrorMessage(language === 'zh' ? '网络错误，请稍后重试' : 'Network error. Please try again.');
-                setShowErrorToast(true);
-                setTimeout(() => setShowErrorToast(false), 3000);
-                return;
-            }
-
-            // Logic error returned from Edge Function (Status 200, but has error)
-            if (funcData?.error) {
-                let msg = funcData.error;
-                if (msg.includes('Registration limit')) {
-                    msg = language === 'zh' ? '该设备/IP 注册次数已达上限（最多4个账号）。付费会员不受限制。' : 'Registration limit reached for this IP (max 4 accounts).';
-                } else if (msg.includes('already been registered')) {
-                    msg = language === 'zh' ? '该邮箱已被注册，请直接登录。' : 'User already registered. Please login.';
-                } else if (msg.includes('Password should be')) {
-                    msg = language === 'zh' ? '密码长度不足（至少6位）。' : 'Password is too short (min 6 chars).';
-                }
-
-                setErrorMessage(msg);
-                setShowErrorToast(true);
-                setTimeout(() => setShowErrorToast(false), 5000);
-                return;
-            }
-
-            // Success - Map response to expected format
-            const data = funcData?.data || {};
-
-            // Success path
-            if (true) {
-                alert(language === 'zh' ? '注册成功！您可以直接登录了。' : 'Registration successful! You can log in now.');
-            }
-
-            setShowLoginModal(false);
-            setShowSuccessToast(true);
-            // Clear form to prevent rapid re-registration
-            setRegisterForm({
-                username: '',
-                email: '',
-                password: '',
-                confirmPassword: ''
-            });
+            console.error('Registration Network Error:', funcError);
+            setErrorMessage(language === 'zh' ? '网络错误，请稍后重试' : 'Network error. Please try again.');
+            setShowErrorToast(true);
+            setTimeout(() => setShowErrorToast(false), 3000);
+            return;
         }
+
+        // Logic error returned from Edge Function (Status 200, but has error)
+        if (funcData?.error) {
+            let msg = funcData.error;
+            // 1. IP Limit Reached
+            if (msg.includes('Registration limit')) {
+                msg = language === 'zh' ? '该设备/IP 注册次数已达上限' : 'Registration limit reached for this device/IP.';
+            }
+            // 2. Email Already Registered
+            else if (msg.includes('already been registered') || msg.includes('User already registered') || msg.includes('already registered')) {
+                msg = language === 'zh' ? '该邮箱已被注册，请直接登录。' : 'Email already registered. Please login.';
+            }
+            // 3. Password Check
+            else if (msg.includes('Password should be')) {
+                msg = language === 'zh' ? '密码长度不足（至少6位）。' : 'Password is too short (min 6 chars).';
+            }
+
+            setErrorMessage(msg);
+            setShowErrorToast(true);
+            setTimeout(() => setShowErrorToast(false), 5000);
+            return;
+        }
+
+        // Success - Map response to expected format
+        const data = funcData?.data || {};
+
+        // Success path
+        if (true) {
+            alert(language === 'zh' ? '注册成功！您可以直接登录了。' : 'Registration successful! You can log in now.');
+        }
+
+        setShowLoginModal(false);
+        setShowSuccessToast(true);
+        // Clear form to prevent rapid re-registration
+        setRegisterForm({
+            username: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+        });
+
     };
 
     // 结算交易 - 打开弹窗
