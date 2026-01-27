@@ -1336,7 +1336,7 @@ function GoldCatApp() {
     };
 
     // 注册逻辑
-    // 注册逻辑 -> Supabase Register
+    // 注册逻辑 -> Supabase Register (Via Secure Edge Function)
     const handleRegister = async () => {
         // Validate all required fields
         if (!registerForm.email || !registerForm.password || !registerForm.username) {
@@ -1345,8 +1345,6 @@ function GoldCatApp() {
             setTimeout(() => setShowErrorToast(false), 3000);
             return;
         }
-
-
 
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1365,7 +1363,7 @@ function GoldCatApp() {
         }
 
         // --- SECURE REGISTRATION VIA EDGE FUNCTION ---
-        // Includes Server-Side IP Limit Check
+        // Backend handles: IP limit check + user creation + session generation
         const { data: funcData, error: funcError } = await supabase.functions.invoke('secure-signup', {
             body: {
                 email: registerForm.email,
@@ -1374,6 +1372,7 @@ function GoldCatApp() {
             }
         });
 
+        // Network-level error (function unreachable)
         if (funcError) {
             console.error('Registration Network Error:', funcError);
             setErrorMessage(language === 'zh' ? '网络错误，请稍后重试' : 'Network error. Please try again.');
@@ -1382,20 +1381,19 @@ function GoldCatApp() {
             return;
         }
 
-        // Logic error returned from Edge Function (Status 200, but has error)
-        if (funcData?.error) {
-            let msg = funcData.error;
-            // 1. IP Limit Reached
-            if (msg.includes('Registration limit')) {
+        // Backend returned error (with proper HTTP semantics now)
+        if (!funcData?.success || funcData?.error) {
+            let msg = funcData?.error || 'Unknown error';
+
+            // Localize error messages
+            if (msg.includes('Registration limit reached')) {
                 msg = language === 'zh' ? '该设备/IP 注册次数已达上限' : 'Registration limit reached for this device/IP.';
-            }
-            // 2. Email Already Registered
-            else if (msg.includes('already been registered') || msg.includes('User already registered') || msg.includes('already registered')) {
+            } else if (msg.includes('Email already registered')) {
                 msg = language === 'zh' ? '该邮箱已被注册，请直接登录。' : 'Email already registered. Please login.';
-            }
-            // 3. Password Check
-            else if (msg.includes('Password should be')) {
+            } else if (msg.includes('Password must be at least')) {
                 msg = language === 'zh' ? '密码长度不足（至少6位）。' : 'Password is too short (min 6 chars).';
+            } else if (msg.includes('Missing required fields')) {
+                msg = language === 'zh' ? '请填写所有必填项' : 'Please fill all required fields.';
             }
 
             setErrorMessage(msg);
@@ -1404,37 +1402,54 @@ function GoldCatApp() {
             return;
         }
 
-        // Success - Map response to expected format
-        const data = funcData?.data || {};
+        // ✅ SUCCESS: Backend returned session tokens
+        if (funcData?.session?.access_token && funcData?.session?.refresh_token) {
+            try {
+                // Directly set session (no frontend sign-in needed)
+                await supabase.auth.setSession({
+                    access_token: funcData.session.access_token,
+                    refresh_token: funcData.session.refresh_token,
+                });
 
-        // Success path - AUTO LOGIN
-        try {
-            const { error: loginError } = await supabase.auth.signInWithPassword({
-                email: registerForm.email,
-                password: registerForm.password
-            });
-
-            if (loginError) {
-                // If auto-login fails, just show success toast and ask them to login manually
-                console.error('Auto-login failed:', loginError);
-                alert(language === 'zh' ? '注册成功！请手动登录。' : 'Registration successful! Please log in.');
-            } else {
-                // Auto-login success will trigger global state update automatically
+                // Success feedback
+                setToastMessage(language === 'zh' ? '注册成功！欢迎加入。' : 'Registration successful! Welcome.');
                 setShowSuccessToast(true);
+                setShowLoginModal(false);
+
+                // Clear form
+                setRegisterForm({
+                    username: '',
+                    email: '',
+                    password: '',
+                    confirmPassword: ''
+                });
+
+                console.log('✅ Registration + Auto-login successful');
+            } catch (sessionError) {
+                console.error('Failed to set session:', sessionError);
+                // Graceful degradation
+                setToastMessage(language === 'zh' ? '注册成功！正在为您跳转登录...' : 'Registration successful! Redirecting to login...');
+                setShowSuccessToast(true);
+                setLoginForm({ email: registerForm.email, password: '' });
+                setIsRegisterMode(false);
             }
-        } catch (e) {
-            console.error('Auto-login exception:', e);
         }
-
-        setShowLoginModal(false);
-        // Clear form
-        setRegisterForm({
-            username: '',
-            email: '',
-            password: '',
-            confirmPassword: ''
-        });
-
+        // ⚠️ Rare case: User created but no session (graceful degradation)
+        else if (funcData?.user && !funcData?.session) {
+            console.warn('User created but session unavailable (backend degraded)');
+            setToastMessage(language === 'zh' ? '注册成功！请登录您的账户。' : 'Registration successful! Please log in.');
+            setShowSuccessToast(true);
+            // Pre-fill login form
+            setLoginForm({ email: registerForm.email, password: '' });
+            setIsRegisterMode(false);
+            // Clear register form
+            setRegisterForm({
+                username: '',
+                email: '',
+                password: '',
+                confirmPassword: ''
+            });
+        }
     };
 
     // 结算交易 - 打开弹窗
