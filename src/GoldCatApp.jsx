@@ -317,6 +317,7 @@ function GoldCatApp() {
     // Optional: Log version for debugging (remove in production)
     useEffect(() => {
         console.log(`🔮 Quantum Observer Version: ${quantumObserverVersion.toUpperCase()}`);
+        console.log(`🚀 App Version: 39 (Auto-Login Fixed)`);
     }, [quantumObserverVersion]);
     // ===================================
 
