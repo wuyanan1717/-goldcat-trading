@@ -94,6 +94,10 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
         setShowHit(false);
         setAiResult(null);
         setTacticalSignals([]);
+        // Clear charts immediately to prevent "ghost data" visual lag
+        setData1m([]);
+        setData5m([]);
+        setData1h([]);
 
         addLog(lang === 'en' ? `Calibrating AI Vector for ${activeSymbol}...` : `正在校准 ${activeSymbol} AI 向量...`, 'info');
         try {

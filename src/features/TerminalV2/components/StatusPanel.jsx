@@ -16,7 +16,7 @@ export const StatusPanel = ({ score, result, lang = 'zh', showSearchHint = false
     const t = translations[lang]?.terminal || translations.zh.terminal;
 
     const probability = result?.probability_up ?? 50;
-    const uncertainty = result?.uncertainty ?? 0;
+    const uncertainty = result?.uncertainty ?? 100;
 
     const handleOpenGuide = () => {
         setHasViewedGuide(true);
