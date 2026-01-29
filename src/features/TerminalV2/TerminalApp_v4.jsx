@@ -89,6 +89,12 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
     }, []);
 
     const initCharts = useCallback(async () => {
+        // OPTIMIZATION: Reset AI state IMMEDIATELY to prevent "ghost data" from previous coin persisting during fetch
+        setScore(0);
+        setShowHit(false);
+        setAiResult(null);
+        setTacticalSignals([]);
+
         addLog(lang === 'en' ? `Calibrating AI Vector for ${activeSymbol}...` : `正在校准 ${activeSymbol} AI 向量...`, 'info');
         try {
             const [d1m, d5m, d1h] = await Promise.all([
@@ -107,11 +113,6 @@ export default function TerminalAppV4({ lang, user, membership, onRequireLogin, 
                 addLog(lang === 'en' ? `>>> Link Stable [${activeSymbol}]. Price: $${formattedPrice}` : `>>> 链路稳定 [${activeSymbol}]。价格: $${formattedPrice}`, 'alert');
                 addLog(lang === 'en' ? 'Awaiting Observation Command...' : '等待观测指令 (Awaiting Observation)...', 'info');
             }
-
-            setScore(0);
-            setShowHit(false);
-            setAiResult(null);
-            setTacticalSignals([]);
         } catch (e) {
             console.error(e);
             addLog(lang === 'en' ? `Error: Connection Failed for ${activeSymbol}` : `错误：无法连接到 ${activeSymbol} 数据源。`, 'alert');
