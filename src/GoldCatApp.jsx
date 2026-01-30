@@ -435,6 +435,13 @@ function GoldCatApp() {
     useEffect(() => {
         localStorage.setItem('goldcat_language', language);
         setPatterns(getInitialPatterns(language)); // 更新 patterns
+
+        // Dynamic Title Localization
+        if (language === 'zh') {
+            document.title = 'Goldcat Terminal (金猫终端) - 首款AI驱动的加密货币复盘工具';
+        } else {
+            document.title = 'Goldcat Terminal - AI-Powered Crypto Trading Journal & Analysis';
+        }
     }, [language]);
 
     // Track page views: Landing vs Dashboard
