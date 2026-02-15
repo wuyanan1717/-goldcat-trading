@@ -110,6 +110,12 @@ export default defineConfig({
         target: 'https://generativelanguage.googleapis.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/gemini/, '')
+      },
+      // Proxy for Vercel Serverless Functions during local dev
+      '/api': {
+        target: 'https://goldcat.trade',
+        changeOrigin: true,
+        secure: false
       }
     }
   }

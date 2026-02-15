@@ -8,8 +8,8 @@
 // Feature version configuration
 export const FEATURE_VERSIONS = {
     QUANTUM_OBSERVER: {
-        current: 'v4', // Restored to V4 (d434f52 working state)
-        available: ['v3', 'v4'],
+        current: 'v4', // Stable Production Version
+        available: ['v3', 'v4', 'v5'], // v5 added for isolated dev
         rolloutPercentage: 100,
         description: 'Quantum Observer - Advanced market analysis with AI'
     }

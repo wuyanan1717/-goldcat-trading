@@ -81,118 +81,144 @@ serve(async (req) => {
             });
         }
 
-        // 1. Fetch RSS Feed
-        let rssUrl = "https://cryptopanic.com/news/rss/";
-        if (CRYPTOPANIC_API_KEY) {
-            rssUrl += `?auth_token=${CRYPTOPANIC_API_KEY}&filter=hot`;
-        } else {
-            rssUrl += `?filter=hot`;
-        }
-
-        console.log("Fetching RSS from:", rssUrl);
-
-        const response = await fetch(rssUrl, {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`RSA Fetch Failed: ${response.status} ${response.statusText}`);
-        }
-
-        const xmlText = await response.text();
-
-        // 2. Parse RSS Items
+        // 1. STRATEGY: API First -> Cointelegraph Fallback
         const items = [];
-        const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-        let match;
+        let fetchSuccess = false;
 
-        while ((match = itemRegex.exec(xmlText)) !== null) {
-            const itemContent = match[1];
+        // --- ATTEMPT 1: CryptoPanic API (JSON) ---
+        // Only if API Key is present (it's robust)
+        if (CRYPTOPANIC_API_KEY) {
+            try {
+                console.log("Attempting CryptoPanic API...");
+                const apiUrl = `https://cryptopanic.com/api/v1/posts/?auth_token=${CRYPTOPANIC_API_KEY}&filter=hot&public=true`;
+                const resp = await fetch(apiUrl);
 
-            const titleMatch = itemContent.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || itemContent.match(/<title>(.*?)<\/title>/);
-            let title = titleMatch ? titleMatch[1] : "No Title";
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.results && Array.isArray(data.results)) {
+                        console.log(`[API Hit] Fetched ${data.results.length} items from CryptoPanic API`);
+                        data.results.forEach((post: any) => {
+                            // Normalize API data to our structure
+                            const title = post.title;
+                            // Clean up source title (often "News.Bitcoin.com" etc)
+                            let source = post.source?.title || "CryptoPanic";
+                            const description = ""; // API listing often doesn't give full description without extra calls, or slug
 
-            let source = "CryptoPanic";
-            const splitTitle = title.split(" \u2013 ");
-            if (splitTitle.length > 1) {
-                const lastPart = splitTitle[splitTitle.length - 1];
-                if (lastPart.trim().startsWith("By ")) {
-                    source = lastPart.replace("By ", "").trim();
-                    title = splitTitle.slice(0, -1).join(" \u2013 ");
+                            if (title && title.length > 10) {
+                                items.push({
+                                    kind: "news",
+                                    domain: post.domain || "cryptopanic.com",
+                                    source: { title: source, region: "en" },
+                                    title: title,
+                                    original_title: title,
+                                    published_at: post.published_at || new Date().toISOString(),
+                                    url: post.url, // Usually a redirector
+                                    description: description
+                                });
+                            }
+                        });
+                        fetchSuccess = true;
+                    }
+                } else {
+                    console.warn(`CryptoPanic API failed: ${resp.status}`);
                 }
+            } catch (e) {
+                console.error("CryptoPanic API Exception:", e);
             }
-
-            const linkMatch = itemContent.match(/<link>(.*?)<\/link>/);
-            const link = linkMatch ? linkMatch[1] : "#";
-
-            const dateMatch = itemContent.match(/<pubDate>(.*?)<\/pubDate>/);
-            const pubDate = dateMatch ? dateMatch[1] : new Date().toISOString();
-
-            // EXTRACT DESCRIPTION FOR AI CONTEXT
-            const descMatch = itemContent.match(/<description>(.*?)<\/description>/);
-            let description = descMatch ? descMatch[1] : "";
-            // Clean description (remove html tags)
-            description = description.replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
-
-            title = title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-
-            // Skip items without valid titles
-            const cleanTitle = title.trim();
-            const isInvalidTitle =
-                !cleanTitle ||
-                cleanTitle === "No Title" ||
-                cleanTitle.length < 15 ||
-                cleanTitle.startsWith('@') ||
-                cleanTitle.toLowerCase().includes('read more') ||
-                /^[A-Z]{2,}:/.test(cleanTitle); // Skip items like "RT:", "LATEST:", etc.
-
-            if (isInvalidTitle) {
-                continue;
-            }
-
-            items.push({
-                kind: "news",
-                domain: "cryptopanic.com",
-                source: { title: source, region: "en" },
-                title: title,
-                original_title: title,
-                published_at: pubDate,
-                url: link,
-                description: description // Pass description for AI
-            });
-        });
         }
 
-// 3. AI Translation & Summarization (Top 5 Items)
-const topItems = items.slice(0, 5);
+        // --- ATTEMPT 2: Decrypt (Fallback) ---
+        // If API failed or no key, or RSS feed blocked previously
+        if (!fetchSuccess) {
+            console.log("Falling back to Decrypt RSS...");
+            try {
+                const rssUrl = "https://decrypt.co/feed";
+                const response = await fetch(rssUrl, {
+                    headers: {
+                        "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+                    }
+                });
 
-if (GOOGLE_API_KEY && topItems.length > 0) {
-    try {
-        // Parse params
-        const url = new URL(req.url);
-        const lang = url.searchParams.get("lang") || "zh";
+                if (response.ok) {
+                    const xmlText = await response.text();
 
-        const titles = topItems.map(i => i.title);
-        let instructions = "";
+                    // Regex Parse XML for resilience
+                    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+                    let match;
+                    while ((match = itemRegex.exec(xmlText)) !== null) {
+                        const itemContent = match[1];
 
-        if (lang === 'zh') {
-            instructions = `
+                        const titleMatch = itemContent.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || itemContent.match(/<title>(.*?)<\/title>/);
+                        let title = titleMatch ? titleMatch[1] : "";
+
+                        const linkMatch = itemContent.match(/<link>(.*?)<\/link>/);
+                        const link = linkMatch ? linkMatch[1] : "";
+
+                        const dateMatch = itemContent.match(/<pubDate>(.*?)<\/pubDate>/);
+                        const pubDate = dateMatch ? dateMatch[1] : new Date().toISOString();
+
+                        // Description often has HTML
+                        const descMatch = itemContent.match(/<description>([\s\S]*?)<\/description>/);
+                        let description = descMatch ? descMatch[1] : "";
+                        description = description.replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+                        // Decode HTML entities if any remaining
+                        description = description.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+
+                        // Extract author if available (dc:creator)
+                        const creatorMatch = itemContent.match(/<dc:creator><!\[CDATA\[(.*?)\]\]><\/dc:creator>/) || itemContent.match(/<dc:creator>(.*?)<\/dc:creator>/);
+                        const author = creatorMatch ? creatorMatch[1] : "Decrypt";
+
+                        if (title && link) {
+                            items.push({
+                                kind: "news",
+                                domain: "decrypt.co",
+                                source: { title: author, region: "en" },
+                                title: title,
+                                original_title: title,
+                                published_at: pubDate,
+                                url: link,
+                                description: description
+                            });
+                        }
+                    }
+                    console.log(`[RSS Fallback] Fetched ${items.length} items from Decrypt`);
+                    fetchSuccess = true;
+                } else {
+                    console.error(`Decrypt RSS failed: ${response.status}`);
+                }
+            } catch (e) {
+                console.error("RSS Fallback Exception:", e);
+            }
+        }
+
+        // 3. AI Translation & Summarization (Top 5 Items)
+        const topItems = items.slice(0, 5);
+
+        if (GOOGLE_API_KEY && topItems.length > 0) {
+            try {
+                // Parse params
+                const url = new URL(req.url);
+                const lang = url.searchParams.get("lang") || "zh";
+
+                const titles = topItems.map(i => i.title);
+                let instructions = "";
+
+                if (lang === 'zh') {
+                    instructions = `
                     1. Read the Headline and the Description.
                     2. Translate the Headline to Chinese (Simplified).
                     3. Generate a "Deep Analyst Take" (2-3 sentences) in Chinese (Simplified). Use the Description to add depth, context, and why this matters for the market. Avoid generic statements.
                     4. Combine into format: "[Translated Title]\\n💡 [Deep Analyst Take]" (No country flags).
                     `;
-        } else {
-            instructions = `
+                } else {
+                    instructions = `
                     1. Read the Headline and the Description.
                     2. Generate a "Deep Analyst Take" (2-3 sentences) in English. Use the Description to add depth, context, and why this matters for the market. Avoid generic statements.
                     3. Combine into format: "[Headline (keep english)]\\n💡 [Deep Analyst Take]" (No country flags).
                     `;
-        }
+                }
 
-        const promptText = `
+                const promptText = `
                 You are a professional senior crypto analyst.
                 For each of the following news headlines:
                 ${instructions}
@@ -203,81 +229,81 @@ if (GOOGLE_API_KEY && topItems.length > 0) {
                 ${JSON.stringify(topItems.map(i => ({ title: i.title, description: i.description || "" })))}
                 `;
 
-        // Using gemini-2.0-flash as confirmed by ListModels
-        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+                // Using gemini-2.0-flash as confirmed by ListModels
+                const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-        const aiResponse = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': GOOGLE_API_KEY!
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: promptText
-                    }]
-                }]
-            })
-        });
+                const aiResponse = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': GOOGLE_API_KEY!
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: promptText
+                            }]
+                        }]
+                    })
+                });
 
-        if (!aiResponse.ok) {
-            const errText = await aiResponse.text();
-            throw new Error(`Gemini API Error: ${aiResponse.status} ${errText}`);
-        }
-
-        const result = await aiResponse.json();
-        const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (textResponse) {
-            // Robust JSON Parsing: Find first [ and last ]
-            const start = textResponse.indexOf('[');
-            const end = textResponse.lastIndexOf(']');
-
-            if (start !== -1 && end !== -1) {
-                const jsonStr = textResponse.substring(start, end + 1);
-                try {
-                    const translations = JSON.parse(jsonStr);
-                    if (Array.isArray(translations) && translations.length === topItems.length) {
-                        topItems.forEach((item, index) => {
-                            item.title = translations[index];
-                        });
-                    }
-                } catch (e) {
-                    console.error("JSON Parse Error:", e);
+                if (!aiResponse.ok) {
+                    const errText = await aiResponse.text();
+                    throw new Error(`Gemini API Error: ${aiResponse.status} ${errText}`);
                 }
+
+                const result = await aiResponse.json();
+                const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (textResponse) {
+                    // Robust JSON Parsing: Find first [ and last ]
+                    const start = textResponse.indexOf('[');
+                    const end = textResponse.lastIndexOf(']');
+
+                    if (start !== -1 && end !== -1) {
+                        const jsonStr = textResponse.substring(start, end + 1);
+                        try {
+                            const translations = JSON.parse(jsonStr);
+                            if (Array.isArray(translations) && translations.length === topItems.length) {
+                                topItems.forEach((item, index) => {
+                                    item.title = translations[index];
+                                });
+                            }
+                        } catch (e) {
+                            console.error("JSON Parse Error:", e);
+                        }
+                    }
+                }
+            } catch (aiError) {
+                console.error("AI Translation Failed:", aiError);
             }
         }
-    } catch (aiError) {
-        console.error("AI Translation Failed:", aiError);
-    }
-}
 
-const jsonResponse = {
-    count: items.length,
-    next: null,
-    previous: null,
-    results: items // Return all items, top 5 translated
-};
+        const jsonResponse = {
+            count: items.length,
+            next: null,
+            previous: null,
+            results: items // Return all items, top 5 translated
+        };
 
-// --- SAVE TO CACHE ---
-if (items.length > 0) {
-    await adminClient.from('daily_briefs').insert({
-        category: cacheCategory,
-        lang: safeLang,
-        content: items // Store the full processed list
-    });
-}
+        // --- SAVE TO CACHE ---
+        if (items.length > 0) {
+            await adminClient.from('daily_briefs').insert({
+                category: cacheCategory,
+                lang: safeLang,
+                content: items // Store the full processed list
+            });
+        }
 
-return new Response(JSON.stringify(jsonResponse), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-});
+        return new Response(JSON.stringify(jsonResponse), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
 
     } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-    });
-}
+        console.error("Error:", error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+        });
+    }
 });

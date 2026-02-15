@@ -10,7 +10,8 @@ export const Header = ({
     isScanning,
     isTacticalEnabled,
     onToggleTactical,
-    lang = 'zh'
+    lang = 'zh',
+    versionLabel
 }) => {
     return (
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-2 md:pb-3 mb-2 gap-3 md:gap-4">
@@ -19,7 +20,7 @@ export const Header = ({
                     <span className="bg-yellow-500 text-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-sm not-italic text-sm md:text-base">G</span>
                     GOLDCAT TERMINAL
                     <span className="hidden sm:inline-block text-[10px] md:text-xs font-normal border border-yellow-500/30 px-1.5 py-0.5 rounded text-yellow-600 bg-yellow-500/5 font-mono">
-                        OBSERVER_NODE_2060
+                        {versionLabel || 'OBSERVER_NODE_2060'}
                     </span>
                 </h1>
 

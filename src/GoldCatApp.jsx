@@ -13,12 +13,13 @@ import {
     Lightbulb, Shield, Globe, MessageSquare, Cpu, ChevronRight, ChevronDown, Lock, Unlock, Settings,
     PieChart, BarChart, ArrowRight, Compass, Edit3, ShieldCheck, Coins, Copy,
     PlusCircle, Check, RotateCcw, Info, Loader2, Trophy, Clock, Snowflake, BarChart2,
-    Send, Star, Gift, Newspaper, Terminal, Search, Radar, Eye, BookOpen
+    Send, Star, Gift, Newspaper, Terminal, Search, Radar, Eye, BookOpen, Upload, Image as ImageIcon
 } from 'lucide-react';
 import { translations } from './translations';
 // Version-aware imports for Quantum Observer - Direct import (no lazy) for instant loading
 import TerminalAppV3 from './features/TerminalV2/TerminalApp_v3';
 import TerminalAppV4 from './features/TerminalV2/TerminalApp_v4';
+import TerminalAppV5 from './features/TerminalV2/TerminalApp_v5';
 // Keep AIAnalysisDashboard lazy since it's heavy and not frequently accessed
 import { lazy, Suspense } from 'react';
 const AIAnalysisDashboard = lazy(() => import('./components/AIAnalysisDashboard'));
@@ -310,9 +311,18 @@ function GoldCatApp() {
     const [showSuggestions, setShowSuggestions] = useState(false);
 
     // ===== VERSION CONTROL SYSTEM =====
-    // Dynamically select Quantum Observer version (V3 stable vs V4 development)
+
+    // ===== VERSION CONTROL SYSTEM =====
+    // Dynamically select Quantum Observer version (V3 stable vs V4/V5 development)
     const quantumObserverVersion = getFeatureVersion('QUANTUM_OBSERVER', null);
-    const TerminalApp = TerminalAppV4;
+
+    // Feature Flag Override: Allow ?v=v5 in URL for dev testing
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceVersion = urlParams.get('v');
+    const effectiveVersion = forceVersion || quantumObserverVersion;
+
+    const TerminalApp = effectiveVersion === 'v5' ? TerminalAppV5 :
+        (effectiveVersion === 'v3' ? TerminalAppV3 : TerminalAppV4);
 
     // Optional: Log version for debugging (remove in production)
     useEffect(() => {
@@ -434,7 +444,31 @@ function GoldCatApp() {
     // 监听语言变化并保存
     useEffect(() => {
         localStorage.setItem('goldcat_language', language);
-        setPatterns(getInitialPatterns(language)); // 更新 patterns
+        const newPatterns = getInitialPatterns(language);
+        setPatterns(newPatterns); // 更新 patterns
+
+        // Auto-translate selected pattern if possible
+        setFormData(prev => {
+            const zhPatterns = getInitialPatterns('zh');
+            const enPatterns = getInitialPatterns('en');
+            let idx = -1;
+
+            // Try to find index in ZH/EN lists
+            if (language === 'en') {
+                // Switching TO English, look in Chinese list
+                idx = zhPatterns.indexOf(prev.pattern);
+                if (idx !== -1 && enPatterns[idx]) return { ...prev, pattern: enPatterns[idx] };
+            } else {
+                // Switching TO Chinese, look in English list
+                idx = enPatterns.indexOf(prev.pattern);
+                if (idx !== -1 && zhPatterns[idx]) return { ...prev, pattern: zhPatterns[idx] };
+            }
+            // If strictly mapping failed, fallback to first of new language ONLY if current is invalid
+            if (!newPatterns.includes(prev.pattern)) {
+                return { ...prev, pattern: newPatterns[0] };
+            }
+            return prev;
+        });
 
         // Dynamic Title Localization
         document.title = 'Goldcat Terminal';
@@ -548,6 +582,10 @@ function GoldCatApp() {
     useEffect(() => {
         localStorage.setItem('goldcat_active_tab_v2', activeTab);
     }, [activeTab]);
+    // Trade Image Upload State
+    const [tradeImage, setTradeImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+
     const [formData, setFormData] = useState({
         tradeType: 'buy',
         symbol: '',
@@ -556,7 +594,7 @@ function GoldCatApp() {
         entryPrice: '',
         stopLoss: '',
         takeProfit: '',
-        pattern: getInitialPatterns('en')[0],
+        pattern: getInitialPatterns(language)[0],
         timeframe: '4h',
         notes: ''
     });
@@ -727,6 +765,7 @@ function GoldCatApp() {
                             violatedDiscipline: t.violated_discipline || false,
                             notes: t.notes || '',
                             review: t.review || '',
+                            image_url: t.image_url, // ✅ Add image URL
                             rrRatio: riskData.rrRatio,
                             positionSize: riskData.positionSize,
                             riskPercent: riskData.riskPercent,
@@ -1134,6 +1173,28 @@ function GoldCatApp() {
         }
     };
 
+    // v5 Feature: Auto-fill trade form from Quantum Observer
+    const fillTradeForm = ({ symbol, side, price, stopLoss, takeProfit }) => {
+        console.log('🤖 AI Auto-fill:', { symbol, side, price, stopLoss, takeProfit });
+        setFormData(prev => ({
+            ...prev,
+            symbol: symbol || prev.symbol,
+            tradeType: side ? (side === 'BUY' ? 'buy' : 'sell') : prev.tradeType,
+            entryPrice: price ? price.toString() : prev.entryPrice,
+            stopLoss: stopLoss ? stopLoss.toString() : prev.stopLoss,
+            takeProfit: takeProfit ? takeProfit.toString() : prev.takeProfit,
+            // Reset other fields if needed, or keep them
+        }));
+        // Switch to Trade Input tab
+        setActiveTab('new_trade');
+        // Optional: Scroll to form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Show feedback
+        setToastMessage(t('common.auto_fill_success') || 'Order parameters loaded from AI');
+        setShowSuccessToast(true);
+    };
+
     const finalizeTrade = async (trade) => {
         try {
             setSyncStatus('saving');
@@ -1171,6 +1232,7 @@ function GoldCatApp() {
                     pattern: trade.pattern,
                     status: trade.status,
                     notes: trade.notes,
+                    image_url: trade.image_url, // ✅ Add image URL
                     risk_analysis: trade.rrRatio || trade.positionSize ? {
                         rrRatio: trade.rrRatio,
                         positionSize: trade.positionSize,
@@ -1202,6 +1264,8 @@ function GoldCatApp() {
                 ...prev,
                 symbol: '', entryPrice: '', stopLoss: '', takeProfit: '', notes: '', margin: ''
             }));
+            setTradeImage(null);
+            setImagePreview(null);
             setChecklist({ trend: false, close: false, structure: false });
         } catch (err) {
             console.error('Unexpected error saving trade:', err);
@@ -1211,6 +1275,22 @@ function GoldCatApp() {
             setTimeout(() => setShowErrorToast(false), 3000);
         }
     };
+    const handleImageSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert(t('common.image_too_large') || 'Image too large (Max 5MB)');
+                return;
+            }
+            setTradeImage(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleSubmitTrade = async () => {
         // Intercept for Guest Mode
         if (!user) {
@@ -1239,6 +1319,29 @@ function GoldCatApp() {
             return;
         }
 
+        let imageUrl = null;
+
+        // 2.5 Image Upload (Premium Only)
+        if (tradeImage && membership.isPremium) {
+            try {
+                const fileExt = tradeImage.name.split('.').pop();
+                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage
+                    .from('trade-images')
+                    .upload(fileName, tradeImage);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('trade-images')
+                    .getPublicUrl(fileName);
+
+                imageUrl = publicUrl;
+            } catch (error) {
+                console.error('Image upload failed:', error);
+                alert(`${t('common.upload_failed')} (${error.message || 'Unknown Error'})`);
+            }
+        }
 
         const newTrade = {
             id: Date.now(),
@@ -1248,7 +1351,8 @@ function GoldCatApp() {
             direction: formData.tradeType === 'buy' ? 'long' : 'short', // 显式映射 tradeType 到 direction
             ...riskAnalysis,
             status: 'open', // open, win, loss
-            profitLoss: 0 // 结单后更新
+            profitLoss: 0, // 结单后更新
+            image_url: imageUrl // Attach image URL
         };
 
         // 3. 盈亏比检查（软性提醒）
@@ -2713,8 +2817,60 @@ function GoldCatApp() {
                                                 </div>
                                             </div>
 
+                                            {/* Image Upload Area (Premium) */}
+                                            <div className="mb-4">
+                                                <label className="block text-xs text-gray-500 mb-2 flex items-center justify-between">
+                                                    <span className="flex items-center gap-1">
+                                                        <ImageIcon className="w-3 h-3" /> {t('form.screenshot') || 'Chart Screenshot'}
+                                                    </span>
+                                                    {!membership.isPremium && <span className="text-[10px] text-amber-500 flex items-center gap-1"><Crown className="w-3 h-3" /> Premium</span>}
+                                                </label>
+
+                                                {membership.isPremium ? (
+                                                    <div className="relative group">
+                                                        {imagePreview ? (
+                                                            <div className="relative rounded-lg overflow-hidden border border-neutral-700 bg-black/50">
+                                                                <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setTradeImage(null);
+                                                                        setImagePreview(null);
+                                                                    }}
+                                                                    className="absolute top-2 right-2 p-1 bg-black/70 text-white rounded-full hover:bg-red-500 transition-colors"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    onChange={handleImageSelect}
+                                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                                />
+                                                                <div className="w-full h-24 border-2 border-dashed border-neutral-700 rounded-lg flex flex-col items-center justify-center gap-2 text-gray-500 group-hover:border-amber-500/50 group-hover:text-amber-500/80 transition-all bg-neutral-800/30">
+                                                                    <Upload className="w-6 h-6" />
+                                                                    <span className="text-xs">{t('form.upload_hint') || 'Click or Drag to Upload'}</span>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div
+                                                        onClick={() => setShowPaymentModal(true)}
+                                                        className="w-full h-24 border border-neutral-800 rounded-lg flex flex-col items-center justify-center gap-2 text-gray-600 bg-neutral-900/50 cursor-pointer hover:bg-neutral-800 transition-colors relative overflow-hidden"
+                                                    >
+                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')] opacity-5"></div>
+                                                        <Lock className="w-5 h-5" />
+                                                        <span className="text-xs">{t('form.unlock_upload') || 'Upgrade to upload charts'}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             {/* 提交按钮区域 */}
-                                            <div className="pt-4">
+                                            <div className="pt-2">
                                                 {!membership.isPremium && trades.length >= membership.maxTrades ? (
                                                     <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
                                                         <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
@@ -2987,6 +3143,7 @@ function GoldCatApp() {
                                                                 <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.date')}</th>
                                                                 <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[120px]">{t('journal.columns.symbol_dir')}</th>
                                                                 <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[180px]">{t('journal.columns.basis')}</th>
+                                                                <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[60px] text-center">{t('journal.columns.chart') || <ImageIcon className="w-4 h-4 mx-auto" />}</th>
                                                                 <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[80px]">{t('journal.columns.rr')}</th>
                                                                 <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[100px]">{t('journal.columns.status')}</th>
                                                                 <th className="px-4 py-4 bg-neutral-800 sticky top-0 z-20 font-medium min-w-[200px] max-w-[300px]">{t('journal.columns.review_content')}</th>
@@ -3010,6 +3167,22 @@ function GoldCatApp() {
                                                                             </span>
                                                                             <span className="text-gray-400 text-xs">{trade.pattern || '-'}</span>
                                                                         </div>
+                                                                    </td>
+                                                                    <td className="px-4 py-4 text-center">
+                                                                        {trade.image_url ? (
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    window.open(trade.image_url, '_blank');
+                                                                                }}
+                                                                                className="p-1.5 bg-neutral-800 rounded-lg hover:bg-neutral-700 border border-neutral-700 text-amber-500 transition-colors mx-auto"
+                                                                                title={t('journal.view_chart') || 'View Chart'}
+                                                                            >
+                                                                                <ImageIcon className="w-4 h-4" />
+                                                                            </button>
+                                                                        ) : (
+                                                                            <span className="text-neutral-700">-</span>
+                                                                        )}
                                                                     </td>
                                                                     <td className="px-4 py-4 font-mono group relative text-sm">
                                                                         <div className="flex items-center gap-1.5">
@@ -3186,11 +3359,13 @@ function GoldCatApp() {
                             {activeTab === 'quantum_terminal' && (
                                 <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 min-h-screen pb-32">
                                     <TerminalApp
+                                        key={effectiveVersion}
                                         lang={language}
                                         user={user}
                                         membership={membership}
                                         onRequireLogin={() => setShowLoginModal(true)}
                                         onUpgrade={() => setShowPaymentModal(true)}
+                                        onAutoFill={(data) => fillTradeForm(data)}
                                     />
                                 </div>
                             )}

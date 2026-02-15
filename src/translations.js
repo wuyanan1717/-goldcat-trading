@@ -271,6 +271,7 @@ export const translations = {
                 date: "日期",
                 symbol_dir: "标的/方向",
                 basis: "依据",
+                chart: "图片",
                 rr: "盈亏比",
                 status: "状态",
                 review: "复盘笔记",
@@ -433,7 +434,10 @@ export const translations = {
             done: "完成",
             auto_save_success: "已自动为您保存刚才的交易！",
             migration_success: "云端同步完成",
-            migration_error: "同步失败，请检查网络"
+            migration_error: "同步失败，请检查网络",
+            upload_failed: "图片上传失败。请检查 Supabase Storage 配置。",
+            image_too_large: "图片过大 (最大 5MB)",
+            upload_hint: "点击或拖拽上传 K线图"
         },
         christmas: {
             wish: "愿你的每一份坚持，都化作新一年的满盘红利",
@@ -711,6 +715,7 @@ export const translations = {
                 date: "Date",
                 symbol_dir: "Symbol/Dir",
                 basis: "Basis",
+                chart: "Chart",
                 rr: "R:R",
                 status: "Status",
                 review: "Review Note",
