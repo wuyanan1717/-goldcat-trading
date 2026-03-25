@@ -2447,18 +2447,10 @@ function GoldCatApp() {
                                         <div className="mb-8 w-full">
                                             <h3 className="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
                                                 {t('pricing.pro_title')}
-                                                {/* 50% OFF Badge */}
-                                                <span className="text-xs bg-gradient-to-r from-red-600 to-red-500 text-white px-2.5 py-1 rounded-full font-black uppercase tracking-wide shadow-lg animate-pulse">
-                                                    50% OFF
-                                                </span>
                                             </h3>
                                             <div className="mb-2">
-                                                {/* Discount Pricing */}
                                                 <div className="flex items-baseline gap-3">
-                                                    {/* Original Price (Strikethrough) */}
-                                                    <span className="text-2xl font-bold text-gray-500 line-through opacity-60">$39.00</span>
-                                                    {/* Sale Price */}
-                                                    <span className="text-5xl font-black text-white">$19.50</span>
+                                                    <span className="text-5xl font-black text-white">$39.00</span>
                                                 </div>
                                             </div>
                                             <p className="text-gray-400 text-sm">{t('pricing.pro_desc')}</p>
@@ -3596,10 +3588,7 @@ function GoldCatApp() {
                                                     ) : (
                                                         <>
                                                             <div className="flex items-baseline gap-2 justify-end">
-                                                                {/* Original Price (Strikethrough) */}
-                                                                <span className="text-sm font-bold text-gray-500 line-through">$39.00</span>
-                                                                {/* Sale Price */}
-                                                                <div className="text-2xl font-black text-amber-500">$19.50</div>
+                                                                <div className="text-2xl font-black text-amber-500">$39.00</div>
                                                             </div>
                                                             <div className="text-xs text-gray-500">/year</div>
                                                         </>
@@ -3624,8 +3613,7 @@ function GoldCatApp() {
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="flex items-baseline gap-2 justify-end">
-                                                        <span className="text-sm font-bold text-gray-500 line-through">39.00 USDT</span>
-                                                        <div className="text-2xl font-black text-amber-500">19.50 USDT</div>
+                                                        <div className="text-2xl font-black text-amber-500">39.00 USDT</div>
                                                     </div>
                                                     <div className="text-xs text-gray-500">/year</div>
                                                 </div>
@@ -3685,7 +3673,7 @@ function GoldCatApp() {
 
                                         <div className="p-4 bg-neutral-800 rounded-xl">
                                             <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                            <div className="text-3xl font-black text-amber-500">19.50 USDT</div>
+                                            <div className="text-3xl font-black text-amber-500">39.00 USDT</div>
                                         </div>
 
                                         <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
