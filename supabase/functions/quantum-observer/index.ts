@@ -20,16 +20,30 @@ serve(async (req) => {
         const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
         const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-        // 1. Auth Check (Require valid user)
-        const authClient = createClient(
-            supabaseUrl,
-            supabaseAnonKey,
-            { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-        )
-        const { data: { user } } = await authClient.auth.getUser()
+        // 1. Auth Check (Support both JWT and API Key)
+        const apiKeyHeader = req.headers.get('x-api-key');
+        const internalApiKey = Deno.env.get('OPENCLAW_API_KEY');
+        const openclawUserId = Deno.env.get('OPENCLAW_USER_ID');
+        
+        let user: any = null;
 
-        if (!user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        if (apiKeyHeader && internalApiKey && apiKeyHeader === internalApiKey) {
+            // Bypass Auth for OpenClaw with valid API Key
+            user = { id: openclawUserId }; 
+            console.log(`[Auth] Authenticated via API Key for User: ${openclawUserId}`);
+        } else {
+            // Regular Auth Check (Require valid user JWT)
+            const authClient = createClient(
+                supabaseUrl,
+                supabaseAnonKey,
+                { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+            )
+            const { data } = await authClient.auth.getUser()
+            user = data.user;
+        }
+
+        if (!user || !user.id) {
+            return new Response(JSON.stringify({ error: 'Unauthorized', message: 'Valid JWT or API Key required' }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 401,
             })
