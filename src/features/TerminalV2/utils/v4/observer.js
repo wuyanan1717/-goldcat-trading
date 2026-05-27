@@ -169,48 +169,39 @@ export async function consultObserver(
         if (error) {
             console.error('[Quantum Observer] Proxy Error:', error);
 
-            // Check for Custom 429 (Daily Limit)
-            // Supabase functions.invoke wraps the response. 
-            // If the function returned 429, error will be populated or we need to check context.
-            // Actually supabase-js handles non-2xx as error usually.
-
-            // If the error object has details we can check.
-            // But if it's a "Daily Limit Reached" JSON from our function, Supabase might parse it?
-            // Actually supabase invoke returns { data, error }. If status is 4xx, error is set.
-
-            // Let's assume we can detect the limit message.
+            let detailedMsg = "";
             try {
-                // Debug: Log full error details
-                console.log("[Quantum Debug] Error Object:", error);
-                if (error && error.context && typeof error.context.json === 'function') {
-                    error.context.json().then(j => console.log("[Quantum Debug] Error Body:", j));
-                } else if (error && error.message) {
-                    console.log("[Quantum Debug] Error Message:", error.message);
-                }
-
-                // If it's a 429, we assume Limit.
-                // The error object typically contains 'context' or 'status'.
-                const status = (error && (error.status || (error.context && error.context.status)));
-                if (status === 429) {
-                    return {
-                        probability_up: 0,
-                        uncertainty: 0,
-                        conclusion: isEn ? "DAILY SCAN LIMIT REACHED." : "今日扫描次数已耗尽。",
-                        quantum_phrase: "LIMIT_EXCEEDED",
-                        signal: "WAIT",
-                        action_advice: isEn ? "Please upgrade to PRO for more scans." : "请升级 PRO 会员解锁无限扫描。",
-                        support_price: 0,
-                        resistance_price: 0,
-                        deja_vu: 0,
-                        resonance: 0,
-                        entropy: 100
-                    };
+                // supabase-js FunctionsHttpError might have a way to get the body
+                if (error.context && typeof error.context.json === 'function') {
+                    const body = await error.context.json();
+                    detailedMsg = body.error || body.message || "";
+                    if (body.suggestion) detailedMsg += "\n" + body.suggestion;
+                    if (body.details) detailedMsg += "\nDetails: " + body.details;
                 }
             } catch (e) {
-                // ignore
+                console.warn("Failed to parse error body", e);
             }
 
-            throw error;
+            const status = (error && (error.status || (error.context && error.context.status)));
+            if (status === 429) {
+                return {
+                    probability_up: 0,
+                    uncertainty: 0,
+                    conclusion: isEn ? "DAILY SCAN LIMIT REACHED." : "今日扫描次数已耗尽。",
+                    quantum_phrase: "LIMIT_EXCEEDED",
+                    signal: "WAIT",
+                    action_advice: isEn ? "Please upgrade to PRO for more scans." : "请升级 PRO 会员解锁无限扫描。",
+                    support_price: 0,
+                    resistance_price: 0,
+                    deja_vu: 0,
+                    resonance: 0,
+                    entropy: 100
+                };
+            }
+
+            const proxyErr = new Error(detailedMsg || error.message || "Proxy invocation failed");
+            proxyErr.status = status;
+            throw proxyErr;
         }
 
         // Parse AI Result
@@ -313,10 +304,10 @@ export async function consultObserver(
         return {
             probability_up: 50,
             uncertainty: 100,
-            conclusion: isEn ? "Connection Failed." : "连接失败，请重试。",
+            conclusion: e.message || (isEn ? "Connection Failed." : "连接失败，请重试。"),
             quantum_phrase: "QUANTUM_DECOHERENCE",
             signal: "WAIT",
-            action_advice: isEn ? "Please check network." : "请检查网络连接。",
+            action_advice: isEn ? "Please check network or API settings." : "请检查网络或 API 设置。",
             support_price: 0,
             resistance_price: 0,
             deja_vu: 0,

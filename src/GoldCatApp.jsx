@@ -1846,10 +1846,10 @@ function GoldCatApp() {
                             <img src="/goldcat_logo_neon.png" alt="GoldCat Logo" className="w-full h-full object-contain" />
                         </div>
                         <div>
-                            <h1 className="text-sm sm:text-base md:text-lg font-black text-white tracking-tighter leading-none">
-                                {t('app_title')} <span className="text-amber-500 text-[10px] align-top">v4</span>
+                            <h1 className="text-sm sm:text-base md:text-lg font-black text-white tracking-tighter leading-none flex items-center gap-1.5">
+                                <span>{t('app_title')}</span>
+                                <span className="text-amber-500 text-[11px] sm:text-xs font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded-sm leading-none">v4</span>
                             </h1>
-
                         </div>
                     </div>
 
@@ -3698,8 +3698,9 @@ function GoldCatApp() {
             <div className="relative w-full max-w-7xl mx-auto px-4 py-4 md:py-8 mt-auto mb-2 md:mb-6 text-gray-500 text-xs font-mono">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4 border-t border-white/10 pt-4 md:pt-8">
                     {/* Left: Copyright */}
-                    <div className="scale-90 md:scale-100">
-                        © {new Date().getFullYear()} GoldCat Terminal. {language === 'zh' ? '保留所有权利。' : 'All rights reserved.'}
+                    <div className="scale-90 md:scale-100 flex items-center gap-2">
+                        <span>© {new Date().getFullYear()} GoldCat Terminal. {language === 'zh' ? '保留所有权利。' : 'All rights reserved.'}</span>
+                        <span className="text-[10px] text-gray-600 font-mono">v1.2.40</span>
                     </div>
 
                     {/* Right: Links */}
@@ -3849,11 +3850,7 @@ function GoldCatApp() {
                 )
             }
 
-            {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
-            <div className="fixed top-2 left-2 z-[9999] opacity-30 text-[10px] text-gray-500 font-mono pointer-events-none select-none">
-                v1.2.40
-            </div>
 
         </div >
     );

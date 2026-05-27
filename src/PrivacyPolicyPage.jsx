@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 const PrivacyPolicyPage = ({ language, onBack }) => {
     const content = {
         zh: {
-            title: "隐私政策",
+            title: "隐私政策（2026版）",
             lastUpdated: "最后更新：2026年5月1日",
             sections: [
                 {
@@ -78,7 +78,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
             ]
         },
         en: {
-            title: "Privacy Policy",
+            title: "Privacy Policy (2026 Edition)",
             lastUpdated: "Last updated: May 1, 2026",
             sections: [
                 {
