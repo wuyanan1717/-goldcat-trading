@@ -12,7 +12,8 @@ export const translations = {
             upgrade: "升级会员",
             pro_member: "PRO会员",
             daily_alpha: "情报聚合器",
-            quantum_terminal: "AI 观测"
+            quantum_terminal: "AI 观测",
+            ashare_pilot: "Stock"
         },
         home: {
             // NEW: Quantum Observer Hero
@@ -228,7 +229,9 @@ export const translations = {
                 trend: "趋势级别",
                 too_tight: "止损过窄",
                 too_wide: "止损过宽"
-            }
+            },
+            review_note: "交易笔记 (可选)",
+            image_upload: "图片上传"
         },
         risk: {
             title: "交易纪律预审",
@@ -275,7 +278,7 @@ export const translations = {
                 rr: "盈亏比",
                 status: "状态",
                 review: "复盘笔记",
-                review_content: "复盘内容",
+                review_content: "交易笔记",
                 action: "操作"
             },
             status: {
@@ -297,7 +300,7 @@ export const translations = {
                 "当时你在想什么？",
                 "有没有共性场景？"
             ],
-            review_placeholder: "在此输入复盘笔记...",
+            review_placeholder: "在此输入交易笔记...",
             entry_price: "入场价",
             stop_loss_price: "止损价",
             take_profit_price: "止盈价",
@@ -437,13 +440,16 @@ export const translations = {
             migration_error: "同步失败，请检查网络",
             upload_failed: "图片上传失败。请检查 Supabase Storage 配置。",
             image_too_large: "图片过大 (最大 5MB)",
-            upload_hint: "点击或拖拽上传 K线图"
+            upload_hint: "点击或拖拽上传 K线图",
+            smart_scan: "交割单识别",
+            processing: "识别中...",
+            auto_fill_success: "智能识别成功！已填充参数到表单。"
         },
         christmas: {
             wish: "愿你的每一份坚持，都化作新一年的满盘红利",
-            title: "圣诞暖心赠礼 -50%",
+            title: "圣诞暖心赠礼",
             desc: "把这一年的波折留在雪地，带着金色的好运开启新篇章。",
-            voucher: "圣诞礼券 (立减 50%)",
+            voucher: "圣诞礼券",
             click_claim: "点击领取",
             claimed: "已领取"
         },
@@ -473,7 +479,8 @@ export const translations = {
             upgrade: "Upgrade",
             pro_member: "PRO Member",
             daily_alpha: "Daily Alpha",
-            quantum_terminal: "AI Observer"
+            quantum_terminal: "AI Observer",
+            ashare_pilot: "Stock"
         },
         home: {
             // NEW: Quantum Observer Hero
@@ -672,7 +679,9 @@ export const translations = {
                 trend: "Trend",
                 too_tight: "Too Tight",
                 too_wide: "Too Wide"
-            }
+            },
+            review_note: "Review Notes (Optional)",
+            image_upload: "Image Upload"
         },
         risk: {
             title: "Risk Pre-check",
@@ -891,13 +900,16 @@ export const translations = {
             done: "Done",
             auto_save_success: "Your trade has been automatically saved!",
             migration_success: "Cloud sync complete",
-            migration_error: "Sync failed. Check connection"
+            migration_error: "Sync failed. Check connection",
+            smart_scan: "Trade Scanner",
+            processing: "Scanning...",
+            auto_fill_success: "Scan successful! Parameters filled."
         },
         christmas: {
             wish: "May every persistence turn into profit in the New Year",
-            title: "Christmas Special Gift -50%",
+            title: "Christmas Special Gift",
             desc: "Leave the year's volatility in the snow, start the new chapter with golden luck.",
-            voucher: "Christmas Voucher (50% OFF)",
+            voucher: "Christmas Voucher",
             click_claim: "Click to Claim",
             claimed: "Claimed"
         },

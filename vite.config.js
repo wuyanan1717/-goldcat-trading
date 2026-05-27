@@ -2,11 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const disablePwa = process.env.DISABLE_PWA === 'true'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
+    !disablePwa && VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
@@ -103,7 +105,7 @@ export default defineConfig({
         ]
       }
     })
-  ],
+  ].filter(Boolean),
   server: {
     proxy: {
       '/api/gemini': {
@@ -116,6 +118,17 @@ export default defineConfig({
         target: 'https://goldcat.trade',
         changeOrigin: true,
         secure: false
+      },
+      '/proxy/tushare': {
+        target: 'http://lianghua.nanyangqiankun.top',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/proxy\/tushare/, '')
+      },
+      '/proxy/sina': {
+        target: 'https://money.finance.sina.com.cn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/proxy\/sina/, '')
       }
     }
   }

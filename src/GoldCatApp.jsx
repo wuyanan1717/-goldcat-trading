@@ -26,6 +26,8 @@ const AIAnalysisDashboard = lazy(() => import('./components/AIAnalysisDashboard'
 
 import { getFeatureVersion } from './config/versionConfig';
 import { MobileDebugOverlay } from './features/TerminalV2/components/MobileDebugOverlay';
+import TradeEntryForm from './features/Trading/TradeEntryForm';
+
 
 
 // Data Sync Status Indicator Component (Icon Only)
@@ -447,29 +449,6 @@ function GoldCatApp() {
         const newPatterns = getInitialPatterns(language);
         setPatterns(newPatterns); // 更新 patterns
 
-        // Auto-translate selected pattern if possible
-        setFormData(prev => {
-            const zhPatterns = getInitialPatterns('zh');
-            const enPatterns = getInitialPatterns('en');
-            let idx = -1;
-
-            // Try to find index in ZH/EN lists
-            if (language === 'en') {
-                // Switching TO English, look in Chinese list
-                idx = zhPatterns.indexOf(prev.pattern);
-                if (idx !== -1 && enPatterns[idx]) return { ...prev, pattern: enPatterns[idx] };
-            } else {
-                // Switching TO Chinese, look in English list
-                idx = enPatterns.indexOf(prev.pattern);
-                if (idx !== -1 && zhPatterns[idx]) return { ...prev, pattern: zhPatterns[idx] };
-            }
-            // If strictly mapping failed, fallback to first of new language ONLY if current is invalid
-            if (!newPatterns.includes(prev.pattern)) {
-                return { ...prev, pattern: newPatterns[0] };
-            }
-            return prev;
-        });
-
         // Dynamic Title Localization
         document.title = 'Goldcat Terminal';
     }, [language]);
@@ -582,37 +561,8 @@ function GoldCatApp() {
     useEffect(() => {
         localStorage.setItem('goldcat_active_tab_v2', activeTab);
     }, [activeTab]);
-    // Trade Image Upload State
-    const [tradeImage, setTradeImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
-
-    const [formData, setFormData] = useState({
-        tradeType: 'buy',
-        symbol: '',
-        margin: '',
-        leverage: '10',
-        entryPrice: '',
-        stopLoss: '',
-        takeProfit: '',
-        pattern: getInitialPatterns(language)[0],
-        timeframe: '4h',
-        notes: ''
-    });
-
-    // 风控分析状态
-    const [riskAnalysis, setRiskAnalysis] = useState({
-        rrRatio: 0,
-        positionSize: 0,
-        riskPercent: 0,
-        accountRiskPercent: 0,
-        riskAmount: 0,
-        valid: false
-    });
-
-    const [validationErrors, setValidationErrors] = useState({ stopLoss: '', takeProfit: '' });
-    const [checklist, setChecklist] = useState({ trend: false, close: false, structure: false });
-    const [isShaking, setIsShaking] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submission
+    const [autoFillData, setAutoFillData] = useState(null); // AI Auto-fill data bridge
     const [isDataLoaded, setIsDataLoaded] = useState(false); // Prevent overwriting local storage before load
 
     const [showCloseTradeModal, setShowCloseTradeModal] = useState(false);
@@ -1077,117 +1027,22 @@ function GoldCatApp() {
         };
     }, [isUpgrading]);
 
-    // 实时风控计算器
-    useEffect(() => {
-        const entry = parseFloat(formData.entryPrice);
-        const stop = parseFloat(formData.stopLoss);
-        const take = parseFloat(formData.takeProfit);
-        const margin = parseFloat(formData.margin);
-        const leverage = parseFloat(formData.leverage);
-
-
-
-        let rrRatio = 0;
-        let positionSize = 0;
-
-        let riskPercent = 0; // Position Risk %
-        let accountRiskPercent = 0; // Account Risk %
-        let riskAmount = 0; // USDT Risk Amount
-        let valid = false;
-
-        if (margin > 0 && leverage > 0) {
-            positionSize = margin * leverage;
-        }
-
-        // 计算风险 (Entry + SL)
-        if (entry > 0 && stop > 0) {
-            const risk = Math.abs(entry - stop);
-            if (risk > 0) {
-
-                riskPercent = ((risk / entry) * leverage * 100).toFixed(2);
-                // Calculate absolute risk amount in USDT
-                // Position Size = Margin * Leverage
-                // Risk Amount = (Risk Price Diff / Entry Price) * Position Size
-                riskAmount = (risk / entry) * positionSize;
-                if (totalCapital > 0) {
-                    const rawPercent = (riskAmount / totalCapital) * 100;
-                    accountRiskPercent = parseFloat(rawPercent.toFixed(2));
-                    console.log('Risk Update:', { totalCapital, riskAmount, accountRiskPercent });
-                }
-            }
-        }
-
-        // 计算盈亏比 (Entry + SL + TP) - 严格校验方向
-        let errors = { stopLoss: '', takeProfit: '' };
-        if (entry > 0 && stop > 0 && take > 0) {
-            const isLong = formData.tradeType === 'buy';
-            let risk = 0;
-            let reward = 0;
-            let isValidLogic = false;
-
-            if (isLong) {
-                // 做多: SL < Entry < TP
-                if (stop >= entry) errors.stopLoss = t('validation.long_sl');
-                if (take <= entry) errors.takeProfit = t('validation.long_tp');
-
-                if (stop < entry && take > entry) {
-                    risk = entry - stop;
-                    reward = take - entry;
-                    isValidLogic = true;
-                }
-            } else {
-                // 做空: TP < Entry < SL
-                if (stop <= entry) errors.stopLoss = t('validation.short_sl');
-                if (take >= entry) errors.takeProfit = t('validation.short_tp');
-
-                if (stop > entry && take < entry) {
-                    risk = stop - entry;
-                    reward = entry - take;
-                    isValidLogic = true;
-                }
-            }
-
-            if (isValidLogic && risk > 0) {
-                rrRatio = (reward / risk).toFixed(2);
-                valid = true;
-            }
-        }
-        setValidationErrors(errors);
-
-
-
-        setRiskAnalysis({ rrRatio, positionSize, riskPercent, accountRiskPercent, riskAmount, valid });
-    }, [formData, totalCapital]);
-
-    const handleInputChange = (field, value) => {
-        // Special handling for number fields to strip non-numeric chars (fixes Google Translate artifacts)
-        if (['margin', 'leverage', 'entryPrice', 'stopLoss', 'takeProfit'].includes(field)) {
-            // Allow only numbers and one decimal point
-            const sanitized = value.replace(/[^\d.]/g, '');
-            // Prevent multiple decimal points
-            const parts = sanitized.split('.');
-            const finalValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
-            setFormData(prev => ({ ...prev, [field]: finalValue }));
-        } else {
-            setFormData(prev => ({ ...prev, [field]: value }));
-        }
-    };
 
     // v5 Feature: Auto-fill trade form from Quantum Observer
     const fillTradeForm = ({ symbol, side, price, stopLoss, takeProfit }) => {
         console.log('🤖 AI Auto-fill:', { symbol, side, price, stopLoss, takeProfit });
-        setFormData(prev => ({
-            ...prev,
-            symbol: symbol || prev.symbol,
-            tradeType: side ? (side === 'BUY' ? 'buy' : 'sell') : prev.tradeType,
-            entryPrice: price ? price.toString() : prev.entryPrice,
-            stopLoss: stopLoss ? stopLoss.toString() : prev.stopLoss,
-            takeProfit: takeProfit ? takeProfit.toString() : prev.takeProfit,
-            // Reset other fields if needed, or keep them
-        }));
+        
+        // Pass data to modularized component via bridge state
+        setAutoFillData({
+            symbol: symbol || '',
+            tradeType: side ? (side === 'BUY' ? 'buy' : 'sell') : 'buy',
+            entryPrice: price ? price.toString() : '',
+            stopLoss: stopLoss ? stopLoss.toString() : '',
+            takeProfit: takeProfit ? takeProfit.toString() : ''
+        });
+
         // Switch to Trade Input tab
         setActiveTab('new_trade');
-        // Optional: Scroll to form
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         // Show feedback
@@ -1231,7 +1086,8 @@ function GoldCatApp() {
                     timeframe: trade.timeframe,
                     pattern: trade.pattern,
                     status: trade.status,
-                    notes: trade.notes,
+                    notes: trade.notes || trade.review,
+                    review: trade.review,
                     image_url: trade.image_url, // ✅ Add image URL
                     risk_analysis: trade.rrRatio || trade.positionSize ? {
                         rrRatio: trade.rrRatio,
@@ -1259,14 +1115,6 @@ function GoldCatApp() {
             setShowSuccessToast(true);
             setSyncStatus('synced');
 
-            // 重置表单 but keep some preferences
-            setFormData(prev => ({
-                ...prev,
-                symbol: '', entryPrice: '', stopLoss: '', takeProfit: '', notes: '', margin: ''
-            }));
-            setTradeImage(null);
-            setImagePreview(null);
-            setChecklist({ trend: false, close: false, structure: false });
         } catch (err) {
             console.error('Unexpected error saving trade:', err);
             setErrorMessage('保存交易记录失败: ' + err.message);
@@ -1275,23 +1123,8 @@ function GoldCatApp() {
             setTimeout(() => setShowErrorToast(false), 3000);
         }
     };
-    const handleImageSelect = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                alert(t('common.image_too_large') || 'Image too large (Max 5MB)');
-                return;
-            }
-            setTradeImage(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
 
-    const handleSubmitTrade = async () => {
+    const handleSubmitTrade = async (capturedFormData = null, capturedRiskAnalysis = null, capturedTradeImage = null) => {
         // Intercept for Guest Mode
         if (!user) {
             setPendingGuestTrade(true); // Flag to save after login
@@ -1304,6 +1137,11 @@ function GoldCatApp() {
         setIsSubmitting(true);
         console.log('handleSubmitTrade called');
 
+        // Allow data to be passed in (modularized component)
+        const finalFormData = capturedFormData || formData;
+        const finalRiskAnalysis = capturedRiskAnalysis || riskAnalysis;
+        const finalTradeImage = capturedTradeImage || tradeImage;
+
         // 1. 权限检查
         if (!membership.isPremium && trades.length >= membership.maxTrades) {
             setShowPaymentModal(true);
@@ -1313,7 +1151,7 @@ function GoldCatApp() {
         }
 
         // 2. 必填检查
-        if (!formData.symbol || !formData.entryPrice || !formData.margin) {
+        if (!finalFormData.symbol || !finalFormData.entryPrice || !finalFormData.margin) {
             alert("【交易纪律】请完整填写交易要素，不可遗漏。");
             setIsSubmitting(false);
             return;
@@ -1322,13 +1160,13 @@ function GoldCatApp() {
         let imageUrl = null;
 
         // 2.5 Image Upload (Premium Only)
-        if (tradeImage && membership.isPremium) {
+        if (finalTradeImage && membership.isPremium) {
             try {
-                const fileExt = tradeImage.name.split('.').pop();
+                const fileExt = finalTradeImage.name.split('.').pop();
                 const fileName = `${user.id}/${Date.now()}.${fileExt}`;
                 const { error: uploadError } = await supabase.storage
                     .from('trade-images')
-                    .upload(fileName, tradeImage);
+                    .upload(fileName, finalTradeImage);
 
                 if (uploadError) throw uploadError;
 
@@ -1347,16 +1185,16 @@ function GoldCatApp() {
             id: Date.now(),
             date: new Date().toLocaleDateString(),
             timestamp: Date.now(),
-            ...formData,
-            direction: formData.tradeType === 'buy' ? 'long' : 'short', // 显式映射 tradeType 到 direction
-            ...riskAnalysis,
+            ...finalFormData,
+            direction: finalFormData.tradeType === 'buy' ? 'long' : 'short',
+            ...finalRiskAnalysis,
             status: 'open', // open, win, loss
             profitLoss: 0, // 结单后更新
             image_url: imageUrl // Attach image URL
         };
 
         // 3. 盈亏比检查（软性提醒）
-        if (riskAnalysis.valid && riskAnalysis.rrRatio < 1.5) {
+        if (finalRiskAnalysis.valid && finalRiskAnalysis.rrRatio < 1.5) {
             setPendingTrade(newTrade);
             setShowRiskWarningModal(true);
             setIsSubmitting(false);
@@ -1660,7 +1498,7 @@ function GoldCatApp() {
     // 复盘交易
     const handleReviewTrade = (trade) => {
         setSelectedTradeId(trade.id);
-        setReviewNotes(trade.review || '');
+        setReviewNotes(trade.review || trade.notes || '');
         setShowReviewModal(true);
     };
 
@@ -1884,33 +1722,6 @@ function GoldCatApp() {
         return { total, wins, winRate, totalPnL };
     }, [trades]);
 
-    // Trading Pair Risk Detection
-    const tradingPairRisk = useMemo(() => {
-        if (!formData.symbol) return null;
-
-        const pair = formData.symbol;
-        const pairTrades = trades.filter(t => t.symbol === pair && t.status === 'closed');
-
-        // Check 1: Same-day losses
-        const today = new Date().toDateString();
-        const todayLosses = pairTrades.filter(t => {
-            const tradeDate = new Date(t.createdAt || t.timestamp).toDateString();
-            return tradeDate === today && (t.profitLoss || 0) < 0;
-        }).length;
-
-        // Check 2: Historical loss rate
-        const totalTrades = pairTrades.length;
-        const losses = pairTrades.filter(t => (t.profitLoss || 0) < 0).length;
-        const lossRate = totalTrades > 0 ? (losses / totalTrades) : 0;
-
-        return {
-            todayLosses,
-            totalTrades,
-            lossRate,
-            showDailyWarning: todayLosses >= 2,
-            showHistoricalWarning: totalTrades >= 5 && lossRate > 0.8
-        };
-    }, [formData.symbol, trades]);
 
 
     // 导出交易记录
@@ -2565,525 +2376,36 @@ function GoldCatApp() {
 
                             {/* --- 1. 录入交易 (核心) --- */}
                             {activeTab === 'new_trade' && (
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
-                                    {/* 左侧：录入表单 */}
-                                    <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-xl">
-                                        <div className="flex justify-between items-center mb-4 sm:mb-6 border-b border-neutral-800 pb-3 sm:pb-4">
-                                            <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                                                <Target className="w-5 h-5 text-amber-500" />
-                                                {t('form.title')}
-                                            </h2>
-                                            <span className="text-xs bg-neutral-800 text-gray-400 px-2 py-1 rounded">
-                                                {t('form.today_trade_count', { count: trades.filter(t => t.date === new Date().toLocaleDateString()).length + 1 })}
-                                            </span>
-                                        </div>
-
-                                        <div className="space-y-4 sm:space-y-6">
-                                            {/* 第一行：基础信息 */}
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                <div className="col-span-2 md:col-span-1">
-                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.direction')}</label>
-                                                    <div className="flex bg-neutral-800 rounded-lg p-1">
-                                                        <button
-                                                            onClick={() => handleInputChange('tradeType', 'buy')}
-                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'buy' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                        >{t('form.long')}</button>
-                                                        <button
-                                                            onClick={() => handleInputChange('tradeType', 'sell')}
-                                                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${formData.tradeType === 'sell' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                                        >{t('form.short')}</button>
-                                                    </div>
-                                                </div>
-                                                <div className="col-span-2 md:col-span-1">
-                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.symbol')}</label>
-                                                    <div className="relative group">
-                                                        {/* Visual Hint Icon - Moved to LEFT to avoid overlap with datalist arrow */}
-                                                        <div className="absolute left-3 top-3 pointer-events-none text-gray-500 z-10">
-                                                            <Search className="w-4 h-4" />
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            // IME Optimization: Hint browser to use English/Latin
-                                                            lang="en"
-                                                            spellCheck="false"
-                                                            autoComplete="off"
-                                                            autoCorrect="off"
-                                                            autoCapitalize="characters"
-                                                            placeholder="BTC"
-                                                            value={formData.symbol}
-                                                            onChange={e => {
-                                                                const val = e.target.value.toUpperCase();
-                                                                handleInputChange('symbol', val);
-                                                                setShowSuggestions(true);
-                                                            }}
-                                                            onFocus={() => setShowSuggestions(true)}
-                                                            onBlur={() => {
-                                                                // Smart append logic
-                                                                let val = formData.symbol.trim();
-                                                                if (val && !val.includes('/') && val.length < 10) {
-                                                                    const common = ['USDT', 'USD', 'BTC', 'ETH'];
-                                                                    if (!common.some(c => val.endsWith(c))) {
-                                                                        val = val + '/USDT';
-                                                                        handleInputChange('symbol', val);
-                                                                    }
-                                                                }
-                                                                // Delay hide to allow click
-                                                                setTimeout(() => setShowSuggestions(false), 200);
-                                                            }}
-                                                            // Removed list="crypto-suggestions" to disable native datalist
-                                                            className="w-full min-h-[44px] bg-neutral-800 border border-neutral-700 rounded-lg pl-10 pr-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono uppercase"
-                                                        />
-                                                        {showSuggestions && (
-                                                            <div className="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
-                                                                {['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'DOGE/USDT', 'PEPE/USDT', 'SUI/USDT', 'XRP/USDT', 'BNB/USDT', 'ADA/USDT', 'LINK/USDT', 'AVAX/USDT', 'DOT/USDT', 'MATIC/USDT', 'LTC/USDT', 'UNI/USDT']
-                                                                    .filter(pair => !formData.symbol || pair.includes(formData.symbol))
-                                                                    .map(pair => (
-                                                                        <div
-                                                                            key={pair}
-                                                                            className="px-4 py-3 hover:bg-neutral-800 cursor-pointer text-sm font-mono text-gray-300 hover:text-white transition-colors border-b border-neutral-800/50 last:border-0"
-                                                                            onClick={() => {
-                                                                                handleInputChange('symbol', pair);
-                                                                                setShowSuggestions(false);
-                                                                            }}
-                                                                        >
-                                                                            {pair}
-                                                                        </div>
-                                                                    ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="col-span-1">
-                                                    <label className="block text-xs text-gray-500 mb-1.5">{t('form.timeframe')}</label>
-                                                    <select
-                                                        value={formData.timeframe}
-                                                        onChange={e => handleInputChange('timeframe', e.target.value)}
-                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                    >
-                                                        {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
-                                                    </select>
-                                                </div>
-                                                <div className="col-span-1">
-                                                    <div className="flex justify-between items-center mb-1.5">
-                                                        <label className="block text-xs text-gray-500">{t('form.pattern')}</label>
-                                                        <button onClick={() => setShowPatternModal(true)} className="text-[10px] text-amber-500 hover:underline flex items-center gap-1">
-                                                            <Settings className="w-3 h-3" /> {t('form.manage')}
-                                                        </button>
-                                                    </div>
-                                                    <select
-                                                        value={formData.pattern}
-                                                        onChange={e => handleInputChange('pattern', e.target.value)}
-                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none appearance-none"
-                                                    >
-                                                        {patterns.map(p => (
-                                                            <option key={p} value={p}>{p}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            {/* Trading Pair Risk Warnings */}
-                                            {tradingPairRisk?.showDailyWarning && (
-                                                <div className="p-2.5 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                    <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                                                    <div className="text-xs text-red-400 leading-relaxed">
-                                                        <span className="font-bold">{t('risk.daily_loss_warning')}</span>
-                                                        <span className="text-red-300/80 block mt-0.5">{t('risk.daily_loss_detail', { count: tradingPairRisk.todayLosses })}</span>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {tradingPairRisk?.showHistoricalWarning && (
-                                                <div className="p-2.5 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                                                    <TrendingDown className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                                                    <div className="text-xs text-orange-400 leading-relaxed">
-                                                        <span className="font-bold">{t('risk.high_loss_rate_warning')}</span>
-                                                        <span className="text-orange-300/80 block mt-0.5">{t('risk.high_loss_rate_detail', { rate: (tradingPairRisk.lossRate * 100).toFixed(0), total: tradingPairRisk.totalTrades })}</span>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* 第二行：资金管理 */}
-                                            <div className="p-4 bg-neutral-800/30 border border-neutral-800 rounded-xl">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-xs text-gray-500 mb-1.5 notranslate">{t('form.margin')}</label>
-                                                        <input
-                                                            type="number" placeholder="1000" value={formData.margin}
-                                                            onChange={e => handleInputChange('margin', e.target.value)}
-                                                            step="any"
-                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs text-gray-500 mb-1.5">{t('form.leverage')}</label>
-                                                        <input
-                                                            type="number" placeholder="10" value={formData.leverage}
-                                                            onChange={e => handleInputChange('leverage', e.target.value)}
-                                                            step="any"
-                                                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 focus:outline-none font-mono notranslate"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* 第三行：点位执行 - Mobile: Single Column (Safe), Desktop: 3 Columns */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5 font-bold text-amber-500">{t('form.entry_price')}</label>
-                                                    <input
-                                                        type="number" placeholder="0.00" value={formData.entryPrice}
-                                                        onChange={e => handleInputChange('entryPrice', e.target.value)}
-                                                        step="any"
-                                                        className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-3 py-2.5 text-white focus:border-amber-500 focus:outline-none font-mono font-bold notranslate"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5 text-red-400">{t('form.stop_loss')}</label>
-                                                    <input
-                                                        type="number" placeholder="0.00" value={formData.stopLoss}
-                                                        onChange={e => handleInputChange('stopLoss', e.target.value)}
-                                                        step="any"
-                                                        className={`w-full bg-neutral-800 border ${validationErrors.stopLoss ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-red-500 focus:outline-none font-mono notranslate`}
-                                                    />
-                                                    {validationErrors.stopLoss && <div className="text-[10px] text-red-500 mt-1">{validationErrors.stopLoss}</div>}
-                                                    {formData.entryPrice && formData.stopLoss && formData.margin && (() => {
-                                                        const slPercent = Math.abs((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * 100);
-                                                        const predictedLoss = Math.abs((parseFloat(formData.stopLoss) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage));
-
-                                                        // Determine level and color
-                                                        let levelText, levelColor, levelBg;
-                                                        if (slPercent < 1) {
-                                                            levelText = t('form.sl_level.too_tight');
-                                                            levelColor = 'text-yellow-500';
-                                                            levelBg = 'bg-yellow-500/10 border-yellow-500/30';
-                                                        } else if (slPercent <= 2) {
-                                                            levelText = t('form.sl_level.short_term');
-                                                            levelColor = 'text-cyan-400';
-                                                            levelBg = 'bg-cyan-500/10 border-cyan-500/30';
-                                                        } else if (slPercent <= 5) {
-                                                            levelText = t('form.sl_level.structure');
-                                                            levelColor = 'text-amber-400';
-                                                            levelBg = 'bg-amber-500/10 border-amber-500/30';
-                                                        } else if (slPercent <= 12) {
-                                                            levelText = t('form.sl_level.trend');
-                                                            levelColor = 'text-purple-400';
-                                                            levelBg = 'bg-purple-500/10 border-purple-500/30';
-                                                        } else {
-                                                            levelText = t('form.sl_level.too_wide');
-                                                            levelColor = 'text-red-500';
-                                                            levelBg = 'bg-red-500/10 border-red-500/30';
-                                                        }
-
-                                                        return (
-                                                            <div className="mt-1.5 space-y-1">
-                                                                <div className="text-[10px] text-gray-500">
-                                                                    {t('form.predicted_loss')}: <span className="text-red-500">${predictedLoss.toFixed(2)}</span>
-                                                                </div>
-                                                                <div className={`text-[10px] px-2 py-0.5 rounded border inline-flex items-center gap-1.5 ${levelBg}`}>
-                                                                    <span className="text-gray-400">{t('form.sl_level.current')}:</span>
-                                                                    <span className={`font-bold ${levelColor}`}>{slPercent.toFixed(1)}%</span>
-                                                                    <span className="text-gray-500">→</span>
-                                                                    <span className={`font-medium ${levelColor}`}>{levelText}</span>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })()}
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1.5 text-green-400">{t('form.take_profit')}</label>
-                                                    <input
-                                                        type="number" placeholder="0.00" value={formData.takeProfit}
-                                                        onChange={e => handleInputChange('takeProfit', e.target.value)}
-                                                        step="any"
-                                                        className={`w-full bg-neutral-800 border ${validationErrors.takeProfit ? 'border-red-500' : 'border-neutral-700'} rounded-lg px-3 py-2.5 text-white focus:border-green-500 focus:outline-none font-mono notranslate`}
-                                                    />
-                                                    {validationErrors.takeProfit && <div className="text-[10px] text-red-500 mt-1">{validationErrors.takeProfit}</div>}
-                                                    {formData.entryPrice && formData.takeProfit && formData.margin && (
-                                                        <div className="text-[10px] text-gray-500 mt-1">
-                                                            {t('form.predicted_profit')}: <span className="text-green-500">
-                                                                ${Math.abs(((parseFloat(formData.takeProfit) - parseFloat(formData.entryPrice)) / parseFloat(formData.entryPrice) * parseFloat(formData.margin) * parseFloat(formData.leverage))).toFixed(2)}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Image Upload Area (Premium) */}
-                                            <div className="mb-4">
-                                                <label className="block text-xs text-gray-500 mb-2 flex items-center justify-between">
-                                                    <span className="flex items-center gap-1">
-                                                        <ImageIcon className="w-3 h-3" /> {t('form.screenshot') || 'Chart Screenshot'}
-                                                    </span>
-                                                    {!membership.isPremium && <span className="text-[10px] text-amber-500 flex items-center gap-1"><Crown className="w-3 h-3" /> Premium</span>}
-                                                </label>
-
-                                                {membership.isPremium ? (
-                                                    <div className="relative group">
-                                                        {imagePreview ? (
-                                                            <div className="relative rounded-lg overflow-hidden border border-neutral-700 bg-black/50">
-                                                                <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setTradeImage(null);
-                                                                        setImagePreview(null);
-                                                                    }}
-                                                                    className="absolute top-2 right-2 p-1 bg-black/70 text-white rounded-full hover:bg-red-500 transition-colors"
-                                                                >
-                                                                    <X className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="relative">
-                                                                <input
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    onChange={handleImageSelect}
-                                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                                />
-                                                                <div className="w-full h-24 border-2 border-dashed border-neutral-700 rounded-lg flex flex-col items-center justify-center gap-2 text-gray-500 group-hover:border-amber-500/50 group-hover:text-amber-500/80 transition-all bg-neutral-800/30">
-                                                                    <Upload className="w-6 h-6" />
-                                                                    <span className="text-xs">{t('form.upload_hint') || 'Click or Drag to Upload'}</span>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div
-                                                        onClick={() => setShowPaymentModal(true)}
-                                                        className="w-full h-24 border border-neutral-800 rounded-lg flex flex-col items-center justify-center gap-2 text-gray-600 bg-neutral-900/50 cursor-pointer hover:bg-neutral-800 transition-colors relative overflow-hidden"
-                                                    >
-                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')] opacity-5"></div>
-                                                        <Lock className="w-5 h-5" />
-                                                        <span className="text-xs">{t('form.unlock_upload') || 'Upgrade to upload charts'}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* 提交按钮区域 */}
-                                            <div className="pt-2">
-                                                {!membership.isPremium && trades.length >= membership.maxTrades ? (
-                                                    <button disabled className="w-full py-4 bg-neutral-800 border border-neutral-700 text-gray-500 font-bold rounded-xl cursor-not-allowed flex flex-col items-center justify-center gap-1">
-                                                        <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> {t('form.quota_full')}</span>
-                                                        <span className="text-xs font-normal">{t('form.quota_desc')}</span>
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => {
-                                                            if (!riskAnalysis.valid) {
-                                                                setIsShaking(true);
-                                                                setTimeout(() => setIsShaking(false), 500);
-                                                                return;
-                                                            }
-                                                            handleSubmitTrade();
-                                                        }}
-                                                        className={`w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-lg ${isShaking ? 'animate-shake' : ''} ${!riskAnalysis.valid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
-                                                    >
-                                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><PlusCircle className="w-5 h-5" /> {t('form.submit_btn')}</>}
-                                                    </button>)}
-                                                <p className="text-center text-xs text-gray-600 mt-3">
-                                                    {t('form.honest_note')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* 右侧：实时风控面板 */}
-                                    <div className="space-y-6">
-                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 h-fit">
-                                            <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
-                                                <Shield className="w-4 h-4 text-amber-500" />
-                                                {t('risk.title')}
-                                            </h3>
-
-                                            {/* Total Capital Management */}
-                                            <div className="mb-4 p-3 bg-neutral-800/30 border border-neutral-700 rounded-xl">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <span className="text-xs text-gray-400">{t('risk.total_capital')}</span>
-                                                    {!isEditingCapital && (
-                                                        <button onClick={() => {
-                                                            // Round to integer to avoid floating point display issues
-                                                            setTotalCapital(Math.round(totalCapital));
-                                                            setIsEditingCapital(true);
-                                                        }} className="text-amber-500 hover:text-amber-400">
-                                                            <Edit3 className="w-3 h-3" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                {isEditingCapital ? (
-                                                    <div className="flex flex-col gap-2 w-full">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs text-gray-500 w-16">资金($):</span>
-                                                            <input
-                                                                type="number"
-                                                                step="1"
-                                                                value={totalCapital}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.value;
-                                                                    if (val === '' || val === '-') {
-                                                                        setTotalCapital('');
-                                                                    } else {
-                                                                        const parsed = parseInt(val);
-                                                                        setTotalCapital(isNaN(parsed) ? 0 : parsed);
-                                                                    }
-                                                                }}
-                                                                className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
-                                                                autoFocus
-                                                            />
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs text-gray-500 w-16">风控(%):</span>
-                                                            <input
-                                                                type="number"
-                                                                step="0.1"
-                                                                value={accountRiskLimit}
-                                                                onChange={(e) => setAccountRiskLimit(e.target.value)}
-                                                                className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-2 py-1 text-sm text-white font-mono"
-                                                            />
-                                                        </div>
-                                                        <button onClick={handleSaveCapital} className="w-full bg-green-600 hover:bg-green-500 text-white px-2 py-1.5 rounded text-xs font-bold mt-1">保存设置</button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex flex-col">
-                                                        <div className="text-xl font-black font-mono text-white tracking-wider">
-                                                            ${(totalCapital || 0).toLocaleString()}
-                                                        </div>
-                                                        <div className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
-                                                            <AlertCircle className="w-3 h-3" />
-                                                            账户风控红线: <span className="text-amber-500 font-bold">{accountRiskLimit}%</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <div className={`p-4 rounded-xl border ${riskAnalysis.valid && riskAnalysis.rrRatio >= 1.5 ? 'bg-green-900/20 border-green-900/50' : 'bg-neutral-800 border-neutral-700'}`}>
-                                                    <div className="text-xs text-gray-500 mb-1">{t('risk.rr_ratio')}</div>
-                                                    <div className="text-3xl font-black font-mono flex items-end gap-2">
-                                                        {riskAnalysis.rrRatio || '0.00'}
-                                                        <span className="text-sm font-normal text-gray-400 mb-1">
-                                                            {riskAnalysis.valid ? (riskAnalysis.rrRatio >= 1.5 ? t('risk.excellent') : t('risk.too_low')) : ''}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="p-3 bg-neutral-800 rounded-lg">
-                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.position_size')}</div>
-                                                        <div className="text-lg font-bold font-mono text-white notranslate">
-                                                            {riskAnalysis.positionSize.toLocaleString()} USDT
-                                                        </div>
-                                                    </div>
-                                                    <div className="p-3 bg-neutral-800 rounded-lg">
-                                                        <div className="text-xs text-gray-500 mb-1">{t('risk.risk_per_trade')}</div>
-                                                        <div className={`text-lg font-bold font-mono ${riskAnalysis.riskPercent > 10 ? 'text-red-500' : 'text-white'}`}>
-                                                            {riskAnalysis.riskPercent}%
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {riskAnalysis.riskPercent > 10 && (
-                                                    <div className="flex gap-2 p-3 bg-red-900/20 border border-red-900/50 rounded-lg">
-                                                        <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                                        <p className="text-xs text-red-400 leading-relaxed">
-                                                            <span className="font-bold">{t('risk.warning_title')}</span>
-                                                            {t('risk.warning_msg')}
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                {riskAnalysis.accountRiskPercent > accountRiskLimit && (
-                                                    <div className={`flex gap-2 p-3 border rounded-lg ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'bg-red-900/20 border-red-900/50' : 'bg-yellow-900/20 border-yellow-900/50'}`}>
-                                                        <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'text-red-500' : 'text-yellow-500'}`} />
-                                                        <div className="text-xs leading-relaxed">
-                                                            <p className={`font-bold ${riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? 'text-red-400' : 'text-yellow-400'}`}>
-                                                                {riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? '危险警告 (DANGER)' : '风险提示 (WARNING)'}
-                                                            </p>
-                                                            <p className="text-gray-400">
-                                                                当前账户风险为 {riskAnalysis.accountRiskPercent}%，
-                                                                {riskAnalysis.accountRiskPercent > (accountRiskLimit * 1.5) ? `严重超出设定阈值 (>${(accountRiskLimit * 1.5).toFixed(1)}%)！建议大幅降低仓位。` : `已超出设定阈值 (${accountRiskLimit}%)，请谨慎操作。`}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                <div className="mt-4 pt-4 border-t border-neutral-800">
-                                                    <div className="text-xs text-gray-500 mb-2">{t('risk.checklist')}</div>
-                                                    <div className="space-y-2">
-                                                        {[
-                                                            { id: 'trend', label: t('risk.check_trend') },
-                                                            { id: 'close', label: t('risk.check_close') },
-                                                            { id: 'structure', label: t('risk.check_structure') }
-                                                        ].map(item => (
-                                                            <label key={item.id} className="flex items-center gap-2 cursor-pointer group">
-                                                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checklist[item.id] ? 'bg-amber-500 border-amber-500' : 'border-neutral-600 group-hover:border-neutral-500'}`}>
-                                                                    {checklist[item.id] && <Check className="w-3 h-3 text-black" />}
-                                                                </div>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="hidden"
-                                                                    checked={checklist[item.id]}
-                                                                    onChange={() => setChecklist(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                                                                />
-                                                                <span className={`text-xs ${checklist[item.id] ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'}`}>{item.label}</span>
-                                                            </label>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Market Sentiment (Moved from AI Analysis) */}
-                                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
-                                            <div className="flex items-center gap-2 mb-4 border-b border-neutral-800 pb-2">
-                                                <Activity className="w-4 h-4 text-blue-400" />
-                                                <h3 className="text-sm font-bold text-gray-300">{t('ai.market_sentiment')}</h3>
-                                            </div>
-
-                                            {/* BTC Price */}
-                                            <div className="mb-4 bg-neutral-800/50 border border-neutral-700 rounded-xl p-3 flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center">
-                                                        <span className="text-[#F7931A] font-bold text-xs">₿</span>
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-[10px] text-gray-400">BTC/USDT</div>
-                                                        <div className="text-sm font-bold text-white">
-                                                            ${(btcMarket.price || 0).toLocaleString()}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className={`text-sm font-bold ${(btcMarket.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                        {(btcMarket.change24h || 0) >= 0 ? '+' : ''}{(btcMarket.change24h || 0).toFixed(2)}%
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Fear & Greed */}
-                                            <div className="flex flex-col items-center justify-center py-2">
-                                                {(() => {
-                                                    const fearIndex = 30 + (new Date().getDate() % 20);
-                                                    return (
-                                                        <>
-                                                            <div className="flex items-baseline gap-2 mb-2">
-                                                                <span className="text-2xl font-black text-white">{fearIndex}</span>
-                                                                <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">{t('ai.fear')}</span>
-                                                            </div>
-                                                            <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
-                                                                <div className="bg-gradient-to-r from-red-500 to-yellow-500 h-full" style={{ width: `${fearIndex}%` }}></div>
-                                                            </div>
-                                                        </>
-                                                    );
-                                                })()}
-                                            </div>
-                                            <p className="text-[10px] text-gray-500 mt-3 text-center leading-relaxed">
-                                                {t('ai.sentiment_tip')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                                <TradeEntryForm
+                                    t={t}
+                                    language={language}
+                                    user={user}
+                                    membership={membership}
+                                    trades={trades}
+                                    btcMarket={btcMarket}
+                                    totalCapital={totalCapital}
+                                    setTotalCapital={setTotalCapital}
+                                    accountRiskLimit={accountRiskLimit}
+                                    setAccountRiskLimit={setAccountRiskLimit}
+                                    handleSaveCapital={handleSaveCapital}
+                                    patterns={patterns}
+                                    onManagePatterns={() => setShowPatternModal(true)}
+                                    onRequireLogin={() => {
+                                        setPendingGuestTrade(true);
+                                        setIsRegisterMode(true);
+                                        setShowLoginModal(true);
+                                    }}
+                                    onRequireUpgrade={() => {
+                                        setShowPaymentModal(true);
+                                        setPaymentMethod(null);
+                                    }}
+                                    onSubmit={handleSubmitTrade}
+                                    isSubmitting={isSubmitting}
+                                    autoFillData={autoFillData}
+                                    onAutoFillApplied={() => setAutoFillData(null)}
+                                    onShowSuccess={(msg) => { setToastMessage(msg); setShowSuccessToast(true); }}
+                                    onShowError={(msg) => { setToastMessage(msg); setShowErrorToast(true); }}
+                                />
 
                             )}
 
@@ -3220,9 +2542,9 @@ function GoldCatApp() {
                                                                         </div>
                                                                     </td>
                                                                     <td className="px-4 py-4 max-w-[300px]">
-                                                                        {trade.review ? (
-                                                                            <div className="text-xs text-gray-300 truncate" title={trade.review}>
-                                                                                {trade.review}
+                                                                        {(trade.review || trade.notes) ? (
+                                                                            <div className="text-xs text-gray-300 truncate" title={trade.review || trade.notes}>
+                                                                                {trade.review || trade.notes}
                                                                             </div>
                                                                         ) : (
                                                                             <span className="text-xs text-gray-600 italic">{t('journal.not_reviewed')}</span>
@@ -3718,7 +3040,7 @@ function GoldCatApp() {
                                                             order_number: orderNum,
                                                             user_id: user.id,
                                                             user_email: user.email,
-                                                            amount: 15,
+                                                            amount: 39,
                                                             currency: 'USDT',
                                                             payment_method: 'usdt',
                                                             txid: paymentTxId,
