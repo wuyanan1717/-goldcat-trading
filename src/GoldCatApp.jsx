@@ -3852,7 +3852,7 @@ function GoldCatApp() {
             {/* --- GLOBAL DEBUG OVERLAY --- */}
             {/* <MobileDebugOverlay />  HIDDEN AS REQUESTED */}
             <div className="fixed top-2 left-2 z-[9999] opacity-30 text-[10px] text-gray-500 font-mono pointer-events-none select-none">
-                v1.2.39
+                v1.2.40
             </div>
 
         </div >
