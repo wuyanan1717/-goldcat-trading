@@ -5,14 +5,18 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
     const content = {
         zh: {
             title: "隐私政策",
-            lastUpdated: "最后更新：2024年12月4日",
+            lastUpdated: "最后更新：2026年5月1日",
             sections: [
                 {
                     title: "1. 引言",
                     content: "GoldCat Terminal（以下简称\"我们\"）重视您的隐私。本隐私政策说明了当您使用我们的交易日志和风险分析服务时，我们如何收集、使用和保护您的信息。"
                 },
                 {
-                    title: "2. 我们收集的信息",
+                    title: "2. 适用地区与合规提示",
+                    content: "本服务不向中华人民共和国大陆地区居民提供。中国大陆用户访问须自行了解并遵守当地法律法规。若您所在地区对加密货币相关活动有限制，请勿继续使用本服务。"
+                },
+                {
+                    title: "3. 我们收集的信息",
                     content: "我们收集以下信息：",
                     list: [
                         "账户信息：电子邮件地址用于身份验证",
@@ -22,7 +26,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     ]
                 },
                 {
-                    title: "3. 信息使用方式",
+                    title: "4. 信息使用方式",
                     content: "我们使用收集的信息用于：",
                     list: [
                         "提供和维护服务",
@@ -33,11 +37,11 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     ]
                 },
                 {
-                    title: "4. 数据存储与安全",
+                    title: "5. 数据存储与安全",
                     content: "您的数据通过 Supabase 安全存储，采用行级安全（RLS）策略确保只有您可以访问自己的数据。我们实施适当的技术和组织措施来保护您的个人信息。"
                 },
                 {
-                    title: "5. 数据共享",
+                    title: "6. 数据共享",
                     content: "我们不会出售您的个人数据。我们仅在以下情况下共享数据：",
                     list: [
                         "第三方服务提供商：Supabase（数据库）、Stripe（支付处理）",
@@ -46,7 +50,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     ]
                 },
                 {
-                    title: "6. 您的权利",
+                    title: "7. 您的权利",
                     content: "您有权：",
                     list: [
                         "访问您的个人数据",
@@ -56,33 +60,37 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     ]
                 },
                 {
-                    title: "7. Cookie 和跟踪",
+                    title: "8. Cookie 和跟踪",
                     content: "我们使用必要的本地存储来保存您的会话信息和偏好设置。我们不使用第三方跟踪 cookie。"
                 },
                 {
-                    title: "8. 儿童隐私",
+                    title: "9. 儿童隐私",
                     content: "我们的服务不面向13岁以下的儿童。我们不会故意收集13岁以下儿童的个人信息。"
                 },
                 {
-                    title: "9. 隐私政策变更",
+                    title: "10. 隐私政策变更",
                     content: "我们可能会不时更新本隐私政策。我们将通过在此页面发布新的隐私政策来通知您任何重大变更。"
                 },
                 {
-                    title: "10. 联系我们",
+                    title: "11. 联系我们",
                     content: "如果您对本隐私政策有任何疑问，请通过 support@goldcat.trade 联系我们。"
                 }
             ]
         },
         en: {
             title: "Privacy Policy",
-            lastUpdated: "Last updated: December 4, 2024",
+            lastUpdated: "Last updated: May 1, 2026",
             sections: [
                 {
                     title: "1. Introduction",
                     content: "At GoldCat Terminal (\"we\" or \"us\"), we take your privacy seriously. This Privacy Policy explains how we collect, use, and protect your information when you use our trading journal and risk analysis service."
                 },
                 {
-                    title: "2. Information We Collect",
+                    title: "2. Geographic Restriction & Compliance Notice",
+                    content: "This service is not offered to residents of mainland China. Users from mainland China must independently understand and comply with applicable local laws and regulations. If crypto-related activities are restricted in your jurisdiction, please do not use this service."
+                },
+                {
+                    title: "3. Information We Collect",
                     content: "We collect the following information:",
                     list: [
                         "Account Information: Email address for authentication",
@@ -92,7 +100,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     ]
                 },
                 {
-                    title: "3. How We Use Information",
+                    title: "4. How We Use Information",
                     content: "We use collected information to:",
                     list: [
                         "Provide and maintain the Service",
@@ -103,11 +111,11 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     ]
                 },
                 {
-                    title: "4. Data Storage and Security",
+                    title: "5. Data Storage and Security",
                     content: "Your data is securely stored via Supabase with Row Level Security (RLS) policies ensuring only you can access your data. We implement appropriate technical and organizational measures to protect your personal information."
                 },
                 {
-                    title: "5. Data Sharing",
+                    title: "6. Data Sharing",
                     content: "We do not sell your personal data. We only share data in the following cases:",
                     list: [
                         "Third-party Service Providers: Supabase (database), Stripe (payment processing)",
@@ -116,7 +124,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     ]
                 },
                 {
-                    title: "6. Your Rights",
+                    title: "7. Your Rights",
                     content: "You have the right to:",
                     list: [
                         "Access your personal data",
@@ -126,19 +134,19 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
                     ]
                 },
                 {
-                    title: "7. Cookies and Tracking",
+                    title: "8. Cookies and Tracking",
                     content: "We use necessary local storage to save your session information and preferences. We do not use third-party tracking cookies."
                 },
                 {
-                    title: "8. Children's Privacy",
+                    title: "9. Children's Privacy",
                     content: "Our Service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13."
                 },
                 {
-                    title: "9. Changes to Privacy Policy",
+                    title: "10. Changes to Privacy Policy",
                     content: "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new Privacy Policy on this page."
                 },
                 {
-                    title: "10. Contact Us",
+                    title: "11. Contact Us",
                     content: "If you have any questions about this Privacy Policy, please contact us at support@goldcat.trade."
                 }
             ]
@@ -188,7 +196,7 @@ const PrivacyPolicyPage = ({ language, onBack }) => {
             {/* Footer */}
             <footer className="border-t border-neutral-800 py-8">
                 <div className="max-w-4xl mx-auto px-6 text-center text-sm text-gray-500">
-                    <p>© 2024 GoldCat Terminal • {language === 'zh' ? '保留所有权利' : 'All rights reserved'}</p>
+                    <p>© 2026 GoldCat Terminal • {language === 'zh' ? '保留所有权利' : 'All rights reserved'}</p>
                 </div>
             </footer>
         </div>

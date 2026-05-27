@@ -16,7 +16,6 @@ export const StatusPanel = ({ score, result, lang = 'zh', showSearchHint = false
     const t = translations[lang]?.terminal || translations.zh.terminal;
 
     const probability = result?.probability_up ?? 50;
-    const uncertainty = result?.uncertainty ?? 100;
 
     const handleOpenGuide = () => {
         setHasViewedGuide(true);
@@ -124,17 +123,12 @@ export const StatusPanel = ({ score, result, lang = 'zh', showSearchHint = false
                         </div>
                     </div>
 
-                    {/* Confidence Meter (Inverted Uncertainty) */}
-                    <div className="flex items-center gap-2 mt-3">
-                        <span className="text-[9px] text-slate-500 font-mono w-28">{t.confidence}</span>
-                        <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-indigo-500 transition-all duration-700"
-                                style={{ width: `${100 - uncertainty}%` }}
-                            ></div>
-                        </div>
-                        <span className="text-[9px] text-indigo-400 font-mono w-8 text-right">{100 - uncertainty}%</span>
-                    </div>
+                    {/* Risk Disclaimer */}
+                    <p className="mt-3 text-[10px] leading-relaxed text-slate-500/80">
+                        {lang === 'zh'
+                            ? '风险提示：AI 模型基于历史数据训练，无法保证未来市场走势，不应作为唯一交易决策依据。'
+                            : 'Risk Notice: This AI model is trained on historical data and cannot guarantee future market moves. Do not rely on it as your sole trading decision basis.'}
+                    </p>
 
                 </div>
             </div>
