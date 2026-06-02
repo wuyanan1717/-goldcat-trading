@@ -575,6 +575,11 @@ function GoldCatApp() {
     const [reviewNotes, setReviewNotes] = useState('');
     const [paymentTxId, setPaymentTxId] = useState(''); // Payment Transaction ID
     const [orderNumber, setOrderNumber] = useState(''); // USDT Order Number
+    const [usdtPromoCode, setUsdtPromoCode] = useState('');
+    const [isUsdtPromoValid, setIsUsdtPromoValid] = useState(false);
+    const USDT_ORIGINAL_AMOUNT = 39;
+    const USDT_DISCOUNT_CODE = 'HGAS7KOU';
+    const usdtPayableAmount = isUsdtPromoValid ? 35.1 : USDT_ORIGINAL_AMOUNT;
 
     // Auto-scroll to top when tab changes or view mode switches
     useEffect(() => {
@@ -2995,7 +3000,40 @@ function GoldCatApp() {
 
                                         <div className="p-4 bg-neutral-800 rounded-xl">
                                             <div className="text-xs text-gray-400 mb-2">{t('payment.amount_due')}</div>
-                                            <div className="text-3xl font-black text-amber-500">39.00 USDT</div>
+                                            <div className="text-3xl font-black text-amber-500">{usdtPayableAmount.toFixed(2)} USDT</div>
+                                        </div>
+
+                                        <div className="p-4 bg-neutral-800 rounded-xl">
+                                            <label className="text-xs text-gray-400 mb-2 block">
+                                                {language === 'zh' ? '优惠码（可选）' : 'Promo Code (Optional)'}
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={usdtPromoCode}
+                                                    onChange={(e) => {
+                                                        const code = e.target.value.toUpperCase().trim();
+                                                        setUsdtPromoCode(code);
+                                                        setIsUsdtPromoValid(false);
+                                                    }}
+                                                    placeholder={language === 'zh' ? '输入代理优惠码' : 'Enter referral promo code'}
+                                                    className="flex-1 bg-black/50 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none text-sm"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const isValid = usdtPromoCode === USDT_DISCOUNT_CODE;
+                                                        setIsUsdtPromoValid(isValid);
+                                                        if (!isValid && usdtPromoCode) {
+                                                            setErrorMessage(language === 'zh' ? '优惠码无效' : 'Invalid promo code');
+                                                            setShowErrorToast(true);
+                                                        }
+                                                    }}
+                                                    className="px-4 py-3 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg text-sm font-semibold"
+                                                >
+                                                    {language === 'zh' ? '验证' : 'Apply'}
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
@@ -3024,6 +3062,8 @@ function GoldCatApp() {
 
                                         <button
                                             onClick={async () => {
+                                                if (isSubmitting) return;
+
                                                 if (!paymentTxId) {
                                                     setErrorMessage(t('payment.txid_placeholder'));
                                                     setShowErrorToast(true);
@@ -3031,8 +3071,9 @@ function GoldCatApp() {
                                                 }
 
                                                 try {
-                                                    // Create or update order in Supabase
-                                                    const orderNum = orderNumber || `ORDER-${Date.now()}`;
+                                                    setIsSubmitting(true);
+                                                    // Generate unique order number at submit time to avoid duplicate key collisions
+                                                    const orderNum = `ORDER-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
                                                     const { error } = await supabase
                                                         .from('orders')
@@ -3040,7 +3081,7 @@ function GoldCatApp() {
                                                             order_number: orderNum,
                                                             user_id: user.id,
                                                             user_email: user.email,
-                                                            amount: 39,
+                                                            amount: usdtPayableAmount,
                                                             currency: 'USDT',
                                                             payment_method: 'usdt',
                                                             txid: paymentTxId,
@@ -3061,9 +3102,15 @@ function GoldCatApp() {
                                                     console.error('Unexpected error:', err);
                                                     setErrorMessage(t('common.error'));
                                                     setShowErrorToast(true);
+                                                } finally {
+                                                    setIsSubmitting(false);
                                                 }
                                             }}
-                                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-lg rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all"
+                                            disabled={isSubmitting}
+                                            className={`w-full py-4 text-black font-black text-lg rounded-xl transition-all ${isSubmitting
+                                                ? 'bg-neutral-600 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:shadow-lg hover:shadow-amber-500/20'
+                                                }`}
                                         >
                                             {t('payment.submit_review')}
                                         </button>
