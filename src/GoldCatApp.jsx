@@ -2042,9 +2042,6 @@ function GoldCatApp() {
                                         {t('home.feature_quantum_title')}
                                     </h3>
                                     <p className="text-sm text-gray-400 leading-relaxed mb-4">{t('home.feature_quantum_desc')}</p>
-                                    <div className="flex items-center gap-2 text-xs text-purple-400 font-mono bg-purple-900/20 px-2 py-1 rounded border border-purple-500/20 w-fit">
-                                        <Sparkles className="w-3 h-3" /> {t('home.feature_quantum_accuracy')}
-                                    </div>
                                 </div>
 
                                 {/* 2. Daily Alpha */}
